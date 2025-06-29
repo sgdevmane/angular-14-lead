@@ -1286,3 +1286,2110 @@ setInterval(() => {
 ```
 
 This comprehensive performance guide covers all essential optimization techniques from Core Web Vitals to memory management, providing practical examples for building high-performance web applications.
+
+---
+
+## Advanced Performance Optimization
+
+### Q11: How do you implement advanced performance optimization strategies?
+
+**Answer:**
+Advanced performance optimization involves sophisticated techniques for resource management, rendering optimization, and intelligent caching strategies.
+
+**Advanced Resource Management:**
+```typescript
+// Advanced Resource Loader with Priority Queue
+class AdvancedResourceLoader {
+  private loadQueue: Map<string, ResourceRequest> = new Map();
+  private activeLoads: Set<string> = new Set();
+  private cache: Map<string, CachedResource> = new Map();
+  private maxConcurrentLoads = 6;
+  private priorityLevels = {
+    CRITICAL: 0,
+    HIGH: 1,
+    NORMAL: 2,
+    LOW: 3
+  };
+
+  constructor(private config: ResourceLoaderConfig) {
+    this.setupIntersectionObserver();
+    this.setupNetworkObserver();
+  }
+
+  async loadResource(url: string, options: LoadOptions = {}): Promise<any> {
+    const cacheKey = this.getCacheKey(url, options);
+    
+    // Check cache first
+    const cached = this.getCachedResource(cacheKey);
+    if (cached && !this.isExpired(cached)) {
+      return cached.data;
+    }
+
+    // Add to queue with priority
+    const request: ResourceRequest = {
+      url,
+      options,
+      priority: options.priority || this.priorityLevels.NORMAL,
+      timestamp: Date.now(),
+      retries: 0,
+      cacheKey
+    };
+
+    return this.enqueueRequest(request);
+  }
+
+  private async enqueueRequest(request: ResourceRequest): Promise<any> {
+    return new Promise((resolve, reject) => {
+      request.resolve = resolve;
+      request.reject = reject;
+      
+      this.loadQueue.set(request.cacheKey, request);
+      this.processQueue();
+    });
+  }
+
+  private async processQueue(): Promise<void> {
+    if (this.activeLoads.size >= this.maxConcurrentLoads) {
+      return;
+    }
+
+    // Sort by priority and timestamp
+    const sortedRequests = Array.from(this.loadQueue.values())
+      .sort((a, b) => {
+        if (a.priority !== b.priority) {
+          return a.priority - b.priority;
+        }
+        return a.timestamp - b.timestamp;
+      });
+
+    const request = sortedRequests[0];
+    if (!request) return;
+
+    this.loadQueue.delete(request.cacheKey);
+    this.activeLoads.add(request.cacheKey);
+
+    try {
+      const data = await this.executeLoad(request);
+      this.cacheResource(request.cacheKey, data, request.options);
+      request.resolve!(data);
+    } catch (error) {
+      if (request.retries < 3) {
+        request.retries++;
+        request.timestamp = Date.now();
+        this.loadQueue.set(request.cacheKey, request);
+      } else {
+        request.reject!(error);
+      }
+    } finally {
+      this.activeLoads.delete(request.cacheKey);
+      this.processQueue(); // Process next in queue
+    }
+  }
+
+  private async executeLoad(request: ResourceRequest): Promise<any> {
+    const { url, options } = request;
+    
+    // Adaptive loading based on network conditions
+    const networkInfo = this.getNetworkInfo();
+    const adaptedOptions = this.adaptOptionsForNetwork(options, networkInfo);
+
+    switch (options.type) {
+      case 'image':
+        return this.loadImage(url, adaptedOptions);
+      case 'script':
+        return this.loadScript(url, adaptedOptions);
+      case 'style':
+        return this.loadStylesheet(url, adaptedOptions);
+      case 'json':
+        return this.loadJSON(url, adaptedOptions);
+      default:
+        return this.loadGeneric(url, adaptedOptions);
+    }
+  }
+
+  private async loadImage(url: string, options: AdaptedOptions): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      
+      // Progressive loading for large images
+      if (options.progressive) {
+        img.loading = 'lazy';
+        img.decoding = 'async';
+      }
+
+      // Responsive image selection
+      if (options.srcSet) {
+        img.srcset = options.srcSet;
+        img.sizes = options.sizes || '100vw';
+      }
+
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  private setupIntersectionObserver(): void {
+    if (!('IntersectionObserver' in window)) return;
+
+    this.intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const element = entry.target as HTMLElement;
+            const url = element.dataset.src;
+            if (url) {
+              this.loadResource(url, {
+                type: 'image',
+                priority: this.priorityLevels.HIGH
+              });
+            }
+          }
+        });
+      },
+      {
+        rootMargin: '50px 0px',
+        threshold: 0.1
+      }
+    );
+  }
+
+  private getNetworkInfo(): NetworkInfo {
+    const connection = (navigator as any).connection;
+    if (!connection) {
+      return { effectiveType: '4g', downlink: 10, rtt: 100 };
+    }
+
+    return {
+      effectiveType: connection.effectiveType,
+      downlink: connection.downlink,
+      rtt: connection.rtt,
+      saveData: connection.saveData
+    };
+  }
+
+  private adaptOptionsForNetwork(options: LoadOptions, network: NetworkInfo): AdaptedOptions {
+    const adapted = { ...options };
+
+    // Reduce quality for slow connections
+    if (network.effectiveType === 'slow-2g' || network.effectiveType === '2g') {
+      adapted.quality = 'low';
+      adapted.timeout = 30000;
+    } else if (network.effectiveType === '3g') {
+      adapted.quality = 'medium';
+      adapted.timeout = 15000;
+    } else {
+      adapted.quality = 'high';
+      adapted.timeout = 10000;
+    }
+
+    // Honor data saver preference
+    if (network.saveData) {
+      adapted.quality = 'low';
+      adapted.compress = true;
+    }
+
+    return adapted;
+  }
+}
+
+// Advanced Virtual Scrolling with Dynamic Heights
+class AdvancedVirtualScroller {
+  private container: HTMLElement;
+  private items: any[];
+  private itemHeights: Map<number, number> = new Map();
+  private estimatedItemHeight: number;
+  private visibleRange: { start: number; end: number } = { start: 0, end: 0 };
+  private scrollTop = 0;
+  private containerHeight = 0;
+  private totalHeight = 0;
+  private renderBuffer = 5;
+  private resizeObserver: ResizeObserver;
+  private intersectionObserver: IntersectionObserver;
+
+  constructor(
+    container: HTMLElement,
+    items: any[],
+    private renderItem: (item: any, index: number) => HTMLElement,
+    estimatedItemHeight = 50
+  ) {
+    this.container = container;
+    this.items = items;
+    this.estimatedItemHeight = estimatedItemHeight;
+    this.setupObservers();
+    this.render();
+  }
+
+  private setupObservers(): void {
+    // Observe container size changes
+    this.resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        this.containerHeight = entry.contentRect.height;
+        this.updateVisibleRange();
+        this.render();
+      }
+    });
+    this.resizeObserver.observe(this.container);
+
+    // Observe item size changes
+    this.intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          const element = entry.target as HTMLElement;
+          const index = parseInt(element.dataset.index!, 10);
+          const height = element.offsetHeight;
+          
+          if (this.itemHeights.get(index) !== height) {
+            this.itemHeights.set(index, height);
+            this.updateTotalHeight();
+            this.render();
+          }
+        });
+      },
+      { root: this.container }
+    );
+
+    // Handle scroll events with throttling
+    let scrollTimeout: number;
+    this.container.addEventListener('scroll', () => {
+      this.scrollTop = this.container.scrollTop;
+      
+      if (scrollTimeout) {
+        cancelAnimationFrame(scrollTimeout);
+      }
+      
+      scrollTimeout = requestAnimationFrame(() => {
+        this.updateVisibleRange();
+        this.render();
+      });
+    });
+  }
+
+  private updateVisibleRange(): void {
+    const start = this.findStartIndex();
+    const end = this.findEndIndex(start);
+    
+    this.visibleRange = {
+      start: Math.max(0, start - this.renderBuffer),
+      end: Math.min(this.items.length - 1, end + this.renderBuffer)
+    };
+  }
+
+  private findStartIndex(): number {
+    let accumulatedHeight = 0;
+    
+    for (let i = 0; i < this.items.length; i++) {
+      const itemHeight = this.itemHeights.get(i) || this.estimatedItemHeight;
+      
+      if (accumulatedHeight + itemHeight > this.scrollTop) {
+        return i;
+      }
+      
+      accumulatedHeight += itemHeight;
+    }
+    
+    return this.items.length - 1;
+  }
+
+  private findEndIndex(startIndex: number): number {
+    let accumulatedHeight = this.getOffsetTop(startIndex);
+    
+    for (let i = startIndex; i < this.items.length; i++) {
+      const itemHeight = this.itemHeights.get(i) || this.estimatedItemHeight;
+      
+      if (accumulatedHeight > this.scrollTop + this.containerHeight) {
+        return i;
+      }
+      
+      accumulatedHeight += itemHeight;
+    }
+    
+    return this.items.length - 1;
+  }
+
+  private getOffsetTop(index: number): number {
+    let offset = 0;
+    
+    for (let i = 0; i < index; i++) {
+      offset += this.itemHeights.get(i) || this.estimatedItemHeight;
+    }
+    
+    return offset;
+  }
+
+  private updateTotalHeight(): void {
+    this.totalHeight = 0;
+    
+    for (let i = 0; i < this.items.length; i++) {
+      this.totalHeight += this.itemHeights.get(i) || this.estimatedItemHeight;
+    }
+  }
+
+  private render(): void {
+    // Clear existing content
+    this.container.innerHTML = '';
+    
+    // Create spacer for items before visible range
+    const topSpacer = document.createElement('div');
+    topSpacer.style.height = `${this.getOffsetTop(this.visibleRange.start)}px`;
+    this.container.appendChild(topSpacer);
+    
+    // Render visible items
+    for (let i = this.visibleRange.start; i <= this.visibleRange.end; i++) {
+      const item = this.items[i];
+      const element = this.renderItem(item, i);
+      element.dataset.index = i.toString();
+      
+      this.container.appendChild(element);
+      this.intersectionObserver.observe(element);
+    }
+    
+    // Create spacer for items after visible range
+    const bottomSpacerHeight = this.totalHeight - this.getOffsetTop(this.visibleRange.end + 1);
+    const bottomSpacer = document.createElement('div');
+    bottomSpacer.style.height = `${bottomSpacerHeight}px`;
+    this.container.appendChild(bottomSpacer);
+  }
+
+  updateItems(newItems: any[]): void {
+    this.items = newItems;
+    this.itemHeights.clear();
+    this.updateTotalHeight();
+    this.updateVisibleRange();
+    this.render();
+  }
+
+  scrollToIndex(index: number): void {
+    const offset = this.getOffsetTop(index);
+    this.container.scrollTop = offset;
+  }
+
+  destroy(): void {
+    this.resizeObserver.disconnect();
+    this.intersectionObserver.disconnect();
+  }
+}
+
+// Intelligent Caching System
+class IntelligentCache {
+  private cache: Map<string, CacheEntry> = new Map();
+  private accessLog: Map<string, AccessInfo> = new Map();
+  private maxSize: number;
+  private ttl: number;
+  private compressionEnabled: boolean;
+
+  constructor(options: CacheOptions = {}) {
+    this.maxSize = options.maxSize || 100;
+    this.ttl = options.ttl || 3600000; // 1 hour
+    this.compressionEnabled = options.compression || false;
+    
+    this.startCleanupInterval();
+  }
+
+  async set(key: string, value: any, options: SetOptions = {}): Promise<void> {
+    const entry: CacheEntry = {
+      value: this.compressionEnabled ? await this.compress(value) : value,
+      timestamp: Date.now(),
+      ttl: options.ttl || this.ttl,
+      size: this.calculateSize(value),
+      compressed: this.compressionEnabled,
+      priority: options.priority || 1
+    };
+
+    // Check if we need to evict items
+    if (this.cache.size >= this.maxSize) {
+      await this.evictLeastUseful();
+    }
+
+    this.cache.set(key, entry);
+    this.updateAccessLog(key, 'write');
+  }
+
+  async get(key: string): Promise<any> {
+    const entry = this.cache.get(key);
+    
+    if (!entry) {
+      return null;
+    }
+
+    // Check if expired
+    if (Date.now() - entry.timestamp > entry.ttl) {
+      this.cache.delete(key);
+      this.accessLog.delete(key);
+      return null;
+    }
+
+    this.updateAccessLog(key, 'read');
+    
+    return entry.compressed ? await this.decompress(entry.value) : entry.value;
+  }
+
+  private updateAccessLog(key: string, operation: 'read' | 'write'): void {
+    const existing = this.accessLog.get(key) || {
+      reads: 0,
+      writes: 0,
+      lastAccess: 0,
+      frequency: 0
+    };
+
+    existing[operation === 'read' ? 'reads' : 'writes']++;
+    existing.lastAccess = Date.now();
+    existing.frequency = this.calculateFrequency(existing);
+    
+    this.accessLog.set(key, existing);
+  }
+
+  private calculateFrequency(access: AccessInfo): number {
+    const totalAccess = access.reads + access.writes;
+    const timeSinceFirst = Date.now() - (access.lastAccess - (totalAccess * 1000));
+    return totalAccess / (timeSinceFirst / 1000 / 60); // accesses per minute
+  }
+
+  private async evictLeastUseful(): Promise<void> {
+    const entries = Array.from(this.cache.entries());
+    
+    // Calculate usefulness score for each entry
+    const scored = entries.map(([key, entry]) => {
+      const access = this.accessLog.get(key);
+      const age = Date.now() - entry.timestamp;
+      const frequency = access?.frequency || 0;
+      const recency = 1 / (age + 1);
+      
+      // Usefulness = frequency * recency * priority / size
+      const usefulness = (frequency * recency * entry.priority) / entry.size;
+      
+      return { key, usefulness };
+    });
+
+    // Sort by usefulness (ascending) and remove least useful
+    scored.sort((a, b) => a.usefulness - b.usefulness);
+    
+    const toEvict = scored.slice(0, Math.ceil(this.maxSize * 0.1)); // Evict 10%
+    
+    for (const { key } of toEvict) {
+      this.cache.delete(key);
+      this.accessLog.delete(key);
+    }
+  }
+
+  private async compress(data: any): Promise<string> {
+    if (!('CompressionStream' in window)) {
+      return JSON.stringify(data);
+    }
+
+    const stream = new CompressionStream('gzip');
+    const writer = stream.writable.getWriter();
+    const reader = stream.readable.getReader();
+    
+    const jsonString = JSON.stringify(data);
+    const encoder = new TextEncoder();
+    
+    writer.write(encoder.encode(jsonString));
+    writer.close();
+    
+    const chunks: Uint8Array[] = [];
+    let done = false;
+    
+    while (!done) {
+      const { value, done: readerDone } = await reader.read();
+      done = readerDone;
+      if (value) chunks.push(value);
+    }
+    
+    const compressed = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+    let offset = 0;
+    
+    for (const chunk of chunks) {
+      compressed.set(chunk, offset);
+      offset += chunk.length;
+    }
+    
+    return btoa(String.fromCharCode(...compressed));
+  }
+
+  private async decompress(compressedData: string): Promise<any> {
+    if (!('DecompressionStream' in window)) {
+      return JSON.parse(compressedData);
+    }
+
+    const compressed = Uint8Array.from(atob(compressedData), c => c.charCodeAt(0));
+    
+    const stream = new DecompressionStream('gzip');
+    const writer = stream.writable.getWriter();
+    const reader = stream.readable.getReader();
+    
+    writer.write(compressed);
+    writer.close();
+    
+    const chunks: Uint8Array[] = [];
+    let done = false;
+    
+    while (!done) {
+      const { value, done: readerDone } = await reader.read();
+      done = readerDone;
+      if (value) chunks.push(value);
+    }
+    
+    const decompressed = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+    let offset = 0;
+    
+    for (const chunk of chunks) {
+      decompressed.set(chunk, offset);
+      offset += chunk.length;
+    }
+    
+    const decoder = new TextDecoder();
+    const jsonString = decoder.decode(decompressed);
+    
+    return JSON.parse(jsonString);
+  }
+
+  private calculateSize(data: any): number {
+    return new Blob([JSON.stringify(data)]).size;
+  }
+
+  private startCleanupInterval(): void {
+    setInterval(() => {
+      const now = Date.now();
+      
+      for (const [key, entry] of this.cache.entries()) {
+        if (now - entry.timestamp > entry.ttl) {
+          this.cache.delete(key);
+          this.accessLog.delete(key);
+        }
+      }
+    }, 60000); // Cleanup every minute
+  }
+
+  getStats(): CacheStats {
+    const totalSize = Array.from(this.cache.values())
+      .reduce((sum, entry) => sum + entry.size, 0);
+    
+    const hitRate = Array.from(this.accessLog.values())
+      .reduce((sum, access) => sum + access.reads, 0) / 
+      Array.from(this.accessLog.values())
+        .reduce((sum, access) => sum + access.reads + access.writes, 0);
+
+    return {
+      size: this.cache.size,
+      maxSize: this.maxSize,
+      totalSize,
+      hitRate,
+      averageFrequency: Array.from(this.accessLog.values())
+        .reduce((sum, access) => sum + access.frequency, 0) / this.accessLog.size
+    };
+  }
+
+  clear(): void {
+    this.cache.clear();
+    this.accessLog.clear();
+  }
+}
+
+// Performance Monitoring and Analytics
+class PerformanceAnalytics {
+  private metrics: Map<string, MetricData[]> = new Map();
+  private observers: Map<string, PerformanceObserver> = new Map();
+  private customTimers: Map<string, number> = new Map();
+  private alerts: AlertConfig[] = [];
+  private reportingEndpoint: string;
+
+  constructor(config: AnalyticsConfig) {
+    this.reportingEndpoint = config.endpoint;
+    this.setupCoreObservers();
+    this.startReporting(config.reportingInterval || 30000);
+  }
+
+  private setupCoreObservers(): void {
+    // Navigation timing
+    this.createObserver('navigation', ['navigation']);
+    
+    // Paint timing
+    this.createObserver('paint', ['paint']);
+    
+    // Largest Contentful Paint
+    this.createObserver('lcp', ['largest-contentful-paint']);
+    
+    // First Input Delay
+    this.createObserver('fid', ['first-input']);
+    
+    // Layout Shift
+    this.createObserver('cls', ['layout-shift']);
+    
+    // Resource timing
+    this.createObserver('resource', ['resource']);
+    
+    // User timing
+    this.createObserver('user', ['measure']);
+  }
+
+  private createObserver(name: string, entryTypes: string[]): void {
+    try {
+      const observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          this.recordMetric(name, {
+            name: entry.name,
+            value: this.extractValue(entry),
+            timestamp: entry.startTime,
+            details: this.extractDetails(entry)
+          });
+        }
+      });
+      
+      observer.observe({ entryTypes });
+      this.observers.set(name, observer);
+    } catch (error) {
+      console.warn(`Failed to create observer for ${name}:`, error);
+    }
+  }
+
+  private extractValue(entry: PerformanceEntry): number {
+    if ('value' in entry) return (entry as any).value;
+    if ('duration' in entry) return entry.duration;
+    if ('startTime' in entry) return entry.startTime;
+    return 0;
+  }
+
+  private extractDetails(entry: PerformanceEntry): any {
+    const details: any = {
+      entryType: entry.entryType,
+      name: entry.name
+    };
+
+    // Add specific details based on entry type
+    if (entry.entryType === 'navigation') {
+      const nav = entry as PerformanceNavigationTiming;
+      details.transferSize = nav.transferSize;
+      details.encodedBodySize = nav.encodedBodySize;
+      details.decodedBodySize = nav.decodedBodySize;
+    } else if (entry.entryType === 'resource') {
+      const resource = entry as PerformanceResourceTiming;
+      details.transferSize = resource.transferSize;
+      details.initiatorType = resource.initiatorType;
+    } else if (entry.entryType === 'largest-contentful-paint') {
+      const lcp = entry as any;
+      details.element = lcp.element?.tagName;
+      details.url = lcp.url;
+    }
+
+    return details;
+  }
+
+  recordMetric(category: string, data: MetricData): void {
+    if (!this.metrics.has(category)) {
+      this.metrics.set(category, []);
+    }
+    
+    const metrics = this.metrics.get(category)!;
+    metrics.push(data);
+    
+    // Keep only last 1000 metrics per category
+    if (metrics.length > 1000) {
+      metrics.shift();
+    }
+    
+    this.checkAlerts(category, data);
+  }
+
+  startTimer(name: string): () => void {
+    const startTime = performance.now();
+    this.customTimers.set(name, startTime);
+    
+    return () => {
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      
+      this.recordMetric('custom', {
+        name,
+        value: duration,
+        timestamp: startTime,
+        details: { duration }
+      });
+      
+      this.customTimers.delete(name);
+    };
+  }
+
+  addAlert(config: AlertConfig): void {
+    this.alerts.push(config);
+  }
+
+  private checkAlerts(category: string, data: MetricData): void {
+    for (const alert of this.alerts) {
+      if (alert.category === category && alert.metric === data.name) {
+        const triggered = this.evaluateAlert(alert, data.value);
+        
+        if (triggered) {
+          this.triggerAlert(alert, data);
+        }
+      }
+    }
+  }
+
+  private evaluateAlert(alert: AlertConfig, value: number): boolean {
+    switch (alert.operator) {
+      case 'gt': return value > alert.threshold;
+      case 'lt': return value < alert.threshold;
+      case 'eq': return value === alert.threshold;
+      case 'gte': return value >= alert.threshold;
+      case 'lte': return value <= alert.threshold;
+      default: return false;
+    }
+  }
+
+  private async triggerAlert(alert: AlertConfig, data: MetricData): Promise<void> {
+    const alertData = {
+      alert: alert.name,
+      category: alert.category,
+      metric: data.name,
+      value: data.value,
+      threshold: alert.threshold,
+      timestamp: Date.now(),
+      severity: alert.severity || 'warning'
+    };
+
+    // Send to reporting endpoint
+    try {
+      await fetch(`${this.reportingEndpoint}/alerts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(alertData)
+      });
+    } catch (error) {
+      console.error('Failed to send alert:', error);
+    }
+
+    // Trigger callback if provided
+    if (alert.callback) {
+      alert.callback(alertData);
+    }
+  }
+
+  private startReporting(interval: number): void {
+    setInterval(async () => {
+      const report = this.generateReport();
+      
+      try {
+        await fetch(this.reportingEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(report)
+        });
+      } catch (error) {
+        console.error('Failed to send performance report:', error);
+      }
+    }, interval);
+  }
+
+  generateReport(): PerformanceReport {
+    const report: PerformanceReport = {
+      timestamp: Date.now(),
+      url: window.location.href,
+      userAgent: navigator.userAgent,
+      metrics: {}
+    };
+
+    // Aggregate metrics by category
+    for (const [category, metrics] of this.metrics.entries()) {
+      if (metrics.length === 0) continue;
+      
+      const values = metrics.map(m => m.value);
+      const recent = metrics.filter(m => Date.now() - m.timestamp < 300000); // Last 5 minutes
+      
+      report.metrics[category] = {
+        count: metrics.length,
+        average: values.reduce((sum, val) => sum + val, 0) / values.length,
+        median: this.calculateMedian(values),
+        p95: this.calculatePercentile(values, 95),
+        min: Math.min(...values),
+        max: Math.max(...values),
+        recent: recent.length
+      };
+    }
+
+    return report;
+  }
+
+  private calculateMedian(values: number[]): number {
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    
+    return sorted.length % 2 === 0
+      ? (sorted[mid - 1] + sorted[mid]) / 2
+      : sorted[mid];
+  }
+
+  private calculatePercentile(values: number[], percentile: number): number {
+    const sorted = [...values].sort((a, b) => a - b);
+    const index = Math.ceil((percentile / 100) * sorted.length) - 1;
+    return sorted[Math.max(0, index)];
+  }
+
+  getMetrics(category?: string): Map<string, MetricData[]> {
+    if (category) {
+      const categoryMetrics = this.metrics.get(category);
+      return categoryMetrics ? new Map([[category, categoryMetrics]]) : new Map();
+    }
+    return new Map(this.metrics);
+  }
+
+  destroy(): void {
+    for (const observer of this.observers.values()) {
+      observer.disconnect();
+    }
+    this.observers.clear();
+    this.metrics.clear();
+    this.customTimers.clear();
+  }
+}
+
+// Type definitions
+interface ResourceRequest {
+  url: string;
+  options: LoadOptions;
+  priority: number;
+  timestamp: number;
+  retries: number;
+  cacheKey: string;
+  resolve?: (value: any) => void;
+  reject?: (error: any) => void;
+}
+
+interface LoadOptions {
+  type?: 'image' | 'script' | 'style' | 'json' | 'generic';
+  priority?: number;
+  progressive?: boolean;
+  srcSet?: string;
+  sizes?: string;
+  timeout?: number;
+}
+
+interface AdaptedOptions extends LoadOptions {
+  quality?: 'low' | 'medium' | 'high';
+  compress?: boolean;
+}
+
+interface NetworkInfo {
+  effectiveType: string;
+  downlink: number;
+  rtt: number;
+  saveData?: boolean;
+}
+
+interface CacheEntry {
+  value: any;
+  timestamp: number;
+  ttl: number;
+  size: number;
+  compressed: boolean;
+  priority: number;
+}
+
+interface AccessInfo {
+  reads: number;
+  writes: number;
+  lastAccess: number;
+  frequency: number;
+}
+
+interface CacheOptions {
+  maxSize?: number;
+  ttl?: number;
+  compression?: boolean;
+}
+
+interface SetOptions {
+  ttl?: number;
+  priority?: number;
+}
+
+interface CacheStats {
+  size: number;
+  maxSize: number;
+  totalSize: number;
+  hitRate: number;
+  averageFrequency: number;
+}
+
+interface MetricData {
+  name: string;
+  value: number;
+  timestamp: number;
+  details: any;
+}
+
+interface AlertConfig {
+  name: string;
+  category: string;
+  metric: string;
+  threshold: number;
+  operator: 'gt' | 'lt' | 'eq' | 'gte' | 'lte';
+  severity?: 'info' | 'warning' | 'error' | 'critical';
+  callback?: (alert: any) => void;
+}
+
+interface AnalyticsConfig {
+  endpoint: string;
+  reportingInterval?: number;
+}
+
+interface PerformanceReport {
+  timestamp: number;
+  url: string;
+  userAgent: string;
+  metrics: Record<string, any>;
+}
+
+// Usage Examples
+const resourceLoader = new AdvancedResourceLoader({
+  maxConcurrentLoads: 6,
+  enableNetworkAdaptation: true,
+  enableProgressiveLoading: true
+});
+
+// Load critical resources with high priority
+resourceLoader.loadResource('/api/critical-data.json', {
+  type: 'json',
+  priority: 0 // CRITICAL
+});
+
+// Load images with lazy loading
+resourceLoader.loadResource('/images/hero.jpg', {
+  type: 'image',
+  priority: 1, // HIGH
+  progressive: true,
+  srcSet: '/images/hero-320.jpg 320w, /images/hero-640.jpg 640w, /images/hero-1280.jpg 1280w',
+  sizes: '(max-width: 320px) 280px, (max-width: 640px) 600px, 1200px'
+});
+
+// Virtual scrolling for large lists
+const virtualScroller = new AdvancedVirtualScroller(
+  document.getElementById('list-container')!,
+  largeDataArray,
+  (item, index) => {
+    const element = document.createElement('div');
+    element.className = 'list-item';
+    element.innerHTML = `<h3>${item.title}</h3><p>${item.description}</p>`;
+    return element;
+  },
+  80 // estimated item height
+);
+
+// Intelligent caching
+const cache = new IntelligentCache({
+  maxSize: 200,
+  ttl: 3600000, // 1 hour
+  compression: true
+});
+
+// Performance analytics
+const analytics = new PerformanceAnalytics({
+  endpoint: '/api/performance',
+  reportingInterval: 30000
+});
+
+// Add performance alerts
+analytics.addAlert({
+  name: 'High LCP',
+  category: 'lcp',
+  metric: 'largest-contentful-paint',
+  threshold: 2500,
+  operator: 'gt',
+  severity: 'warning',
+  callback: (alert) => {
+    console.warn('LCP threshold exceeded:', alert);
+  }
+});
+
+// Custom performance measurement
+const apiTimer = analytics.startTimer('api.user.profile');
+fetch('/api/user/profile')
+  .then(response => response.json())
+  .finally(() => apiTimer());
+```
+
+### Q12: How do you implement advanced performance monitoring and real-time optimization?
+
+**Answer:**
+Advanced performance monitoring involves real-time metrics collection, intelligent alerting, and automatic optimization based on performance data.
+
+**Real-time Performance Monitoring System:**
+```typescript
+// Resource Pool Management
+class ResourcePool<T> {
+  private pool: T[] = [];
+  private factory: () => T;
+  private reset: (item: T) => void;
+  private maxSize: number;
+  private created = 0;
+  
+  constructor(
+    factory: () => T,
+    reset: (item: T) => void,
+    maxSize: number = 50
+  ) {
+    this.factory = factory;
+    this.reset = reset;
+    this.maxSize = maxSize;
+  }
+  
+  acquire(): T {
+    if (this.pool.length > 0) {
+      return this.pool.pop()!;
+    }
+    
+    if (this.created < this.maxSize) {
+      this.created++;
+      return this.factory();
+    }
+    
+    // Pool exhausted, create temporary object
+    console.warn('Resource pool exhausted, creating temporary object');
+    return this.factory();
+  }
+  
+  release(item: T): void {
+    if (this.pool.length < this.maxSize) {
+      this.reset(item);
+      this.pool.push(item);
+    }
+  }
+  
+  clear(): void {
+    this.pool.length = 0;
+    this.created = 0;
+  }
+  
+  getStats(): { poolSize: number; created: number; available: number } {
+    return {
+      poolSize: this.maxSize,
+      created: this.created,
+      available: this.pool.length
+    };
+  }
+}
+
+// DOM Element Pool for Virtual Scrolling
+class DOMElementPool {
+  private elementPools = new Map<string, ResourcePool<HTMLElement>>();
+  
+  getElement(tagName: string, className?: string): HTMLElement {
+    const key = `${tagName}:${className || ''}`;
+    
+    if (!this.elementPools.has(key)) {
+      this.elementPools.set(key, new ResourcePool(
+        () => {
+          const element = document.createElement(tagName);
+          if (className) {
+            element.className = className;
+          }
+          return element;
+        },
+        (element) => {
+          element.innerHTML = '';
+          element.removeAttribute('style');
+          // Reset other attributes as needed
+          Array.from(element.attributes).forEach(attr => {
+            if (attr.name !== 'class') {
+              element.removeAttribute(attr.name);
+            }
+          });
+        },
+        100
+      ));
+    }
+    
+    return this.elementPools.get(key)!.acquire();
+  }
+  
+  releaseElement(element: HTMLElement, tagName: string, className?: string): void {
+    const key = `${tagName}:${className || ''}`;
+    const pool = this.elementPools.get(key);
+    if (pool) {
+      pool.release(element);
+    }
+  }
+  
+  clearAll(): void {
+    this.elementPools.forEach(pool => pool.clear());
+    this.elementPools.clear();
+  }
+}
+
+// Advanced Virtual Scrolling Implementation
+class VirtualScrollManager {
+  private container: HTMLElement;
+  private itemHeight: number;
+  private bufferSize: number;
+  private visibleRange = { start: 0, end: 0 };
+  private renderedItems = new Map<number, HTMLElement>();
+  private elementPool: DOMElementPool;
+  private data: any[] = [];
+  private renderItem: (item: any, element: HTMLElement) => void;
+  
+  constructor(
+    container: HTMLElement,
+    itemHeight: number,
+    renderItem: (item: any, element: HTMLElement) => void,
+    bufferSize: number = 5
+  ) {
+    this.container = container;
+    this.itemHeight = itemHeight;
+    this.renderItem = renderItem;
+    this.bufferSize = bufferSize;
+    this.elementPool = new DOMElementPool();
+    
+    this.setupScrollListener();
+  }
+  
+  setData(data: any[]): void {
+    this.data = data;
+    this.updateVisibleRange();
+    this.renderVisibleItems();
+  }
+  
+  private setupScrollListener(): void {
+    let ticking = false;
+    
+    this.container.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          this.updateVisibleRange();
+          this.renderVisibleItems();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  }
+  
+  private updateVisibleRange(): void {
+    const scrollTop = this.container.scrollTop;
+    const containerHeight = this.container.clientHeight;
+    
+    const start = Math.max(0, Math.floor(scrollTop / this.itemHeight) - this.bufferSize);
+    const end = Math.min(
+      this.data.length - 1,
+      Math.ceil((scrollTop + containerHeight) / this.itemHeight) + this.bufferSize
+    );
+    
+    this.visibleRange = { start, end };
+  }
+  
+  private renderVisibleItems(): void {
+    // Remove items that are no longer visible
+    for (const [index, element] of this.renderedItems) {
+      if (index < this.visibleRange.start || index > this.visibleRange.end) {
+        this.container.removeChild(element);
+        this.elementPool.releaseElement(element, 'div', 'virtual-item');
+        this.renderedItems.delete(index);
+      }
+    }
+    
+    // Add new visible items
+    for (let i = this.visibleRange.start; i <= this.visibleRange.end; i++) {
+      if (!this.renderedItems.has(i) && this.data[i]) {
+        const element = this.elementPool.getElement('div', 'virtual-item');
+        element.style.position = 'absolute';
+        element.style.top = `${i * this.itemHeight}px`;
+        element.style.height = `${this.itemHeight}px`;
+        element.style.width = '100%';
+        
+        this.renderItem(this.data[i], element);
+        this.container.appendChild(element);
+        this.renderedItems.set(i, element);
+      }
+    }
+    
+    // Update container height
+    this.container.style.height = `${this.data.length * this.itemHeight}px`;
+  }
+  
+  destroy(): void {
+    this.renderedItems.forEach(element => {
+      this.container.removeChild(element);
+    });
+    this.renderedItems.clear();
+    this.elementPool.clearAll();
+  }
+}
+
+// Advanced Caching Strategy
+class AdvancedCacheManager {
+  private memoryCache = new Map<string, CacheEntry>();
+  private persistentCache: IDBDatabase | null = null;
+  private maxMemorySize: number;
+  private currentMemorySize = 0;
+  private compressionEnabled: boolean;
+  
+  constructor(
+    maxMemorySize: number = 50 * 1024 * 1024, // 50MB
+    compressionEnabled: boolean = true
+  ) {
+    this.maxMemorySize = maxMemorySize;
+    this.compressionEnabled = compressionEnabled;
+    this.initPersistentCache();
+  }
+  
+  private async initPersistentCache(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('AdvancedCache', 1);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        this.persistentCache = request.result;
+        resolve();
+      };
+      
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        if (!db.objectStoreNames.contains('cache')) {
+          const store = db.createObjectStore('cache', { keyPath: 'key' });
+          store.createIndex('expiry', 'expiry', { unique: false });
+          store.createIndex('priority', 'priority', { unique: false });
+        }
+      };
+    });
+  }
+  
+  async set(
+    key: string,
+    value: any,
+    options: CacheOptions = {}
+  ): Promise<void> {
+    const entry: CacheEntry = {
+      key,
+      value: this.compressionEnabled ? await this.compress(value) : value,
+      timestamp: Date.now(),
+      expiry: options.ttl ? Date.now() + options.ttl : null,
+      size: this.calculateSize(value),
+      priority: options.priority || 1,
+      compressed: this.compressionEnabled
+    };
+    
+    // Store in memory cache
+    await this.setInMemory(entry);
+    
+    // Store in persistent cache if enabled
+    if (options.persistent && this.persistentCache) {
+      await this.setInPersistent(entry);
+    }
+  }
+  
+  async get(key: string): Promise<any> {
+    // Try memory cache first
+    let entry = this.memoryCache.get(key);
+    
+    if (!entry && this.persistentCache) {
+      // Try persistent cache
+      entry = await this.getFromPersistent(key);
+      if (entry) {
+        // Promote to memory cache
+        await this.setInMemory(entry);
+      }
+    }
+    
+    if (!entry) {
+      return null;
+    }
+    
+    // Check expiry
+    if (entry.expiry && Date.now() > entry.expiry) {
+      await this.delete(key);
+      return null;
+    }
+    
+    // Update access time for LRU
+    entry.timestamp = Date.now();
+    
+    return entry.compressed ? await this.decompress(entry.value) : entry.value;
+  }
+  
+  private async setInMemory(entry: CacheEntry): Promise<void> {
+    // Check if we need to evict items
+    while (this.currentMemorySize + entry.size > this.maxMemorySize) {
+      await this.evictLRU();
+    }
+    
+    const existing = this.memoryCache.get(entry.key);
+    if (existing) {
+      this.currentMemorySize -= existing.size;
+    }
+    
+    this.memoryCache.set(entry.key, entry);
+    this.currentMemorySize += entry.size;
+  }
+  
+  private async setInPersistent(entry: CacheEntry): Promise<void> {
+    if (!this.persistentCache) return;
+    
+    const transaction = this.persistentCache.transaction(['cache'], 'readwrite');
+    const store = transaction.objectStore('cache');
+    
+    return new Promise((resolve, reject) => {
+      const request = store.put(entry);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+  
+  private async getFromPersistent(key: string): Promise<CacheEntry | null> {
+    if (!this.persistentCache) return null;
+    
+    const transaction = this.persistentCache.transaction(['cache'], 'readonly');
+    const store = transaction.objectStore('cache');
+    
+    return new Promise((resolve, reject) => {
+      const request = store.get(key);
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+    });
+  }
+  
+  private async evictLRU(): Promise<void> {
+    let oldestEntry: CacheEntry | null = null;
+    let oldestKey = '';
+    
+    for (const [key, entry] of this.memoryCache) {
+      if (!oldestEntry || entry.timestamp < oldestEntry.timestamp) {
+        oldestEntry = entry;
+        oldestKey = key;
+      }
+    }
+    
+    if (oldestKey) {
+      this.memoryCache.delete(oldestKey);
+      if (oldestEntry) {
+        this.currentMemorySize -= oldestEntry.size;
+      }
+    }
+  }
+  
+  private async compress(data: any): Promise<string> {
+    if (typeof CompressionStream !== 'undefined') {
+      const stream = new CompressionStream('gzip');
+      const writer = stream.writable.getWriter();
+      const reader = stream.readable.getReader();
+      
+      const jsonString = JSON.stringify(data);
+      const encoder = new TextEncoder();
+      const uint8Array = encoder.encode(jsonString);
+      
+      writer.write(uint8Array);
+      writer.close();
+      
+      const chunks: Uint8Array[] = [];
+      let done = false;
+      
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+        if (value) {
+          chunks.push(value);
+        }
+      }
+      
+      const compressed = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+      let offset = 0;
+      for (const chunk of chunks) {
+        compressed.set(chunk, offset);
+        offset += chunk.length;
+      }
+      
+      return btoa(String.fromCharCode(...compressed));
+    }
+    
+    // Fallback to JSON string if compression not available
+    return JSON.stringify(data);
+  }
+  
+  private async decompress(compressedData: string): Promise<any> {
+    if (typeof DecompressionStream !== 'undefined') {
+      try {
+        const binaryString = atob(compressedData);
+        const uint8Array = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          uint8Array[i] = binaryString.charCodeAt(i);
+        }
+        
+        const stream = new DecompressionStream('gzip');
+        const writer = stream.writable.getWriter();
+        const reader = stream.readable.getReader();
+        
+        writer.write(uint8Array);
+        writer.close();
+        
+        const chunks: Uint8Array[] = [];
+        let done = false;
+        
+        while (!done) {
+          const { value, done: readerDone } = await reader.read();
+          done = readerDone;
+          if (value) {
+            chunks.push(value);
+          }
+        }
+        
+        const decompressed = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+        let offset = 0;
+        for (const chunk of chunks) {
+          decompressed.set(chunk, offset);
+          offset += chunk.length;
+        }
+        
+        const decoder = new TextDecoder();
+        const jsonString = decoder.decode(decompressed);
+        return JSON.parse(jsonString);
+      } catch (error) {
+        console.warn('Decompression failed, falling back to JSON parse:', error);
+      }
+    }
+    
+    // Fallback to JSON parse
+    return JSON.parse(compressedData);
+  }
+  
+  private calculateSize(value: any): number {
+    return new Blob([JSON.stringify(value)]).size;
+  }
+  
+  async delete(key: string): Promise<void> {
+    const entry = this.memoryCache.get(key);
+    if (entry) {
+      this.memoryCache.delete(key);
+      this.currentMemorySize -= entry.size;
+    }
+    
+    if (this.persistentCache) {
+      const transaction = this.persistentCache.transaction(['cache'], 'readwrite');
+      const store = transaction.objectStore('cache');
+      store.delete(key);
+    }
+  }
+  
+  async clear(): Promise<void> {
+    this.memoryCache.clear();
+    this.currentMemorySize = 0;
+    
+    if (this.persistentCache) {
+      const transaction = this.persistentCache.transaction(['cache'], 'readwrite');
+      const store = transaction.objectStore('cache');
+      store.clear();
+    }
+  }
+  
+  getStats(): CacheStats {
+    return {
+      memoryEntries: this.memoryCache.size,
+      memorySize: this.currentMemorySize,
+      maxMemorySize: this.maxMemorySize,
+      memoryUtilization: (this.currentMemorySize / this.maxMemorySize) * 100
+    };
+  }
+}
+
+interface CacheEntry {
+  key: string;
+  value: any;
+  timestamp: number;
+  expiry: number | null;
+  size: number;
+  priority: number;
+  compressed: boolean;
+}
+
+interface CacheOptions {
+  ttl?: number;
+  priority?: number;
+  persistent?: boolean;
+}
+
+interface CacheStats {
+  memoryEntries: number;
+  memorySize: number;
+  maxMemorySize: number;
+  memoryUtilization: number;
+}
+```
+
+### Q12: How do you implement comprehensive performance monitoring and analytics?
+
+**Answer:**
+Comprehensive performance monitoring requires real-time metrics collection, intelligent alerting, and detailed analytics for optimization insights.
+
+**Advanced Performance Monitoring System:**
+```typescript
+// Performance Metrics Collector
+class PerformanceMetricsCollector {
+  private metrics: Map<string, MetricData[]> = new Map();
+  private observers: Map<string, PerformanceObserver> = new Map();
+  private customMetrics: Map<string, CustomMetric> = new Map();
+  private alertThresholds: Map<string, AlertThreshold> = new Map();
+  private reportingInterval: number;
+  private reportingTimer: number | null = null;
+  
+  constructor(
+    private config: MonitoringConfig,
+    private reporter: MetricsReporter
+  ) {
+    this.reportingInterval = config.reportingInterval || 30000; // 30 seconds
+    this.setupCoreMetrics();
+    this.setupCustomObservers();
+    this.startReporting();
+  }
+  
+  private setupCoreMetrics(): void {
+    // Navigation Timing
+    if ('PerformanceObserver' in window) {
+      const navObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if (entry.entryType === 'navigation') {
+            this.recordNavigationMetrics(entry as PerformanceNavigationTiming);
+          }
+        }
+      });
+      navObserver.observe({ entryTypes: ['navigation'] });
+      this.observers.set('navigation', navObserver);
+      
+      // Resource Timing
+      const resourceObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          this.recordResourceMetrics(entry as PerformanceResourceTiming);
+        }
+      });
+      resourceObserver.observe({ entryTypes: ['resource'] });
+      this.observers.set('resource', resourceObserver);
+      
+      // Paint Timing
+      const paintObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          this.recordPaintMetrics(entry);
+        }
+      });
+      paintObserver.observe({ entryTypes: ['paint'] });
+      this.observers.set('paint', paintObserver);
+      
+      // Largest Contentful Paint
+      const lcpObserver = new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        const lastEntry = entries[entries.length - 1];
+        this.recordMetric('lcp', lastEntry.startTime, {
+          element: (lastEntry as any).element?.tagName,
+          url: (lastEntry as any).url
+        });
+      });
+      lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
+      this.observers.set('lcp', lcpObserver);
+      
+      // First Input Delay
+      const fidObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          this.recordMetric('fid', (entry as any).processingStart - entry.startTime, {
+            eventType: (entry as any).name
+          });
+        }
+      });
+      fidObserver.observe({ entryTypes: ['first-input'] });
+      this.observers.set('fid', fidObserver);
+      
+      // Layout Shift
+      const clsObserver = new PerformanceObserver((list) => {
+        let clsValue = 0;
+        for (const entry of list.getEntries()) {
+          if (!(entry as any).hadRecentInput) {
+            clsValue += (entry as any).value;
+          }
+        }
+        if (clsValue > 0) {
+          this.recordMetric('cls', clsValue);
+        }
+      });
+      clsObserver.observe({ entryTypes: ['layout-shift'] });
+      this.observers.set('cls', clsObserver);
+    }
+    
+    // Memory Usage
+    this.setupMemoryMonitoring();
+    
+    // Frame Rate
+    this.setupFrameRateMonitoring();
+    
+    // Network Information
+    this.setupNetworkMonitoring();
+  }
+  
+  private recordNavigationMetrics(entry: PerformanceNavigationTiming): void {
+    const metrics = {
+      dns: entry.domainLookupEnd - entry.domainLookupStart,
+      tcp: entry.connectEnd - entry.connectStart,
+      ssl: entry.secureConnectionStart > 0 ? entry.connectEnd - entry.secureConnectionStart : 0,
+      ttfb: entry.responseStart - entry.requestStart,
+      download: entry.responseEnd - entry.responseStart,
+      domParse: entry.domContentLoadedEventStart - entry.responseEnd,
+      domReady: entry.domContentLoadedEventEnd - entry.domContentLoadedEventStart,
+      loadComplete: entry.loadEventEnd - entry.loadEventStart,
+      totalTime: entry.loadEventEnd - entry.navigationStart
+    };
+    
+    Object.entries(metrics).forEach(([key, value]) => {
+      this.recordMetric(`navigation.${key}`, value);
+    });
+  }
+  
+  private recordResourceMetrics(entry: PerformanceResourceTiming): void {
+    const resourceType = this.getResourceType(entry.name);
+    const size = entry.transferSize || entry.encodedBodySize || 0;
+    const duration = entry.responseEnd - entry.startTime;
+    
+    this.recordMetric(`resource.${resourceType}.duration`, duration, {
+      url: entry.name,
+      size
+    });
+    
+    this.recordMetric(`resource.${resourceType}.size`, size, {
+      url: entry.name
+    });
+    
+    // Check for slow resources
+    if (duration > 1000) { // > 1 second
+      this.recordMetric('resource.slow', duration, {
+        url: entry.name,
+        type: resourceType,
+        size
+      });
+    }
+  }
+  
+  private recordPaintMetrics(entry: PerformanceEntry): void {
+    this.recordMetric(entry.name.replace('-', '_'), entry.startTime);
+  }
+  
+  private setupMemoryMonitoring(): void {
+    if ('memory' in performance) {
+      setInterval(() => {
+        const memory = (performance as any).memory;
+        this.recordMetric('memory.used', memory.usedJSHeapSize);
+        this.recordMetric('memory.total', memory.totalJSHeapSize);
+        this.recordMetric('memory.limit', memory.jsHeapSizeLimit);
+        this.recordMetric('memory.utilization', 
+          (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100
+        );
+      }, 5000);
+    }
+  }
+  
+  private setupFrameRateMonitoring(): void {
+    let lastTime = performance.now();
+    let frameCount = 0;
+    
+    const measureFrameRate = () => {
+      frameCount++;
+      const currentTime = performance.now();
+      
+      if (currentTime - lastTime >= 1000) {
+        const fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
+        this.recordMetric('fps', fps);
+        
+        frameCount = 0;
+        lastTime = currentTime;
+      }
+      
+      requestAnimationFrame(measureFrameRate);
+    };
+    
+    requestAnimationFrame(measureFrameRate);
+  }
+  
+  private setupNetworkMonitoring(): void {
+    if ('connection' in navigator) {
+      const connection = (navigator as any).connection;
+      
+      const recordNetworkInfo = () => {
+        this.recordMetric('network.downlink', connection.downlink);
+        this.recordMetric('network.rtt', connection.rtt);
+        this.recordMetric('network.effectiveType', connection.effectiveType, {
+          type: 'categorical'
+        });
+      };
+      
+      recordNetworkInfo();
+      connection.addEventListener('change', recordNetworkInfo);
+    }
+  }
+  
+  private setupCustomObservers(): void {
+    // User Timing
+    if ('PerformanceObserver' in window) {
+      const userTimingObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          this.recordMetric(`user.${entry.name}`, entry.duration || entry.startTime, {
+            type: entry.entryType
+          });
+        }
+      });
+      userTimingObserver.observe({ entryTypes: ['measure', 'mark'] });
+      this.observers.set('userTiming', userTimingObserver);
+    }
+  }
+  
+  recordMetric(name: string, value: number, metadata?: any): void {
+    const timestamp = Date.now();
+    const metric: MetricData = {
+      name,
+      value,
+      timestamp,
+      metadata
+    };
+    
+    if (!this.metrics.has(name)) {
+      this.metrics.set(name, []);
+    }
+    
+    const metricArray = this.metrics.get(name)!;
+    metricArray.push(metric);
+    
+    // Keep only last 1000 entries per metric
+    if (metricArray.length > 1000) {
+      metricArray.shift();
+    }
+    
+    // Check alert thresholds
+    this.checkAlertThresholds(name, value, metadata);
+  }
+  
+  recordCustomMetric(name: string, value: number, type: MetricType = 'gauge'): void {
+    const customMetric: CustomMetric = {
+      name,
+      value,
+      type,
+      timestamp: Date.now()
+    };
+    
+    this.customMetrics.set(name, customMetric);
+    this.recordMetric(`custom.${name}`, value);
+  }
+  
+  startTimer(name: string): () => void {
+    const startTime = performance.now();
+    return () => {
+      const duration = performance.now() - startTime;
+      this.recordMetric(`timer.${name}`, duration);
+    };
+  }
+  
+  setAlertThreshold(metricName: string, threshold: AlertThreshold): void {
+    this.alertThresholds.set(metricName, threshold);
+  }
+  
+  private checkAlertThresholds(name: string, value: number, metadata?: any): void {
+    const threshold = this.alertThresholds.get(name);
+    if (!threshold) return;
+    
+    let triggered = false;
+    let severity: 'warning' | 'critical' = 'warning';
+    
+    if (threshold.critical !== undefined) {
+      if (threshold.operator === 'gt' && value > threshold.critical) {
+        triggered = true;
+        severity = 'critical';
+      } else if (threshold.operator === 'lt' && value < threshold.critical) {
+        triggered = true;
+        severity = 'critical';
+      }
+    }
+    
+    if (!triggered && threshold.warning !== undefined) {
+      if (threshold.operator === 'gt' && value > threshold.warning) {
+        triggered = true;
+        severity = 'warning';
+      } else if (threshold.operator === 'lt' && value < threshold.warning) {
+        triggered = true;
+        severity = 'warning';
+      }
+    }
+    
+    if (triggered) {
+      this.reporter.reportAlert({
+        metric: name,
+        value,
+        threshold: threshold[severity]!,
+        severity,
+        timestamp: Date.now(),
+        metadata
+      });
+    }
+  }
+  
+  private startReporting(): void {
+    this.reportingTimer = window.setInterval(() => {
+      this.generateReport();
+    }, this.reportingInterval);
+  }
+  
+  private generateReport(): void {
+    const report: PerformanceReport = {
+      timestamp: Date.now(),
+      metrics: this.aggregateMetrics(),
+      customMetrics: Array.from(this.customMetrics.values()),
+      summary: this.generateSummary()
+    };
+    
+    this.reporter.sendReport(report);
+  }
+  
+  private aggregateMetrics(): AggregatedMetrics {
+    const aggregated: AggregatedMetrics = {};
+    
+    for (const [name, values] of this.metrics) {
+      if (values.length === 0) continue;
+      
+      const numericValues = values.map(v => v.value).filter(v => typeof v === 'number');
+      if (numericValues.length === 0) continue;
+      
+      aggregated[name] = {
+        count: numericValues.length,
+        min: Math.min(...numericValues),
+        max: Math.max(...numericValues),
+        avg: numericValues.reduce((a, b) => a + b, 0) / numericValues.length,
+        p50: this.percentile(numericValues, 0.5),
+        p90: this.percentile(numericValues, 0.9),
+        p95: this.percentile(numericValues, 0.95),
+        p99: this.percentile(numericValues, 0.99)
+      };
+    }
+    
+    return aggregated;
+  }
+  
+  private percentile(values: number[], p: number): number {
+    const sorted = values.slice().sort((a, b) => a - b);
+    const index = Math.ceil(sorted.length * p) - 1;
+    return sorted[Math.max(0, index)];
+  }
+  
+  private generateSummary(): PerformanceSummary {
+    const metrics = this.aggregateMetrics();
+    
+    return {
+      coreWebVitals: {
+        lcp: metrics['lcp']?.p75 || 0,
+        fid: metrics['fid']?.p75 || 0,
+        cls: metrics['cls']?.avg || 0
+      },
+      loadTimes: {
+        ttfb: metrics['navigation.ttfb']?.avg || 0,
+        domReady: metrics['navigation.domReady']?.avg || 0,
+        loadComplete: metrics['navigation.loadComplete']?.avg || 0
+      },
+      resources: {
+        totalRequests: metrics['resource.total']?.count || 0,
+        slowRequests: metrics['resource.slow']?.count || 0,
+        averageSize: metrics['resource.size']?.avg || 0
+      },
+      performance: {
+        averageFPS: metrics['fps']?.avg || 0,
+        memoryUsage: metrics['memory.utilization']?.avg || 0
+      }
+    };
+  }
+  
+  private getResourceType(url: string): string {
+    const extension = url.split('.').pop()?.toLowerCase();
+    
+    if (['js', 'mjs'].includes(extension || '')) return 'script';
+    if (['css'].includes(extension || '')) return 'stylesheet';
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(extension || '')) return 'image';
+    if (['woff', 'woff2', 'ttf', 'otf'].includes(extension || '')) return 'font';
+    if (['mp4', 'webm', 'ogg'].includes(extension || '')) return 'video';
+    if (['mp3', 'wav', 'ogg'].includes(extension || '')) return 'audio';
+    
+    return 'other';
+  }
+  
+  getMetrics(metricName?: string): MetricData[] {
+    if (metricName) {
+      return this.metrics.get(metricName) || [];
+    }
+    
+    const allMetrics: MetricData[] = [];
+    for (const metrics of this.metrics.values()) {
+      allMetrics.push(...metrics);
+    }
+    return allMetrics;
+  }
+  
+  destroy(): void {
+    if (this.reportingTimer) {
+      clearInterval(this.reportingTimer);
+    }
+    
+    for (const observer of this.observers.values()) {
+      observer.disconnect();
+    }
+    
+    this.metrics.clear();
+    this.customMetrics.clear();
+    this.observers.clear();
+  }
+}
+
+// Interfaces
+interface MetricData {
+  name: string;
+  value: number;
+  timestamp: number;
+  metadata?: any;
+}
+
+interface CustomMetric {
+  name: string;
+  value: number;
+  type: MetricType;
+  timestamp: number;
+}
+
+type MetricType = 'counter' | 'gauge' | 'histogram' | 'timer';
+
+interface AlertThreshold {
+  warning?: number;
+  critical?: number;
+  operator: 'gt' | 'lt';
+}
+
+interface MonitoringConfig {
+  reportingInterval?: number;
+  enableResourceTiming?: boolean;
+  enableUserTiming?: boolean;
+  enableMemoryMonitoring?: boolean;
+  enableNetworkMonitoring?: boolean;
+}
+
+interface AggregatedMetrics {
+  [key: string]: {
+    count: number;
+    min: number;
+    max: number;
+    avg: number;
+    p50: number;
+    p90: number;
+    p95: number;
+    p99: number;
+  };
+}
+
+interface PerformanceReport {
+  timestamp: number;
+  metrics: AggregatedMetrics;
+  customMetrics: CustomMetric[];
+  summary: PerformanceSummary;
+}
+
+interface PerformanceSummary {
+  coreWebVitals: {
+    lcp: number;
+    fid: number;
+    cls: number;
+  };
+  loadTimes: {
+    ttfb: number;
+    domReady: number;
+    loadComplete: number;
+  };
+  resources: {
+    totalRequests: number;
+    slowRequests: number;
+    averageSize: number;
+  };
+  performance: {
+    averageFPS: number;
+    memoryUsage: number;
+  };
+}
+
+interface Alert {
+  metric: string;
+  value: number;
+  threshold: number;
+  severity: 'warning' | 'critical';
+  timestamp: number;
+  metadata?: any;
+}
+
+// Metrics Reporter
+class MetricsReporter {
+  constructor(
+    private endpoint: string,
+    private apiKey: string
+  ) {}
+  
+  async sendReport(report: PerformanceReport): Promise<void> {
+    try {
+      await fetch(this.endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify(report)
+      });
+    } catch (error) {
+      console.error('Failed to send performance report:', error);
+    }
+  }
+  
+  async reportAlert(alert: Alert): Promise<void> {
+    try {
+      await fetch(`${this.endpoint}/alerts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify(alert)
+      });
+    } catch (error) {
+      console.error('Failed to send alert:', error);
+    }
+  }
+}
+
+// Usage Example
+const performanceMonitor = new PerformanceMetricsCollector(
+  {
+    reportingInterval: 30000,
+    enableResourceTiming: true,
+    enableUserTiming: true,
+    enableMemoryMonitoring: true,
+    enableNetworkMonitoring: true
+  },
+  new MetricsReporter('/api/metrics', 'your-api-key')
+);
+
+// Set alert thresholds
+performanceMonitor.setAlertThreshold('lcp', {
+  warning: 2500,
+  critical: 4000,
+  operator: 'gt'
+});
+
+performanceMonitor.setAlertThreshold('fid', {
+  warning: 100,
+  critical: 300,
+  operator: 'gt'
+});
+
+performanceMonitor.setAlertThreshold('cls', {
+  warning: 0.1,
+  critical: 0.25,
+  operator: 'gt'
+});
+
+// Record custom metrics
+const apiTimer = performanceMonitor.startTimer('api.user.fetch');
+// ... API call
+apiTimer();
+
+performanceMonitor.recordCustomMetric('user.actions', 1, 'counter');
+```
+
+This advanced performance guide now includes sophisticated resource management, virtual scrolling, intelligent caching strategies, and comprehensive performance monitoring with real-time analytics and alerting capabilities.

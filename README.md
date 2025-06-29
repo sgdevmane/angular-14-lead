@@ -67,10 +67,11 @@ angular-14-lead/
 
 ### Prerequisites
 
+- **Docker & Docker Compose** (recommended for production deployment)
 - A modern web browser (Chrome, Firefox, Safari, Edge)
 - Text editor (VS Code, Sublime Text, etc.) for editing
 
-### Quick Start
+### Quick Start with Docker (Recommended)
 
 1. **Clone the repository**:
    ```bash
@@ -78,7 +79,35 @@ angular-14-lead/
    cd angular-14-lead
    ```
 
-2. **Open HTML files directly in browser**:
+2. **Run with Docker Compose** (easiest method):
+   ```bash
+   # Production mode (optimized for performance)
+   docker-compose up -d
+   # Access at: http://localhost:8080
+   
+   # Development mode (with live reload)
+   docker-compose --profile development up -d interview-guide-dev
+   # Access at: http://localhost:3000
+   ```
+
+3. **Or use the convenience scripts**:
+   ```bash
+   # Build and run production
+   ./scripts/run.sh production
+   
+   # Build and run development
+   ./scripts/run.sh development
+   
+   # Build only
+   ./scripts/build.sh production --clean
+   
+   # Stop all containers
+   ./scripts/run.sh --stop
+   ```
+
+### Alternative: Local Development Server
+
+1. **Open HTML files directly in browser**:
    ```bash
    # For Angular questions
    open angular/angular-questions.html
@@ -87,7 +116,7 @@ angular-14-lead/
    open javascript/javascript-questions.html
    ```
 
-3. **Or serve with a local server** (recommended):
+2. **Or serve with a local server**:
    ```bash
    # Using Python
    python -m http.server 8000
@@ -102,6 +131,239 @@ angular-14-lead/
    Then navigate to:
    - Angular: `http://localhost:8000/angular/angular-questions.html`
    - JavaScript: `http://localhost:8000/javascript/javascript-questions.html`
+
+## 🐳 Docker Deployment
+
+### Docker Architecture
+
+The application uses a multi-stage Docker build with Nginx for optimal performance:
+
+- **Stage 1**: Node.js builder (for future extensibility)
+- **Stage 2**: Nginx production server with optimized configuration
+
+### Configuration Files
+
+```
+docker/
+├── nginx-prod.conf     # Production Nginx configuration
+└── nginx-dev.conf      # Development Nginx configuration
+```
+
+### Environment-Specific Configurations
+
+#### Production Configuration (`nginx-prod.conf`)
+- **Optimized for performance**: Gzip compression, caching headers
+- **Security headers**: XSS protection, content type options, CSP
+- **Static asset caching**: 1-year cache for JS/CSS/images
+- **Health check endpoint**: `/health`
+- **API info endpoint**: `/api/info`
+
+#### Development Configuration (`nginx-dev.conf`)
+- **Development-friendly**: No caching, CORS enabled
+- **Live reload support**: Disabled sendfile for file watching
+- **Debug logging**: Detailed error and access logs
+- **Dev info endpoint**: `/dev-info`
+
+### Docker Commands
+
+#### Using Docker Compose (Recommended)
+
+```bash
+# Production deployment
+docker-compose up -d
+
+# Development with live reload
+docker-compose --profile development up -d interview-guide-dev
+
+# With monitoring stack
+docker-compose --profile monitoring up -d
+
+# With Traefik reverse proxy
+docker-compose --profile traefik up -d
+
+# Full stack (dev + monitoring + traefik)
+docker-compose --profile development --profile monitoring --profile traefik up -d
+
+# View logs
+docker-compose logs -f interview-guide
+
+# Stop all services
+docker-compose down
+```
+
+#### Using Docker Build Directly
+
+```bash
+# Build production image
+docker build --build-arg NGINX_CONFIG=nginx-prod.conf -t angular-interview-guide:latest .
+
+# Build development image
+docker build --build-arg NGINX_CONFIG=nginx-dev.conf -t angular-interview-guide:dev .
+
+# Run production container
+docker run -d --name interview-guide -p 8080:80 angular-interview-guide:latest
+
+# Run development container
+docker run -d --name interview-guide-dev -p 3000:80 angular-interview-guide:dev
+```
+
+### Convenience Scripts
+
+#### Build Script (`./scripts/build.sh`)
+
+```bash
+# Build production image
+./scripts/build.sh production
+
+# Build development image
+./scripts/build.sh development
+
+# Clean build with run
+./scripts/build.sh production --clean --run
+
+# Build and push to registry
+./scripts/build.sh production --push
+```
+
+#### Run Script (`./scripts/run.sh`)
+
+```bash
+# Run production (detached)
+./scripts/run.sh production
+
+# Run development (detached)
+./scripts/run.sh development
+
+# Run in foreground
+./scripts/run.sh --foreground
+
+# Rebuild and run
+./scripts/run.sh --rebuild
+
+# Clean rebuild
+./scripts/run.sh --clean
+
+# Stop all containers
+./scripts/run.sh --stop
+
+# Show logs
+./scripts/run.sh --logs
+```
+
+### Health Monitoring
+
+#### Health Check Endpoints
+
+- **Production**: `http://localhost:8080/health`
+- **Development**: `http://localhost:3000/health`
+- **API Info**: `http://localhost:8080/api/info`
+- **Dev Info**: `http://localhost:3000/dev-info`
+
+#### Docker Health Checks
+
+```bash
+# Check container health
+docker ps
+
+# View health check logs
+docker inspect interview-guide --format='{{.State.Health}}'
+
+# Manual health check
+curl -f http://localhost:8080/health
+```
+
+### Production Deployment
+
+#### Cloud Deployment
+
+```bash
+# Build for production
+docker build --build-arg NGINX_CONFIG=nginx-prod.conf -t your-registry/angular-interview-guide:latest .
+
+# Push to registry
+docker push your-registry/angular-interview-guide:latest
+
+# Deploy to cloud (example for AWS ECS, GCP Cloud Run, etc.)
+# Follow your cloud provider's container deployment guide
+```
+
+#### Kubernetes Deployment
+
+```yaml
+# Example Kubernetes deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: angular-interview-guide
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: angular-interview-guide
+  template:
+    metadata:
+      labels:
+        app: angular-interview-guide
+    spec:
+      containers:
+      - name: app
+        image: your-registry/angular-interview-guide:latest
+        ports:
+        - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+```
+
+### Troubleshooting
+
+#### Common Issues
+
+1. **"Server isn't available" error**:
+   ```bash
+   # Check if container is running
+   docker ps
+   
+   # Check container logs
+   docker logs interview-guide
+   
+   # Restart container
+   docker restart interview-guide
+   ```
+
+2. **Port conflicts**:
+   ```bash
+   # Use different ports
+   docker run -p 8081:80 angular-interview-guide:latest
+   ```
+
+3. **Configuration issues**:
+   ```bash
+   # Rebuild with clean slate
+   ./scripts/run.sh --clean
+   ```
+
+4. **Permission issues**:
+   ```bash
+   # Make scripts executable
+   chmod +x scripts/*.sh
+   ```
+
+#### Debug Mode
+
+```bash
+# Run in development mode for debugging
+docker-compose --profile development up interview-guide-dev
+
+# Check nginx configuration
+docker exec interview-guide nginx -t
+
+# View nginx error logs
+docker exec interview-guide tail -f /var/log/nginx/error.log
+```
 
 ## 📚 Content Coverage
 

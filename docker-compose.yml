@@ -1,12 +1,13 @@
 version: '3.8'
 
 services:
-  # Main application service
+  # Main application service (Production)
   interview-guide:
     build:
       context: .
       dockerfile: Dockerfile
-      target: production
+      args:
+        NGINX_CONFIG: nginx-prod.conf
     container_name: angular-interview-guide
     ports:
       - "8080:80"
@@ -19,6 +20,7 @@ services:
       - ./javascript:/usr/share/nginx/html/javascript:ro
       - ./css:/usr/share/nginx/html/css:ro
       - ./html:/usr/share/nginx/html/html:ro
+      - ./typescript:/usr/share/nginx/html/typescript:ro
       - ./ngrx:/usr/share/nginx/html/ngrx:ro
       - ./performance:/usr/share/nginx/html/performance:ro
       - ./security:/usr/share/nginx/html/security:ro

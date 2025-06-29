@@ -105,6 +105,1294 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
       <h3>{{ user.name }}</h3>
       <p>{{ user.email }}</p>
       <button (click)="onEdit()">Edit</button>
+    </div>
+  `,
+  styleUrls: ['./user-card.component.css']
+})
+export class UserCardComponent {
+  @Input() user!: User;
+  @Output() editUser = new EventEmitter<User>();
+
+  onEdit() {
+    this.editUser.emit(this.user);
+  }
+}
+```
+
+**3. Services**
+```typescript
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class UserService {
+  constructor(private http: HttpClient) {}
+
+  getUsers(): Observable<User[]> {
+    return this.http.get<User[]>('/api/users');
+  }
+}
+```
+
+**4. Directives**
+```typescript
+import { Directive, ElementRef, HostListener } from '@angular/core';
+
+@Directive({
+  selector: '[appHighlight]'
+})
+export class HighlightDirective {
+  constructor(private el: ElementRef) {}
+
+  @HostListener('mouseenter') onMouseEnter() {
+    this.el.nativeElement.style.backgroundColor = 'yellow';
+  }
+}
+```
+
+**5. Pipes**
+```typescript
+import { Pipe, PipeTransform } from '@angular/core';
+
+@Pipe({
+  name: 'capitalize'
+})
+export class CapitalizePipe implements PipeTransform {
+  transform(value: string): string {
+    return value.charAt(0).toUpperCase() + value.slice(1);
+  }
+}
+```
+
+---
+
+### Q3: What are Angular Standalone Components and how do they work?
+**Difficulty: Medium**
+
+**Answer:**
+Standalone Components (Angular 14+) allow you to create components without NgModules, simplifying the application structure.
+
+```typescript
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { UserService } from './user.service';
+
+@Component({
+  selector: 'app-user-list',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  providers: [UserService],
+  template: `
+    <div class="user-list">
+      <input [(ngModel)]="searchTerm" placeholder="Search users...">
+      <div *ngFor="let user of filteredUsers" class="user-item">
+        {{ user.name }}
+      </div>
+    </div>
+  `
+})
+export class UserListComponent {
+  searchTerm = '';
+  users: User[] = [];
+  
+  get filteredUsers() {
+    return this.users.filter(user => 
+      user.name.toLowerCase().includes(this.searchTerm.toLowerCase())
+    );
+  }
+}
+```
+
+**Bootstrapping Standalone Components:**
+```typescript
+// main.ts
+import { bootstrapApplication } from '@angular/platform-browser';
+import { AppComponent } from './app/app.component';
+import { provideRouter } from '@angular/router';
+import { routes } from './app/app.routes';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideRouter(routes),
+    // other providers
+  ]
+});
+```
+
+**Benefits:**
+- Reduced boilerplate code
+- Better tree-shaking
+- Simplified testing
+- Easier lazy loading
+- More intuitive for developers coming from other frameworks
+
+---
+
+### Q4: Explain Angular Change Detection and OnPush strategy.
+**Difficulty: Hard**
+
+**Answer:**
+Angular's change detection is the mechanism that keeps the view in sync with the component state.
+
+**Default Change Detection:**
+```typescript
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-counter',
+  template: `
+    <div>
+      <p>Count: {{ count }}</p>
+      <button (click)="increment()">Increment</button>
+      <app-child [data]="childData"></app-child>
+    </div>
+  `
+})
+export class CounterComponent {
+  count = 0;
+  childData = { value: 0 };
+
+  increment() {
+    this.count++;
+    // This will trigger change detection for entire component tree
+    this.childData.value++; // Mutating object - not recommended
+  }
+}
+```
+
+**OnPush Change Detection:**
+```typescript
+import { Component, ChangeDetectionStrategy, Input, ChangeDetectorRef } from '@angular/core';
+
+@Component({
+  selector: 'app-optimized-child',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div>
+      <p>Child Value: {{ data.value }}</p>
+      <p>Internal Count: {{ internalCount }}</p>
+      <button (click)="updateInternal()">Update Internal</button>
+    </div>
+  `
+})
+export class OptimizedChildComponent {
+  @Input() data!: { value: number };
+  internalCount = 0;
+
+  constructor(private cdr: ChangeDetectorRef) {}
+
+  updateInternal() {
+    this.internalCount++;
+    // Manually trigger change detection
+    this.cdr.markForCheck();
+  }
+}
+```
+
+**Best Practices for OnPush:**
+```typescript
+// Parent component with OnPush
+@Component({
+  selector: 'app-parent',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <app-child [data]="childData$ | async"></app-child>
+  `
+})
+export class ParentComponent {
+  private dataSubject = new BehaviorSubject({ value: 0 });
+  childData$ = this.dataSubject.asObservable();
+
+  updateData() {
+    // Create new object reference
+    this.dataSubject.next({ value: this.dataSubject.value.value + 1 });
+  }
+}
+```
+
+**Change Detection Triggers:**
+- DOM events (click, keyup, etc.)
+- HTTP requests
+- Timers (setTimeout, setInterval)
+- Promises and Observables
+
+---
+
+### Q5: How do you implement lazy loading in Angular?
+**Difficulty: Medium**
+
+**Answer:**
+Lazy loading allows you to load feature modules only when needed, improving initial load time.
+
+**Route Configuration:**
+```typescript
+// app-routing.module.ts
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { HomeComponent } from './home/home.component';
+import { AuthGuard } from './guards/auth.guard';
+
+const routes: Routes = [
+  { path: '', component: HomeComponent },
+  {
+    path: 'users',
+    loadChildren: () => import('./users/users.module').then(m => m.UsersModule),
+    canLoad: [AuthGuard]
+  },
+  {
+    path: 'admin',
+    loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule),
+    canLoad: [AuthGuard],
+    data: { roles: ['admin'] }
+  },
+  {
+    path: 'products',
+    loadComponent: () => import('./products/product-list.component')
+      .then(c => c.ProductListComponent) // Standalone component lazy loading
+  }
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes, {
+    preloadingStrategy: PreloadAllModules // Optional: preload after initial load
+  })],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+```
+
+**Feature Module:**
+```typescript
+// users/users.module.ts
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { UsersRoutingModule } from './users-routing.module';
+import { UserListComponent } from './user-list/user-list.component';
+import { UserDetailComponent } from './user-detail/user-detail.component';
+
+@NgModule({
+  declarations: [
+    UserListComponent,
+    UserDetailComponent
+  ],
+  imports: [
+    CommonModule,
+    UsersRoutingModule
+  ]
+})
+export class UsersModule { }
+```
+
+**Feature Module Routing:**
+```typescript
+// users/users-routing.module.ts
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { UserListComponent } from './user-list/user-list.component';
+import { UserDetailComponent } from './user-detail/user-detail.component';
+
+const routes: Routes = [
+  { path: '', component: UserListComponent },
+  { path: ':id', component: UserDetailComponent }
+];
+
+@NgModule({
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule]
+})
+export class UsersRoutingModule { }
+```
+
+**Custom Preloading Strategy:**
+```typescript
+import { Injectable } from '@angular/core';
+import { PreloadingStrategy, Route } from '@angular/router';
+import { Observable, of } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class CustomPreloadingStrategy implements PreloadingStrategy {
+  preload(route: Route, load: () => Observable<any>): Observable<any> {
+    // Only preload routes marked with data.preload = true
+    if (route.data && route.data['preload']) {
+      return load();
+    }
+    return of(null);
+  }
+}
+```
+
+---
+
+### Q6: Explain RxJS operators commonly used in Angular applications.
+**Difficulty: Hard**
+
+**Answer:**
+RxJS operators are essential for handling asynchronous data streams in Angular.
+
+**Creation Operators:**
+```typescript
+import { of, from, interval, fromEvent } from 'rxjs';
+import { ajax } from 'rxjs/ajax';
+
+// of - creates observable from values
+const numbers$ = of(1, 2, 3, 4, 5);
+
+// from - creates observable from array, promise, or iterable
+const fromArray$ = from([1, 2, 3]);
+const fromPromise$ = from(fetch('/api/data'));
+
+// interval - emits sequential numbers
+const timer$ = interval(1000);
+
+// fromEvent - creates observable from DOM events
+const clicks$ = fromEvent(document, 'click');
+```
+
+**Transformation Operators:**
+```typescript
+import { map, switchMap, mergeMap, concatMap, exhaustMap } from 'rxjs/operators';
+
+@Injectable()
+export class UserService {
+  constructor(private http: HttpClient) {}
+
+  // map - transforms emitted values
+  getUserNames(): Observable<string[]> {
+    return this.http.get<User[]>('/api/users')
+      .pipe(
+        map(users => users.map(user => user.name))
+      );
+  }
+
+  // switchMap - switches to new observable, cancels previous
+  searchUsers(searchTerm$: Observable<string>): Observable<User[]> {
+    return searchTerm$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(term => 
+        term ? this.http.get<User[]>(`/api/users?search=${term}`) : of([])
+      )
+    );
+  }
+
+  // mergeMap - merges multiple observables
+  getUsersWithDetails(): Observable<UserWithDetails[]> {
+    return this.http.get<User[]>('/api/users').pipe(
+      mergeMap(users => 
+        users.map(user => 
+          this.http.get<UserDetails>(`/api/users/${user.id}/details`).pipe(
+            map(details => ({ ...user, details }))
+          )
+        )
+      )
+    );
+  }
+}
+```
+
+**Filtering Operators:**
+```typescript
+import { filter, take, takeUntil, distinctUntilChanged, debounceTime } from 'rxjs/operators';
+
+@Component({
+  selector: 'app-search',
+  template: `
+    <input #searchInput placeholder="Search...">
+    <div *ngFor="let result of searchResults$ | async">
+      {{ result.name }}
+    </div>
+  `
+})
+export class SearchComponent implements OnInit, OnDestroy {
+  @ViewChild('searchInput') searchInput!: ElementRef;
+  searchResults$!: Observable<SearchResult[]>;
+  private destroy$ = new Subject<void>();
+
+  constructor(private searchService: SearchService) {}
+
+  ngOnInit() {
+    this.searchResults$ = fromEvent(this.searchInput.nativeElement, 'input')
+      .pipe(
+        map((event: any) => event.target.value),
+        filter(text => text.length > 2), // Only search if more than 2 characters
+        debounceTime(300), // Wait 300ms after user stops typing
+        distinctUntilChanged(), // Only search if term changed
+        switchMap(term => this.searchService.search(term)),
+        takeUntil(this.destroy$) // Unsubscribe on component destroy
+      );
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+}
+```
+
+**Error Handling Operators:**
+```typescript
+import { catchError, retry, retryWhen, delay } from 'rxjs/operators';
+import { throwError, timer } from 'rxjs';
+
+@Injectable()
+export class ApiService {
+  constructor(private http: HttpClient) {}
+
+  getData(): Observable<any> {
+    return this.http.get('/api/data').pipe(
+      retry(3), // Retry up to 3 times
+      catchError(error => {
+        console.error('API Error:', error);
+        return throwError(() => new Error('Failed to load data'));
+      })
+    );
+  }
+
+  getDataWithRetryDelay(): Observable<any> {
+    return this.http.get('/api/data').pipe(
+      retryWhen(errors => 
+        errors.pipe(
+          delay(1000), // Wait 1 second before retry
+          take(3) // Maximum 3 retries
+        )
+      ),
+      catchError(error => of([])) // Return empty array on final failure
+    );
+  }
+}
+```
+
+---
+
+### Q7: How do you implement micro-frontends with Angular?
+**Difficulty: Hard**
+
+**Answer:**
+Micro-frontends allow you to break down a large application into smaller, independently deployable pieces.
+
+**Module Federation Setup:**
+```javascript
+// webpack.config.js for shell application
+const ModuleFederationPlugin = require('@module-federation/webpack');
+
+module.exports = {
+  plugins: [
+    new ModuleFederationPlugin({
+      name: 'shell',
+      remotes: {
+        userMfe: 'userMfe@http://localhost:4201/remoteEntry.js',
+        productMfe: 'productMfe@http://localhost:4202/remoteEntry.js'
+      },
+      shared: {
+        '@angular/core': { singleton: true, strictVersion: true },
+        '@angular/common': { singleton: true, strictVersion: true },
+        '@angular/router': { singleton: true, strictVersion: true }
+      }
+    })
+  ]
+};
+```
+
+**Remote Module Configuration:**
+```javascript
+// webpack.config.js for user micro-frontend
+const ModuleFederationPlugin = require('@module-federation/webpack');
+
+module.exports = {
+  plugins: [
+    new ModuleFederationPlugin({
+      name: 'userMfe',
+      filename: 'remoteEntry.js',
+      exposes: {
+        './UserModule': './src/app/user/user.module.ts'
+      },
+      shared: {
+        '@angular/core': { singleton: true, strictVersion: true },
+        '@angular/common': { singleton: true, strictVersion: true }
+      }
+    })
+  ]
+};
+```
+
+**Dynamic Loading in Shell:**
+```typescript
+// app-routing.module.ts
+import { loadRemoteModule } from '@angular-architects/module-federation';
+
+const routes: Routes = [
+  {
+    path: 'users',
+    loadChildren: () => loadRemoteModule({
+      type: 'module',
+      remoteEntry: 'http://localhost:4201/remoteEntry.js',
+      exposedModule: './UserModule'
+    }).then(m => m.UserModule)
+  },
+  {
+    path: 'products',
+    loadChildren: () => loadRemoteModule({
+      type: 'module',
+      remoteEntry: 'http://localhost:4202/remoteEntry.js',
+      exposedModule: './ProductModule'
+    }).then(m => m.ProductModule)
+  }
+];
+```
+
+**Shared Services Between Micro-frontends:**
+```typescript
+// shared-state.service.ts
+import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class SharedStateService {
+  private userSubject = new BehaviorSubject<User | null>(null);
+  user$ = this.userSubject.asObservable();
+
+  setUser(user: User) {
+    this.userSubject.next(user);
+    // Broadcast to other micro-frontends
+    window.postMessage({ type: 'USER_UPDATED', user }, '*');
+  }
+
+  constructor() {
+    // Listen for messages from other micro-frontends
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'USER_UPDATED') {
+        this.userSubject.next(event.data.user);
+      }
+    });
+  }
+}
+```
+
+**Communication Between Micro-frontends:**
+```typescript
+// event-bus.service.ts
+import { Injectable } from '@angular/core';
+import { Subject, Observable } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+
+interface MfeEvent {
+  type: string;
+  payload: any;
+  source: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class EventBusService {
+  private eventSubject = new Subject<MfeEvent>();
+
+  emit(type: string, payload: any, source: string) {
+    this.eventSubject.next({ type, payload, source });
+  }
+
+  on(eventType: string): Observable<any> {
+    return this.eventSubject.pipe(
+      filter(event => event.type === eventType),
+      map(event => event.payload)
+    );
+  }
+}
+```
+
+---
+
+### Q8: Explain Angular Universal and Server-Side Rendering (SSR).
+**Difficulty: Medium**
+
+**Answer:**
+Angular Universal enables server-side rendering, improving SEO and initial page load performance.
+
+**Setup Angular Universal:**
+```bash
+ng add @nguniversal/express-engine
+```
+
+**Server Configuration:**
+```typescript
+// server.ts
+import { ngExpressEngine } from '@nguniversal/express-engine';
+import { APP_BASE_HREF } from '@angular/common';
+import { existsSync } from 'fs';
+import express from 'express';
+import { AppServerModule } from './src/main.server';
+
+const app = express();
+const PORT = process.env['PORT'] || 4000;
+const DIST_FOLDER = join(process.cwd(), 'dist');
+
+// Set the engine
+app.engine('html', ngExpressEngine({
+  bootstrap: AppServerModule,
+}));
+
+app.set('view engine', 'html');
+app.set('views', DIST_FOLDER);
+
+// Serve static files
+app.get('*.*', express.static(DIST_FOLDER));
+
+// All regular routes use the Universal engine
+app.get('*', (req, res) => {
+  res.render('index', { req, providers: [{ provide: APP_BASE_HREF, useValue: req.baseUrl }] });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
+```
+
+**Platform-Specific Code:**
+```typescript
+import { Component, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser, isPlatformServer } from '@angular/common';
+
+@Component({
+  selector: 'app-platform-specific',
+  template: `
+    <div>
+      <p>Platform: {{ platform }}</p>
+      <div *ngIf="isBrowser">
+        <p>Browser-only content</p>
+        <canvas #canvas></canvas>
+      </div>
+    </div>
+  `
+})
+export class PlatformSpecificComponent {
+  platform: string;
+  isBrowser: boolean;
+
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.platform = this.isBrowser ? 'Browser' : 'Server';
+  }
+
+  ngOnInit() {
+    if (this.isBrowser) {
+      // Browser-only code
+      console.log('Running in browser');
+      localStorage.setItem('visited', 'true');
+    }
+  }
+}
+```
+
+**SEO Optimization:**
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { Meta, Title } from '@angular/platform-browser';
+import { ActivatedRoute } from '@angular/router';
+
+@Component({
+  selector: 'app-product-detail',
+  template: `
+    <div *ngIf="product">
+      <h1>{{ product.name }}</h1>
+      <p>{{ product.description }}</p>
+      <img [src]="product.imageUrl" [alt]="product.name">
+    </div>
+  `
+})
+export class ProductDetailComponent implements OnInit {
+  product: Product | null = null;
+
+  constructor(
+    private meta: Meta,
+    private title: Title,
+    private route: ActivatedRoute,
+    private productService: ProductService
+  ) {}
+
+  ngOnInit() {
+    const productId = this.route.snapshot.paramMap.get('id');
+    if (productId) {
+      this.productService.getProduct(productId).subscribe(product => {
+        this.product = product;
+        this.updateSEO(product);
+      });
+    }
+  }
+
+  private updateSEO(product: Product) {
+    this.title.setTitle(`${product.name} - Our Store`);
+    
+    this.meta.updateTag({ name: 'description', content: product.description });
+    this.meta.updateTag({ name: 'keywords', content: product.tags.join(', ') });
+    
+    // Open Graph tags
+    this.meta.updateTag({ property: 'og:title', content: product.name });
+    this.meta.updateTag({ property: 'og:description', content: product.description });
+    this.meta.updateTag({ property: 'og:image', content: product.imageUrl });
+    
+    // Twitter Card tags
+    this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
+    this.meta.updateTag({ name: 'twitter:title', content: product.name });
+    this.meta.updateTag({ name: 'twitter:description', content: product.description });
+  }
+}
+```
+
+---
+
+### Q9: How do you implement advanced form validation in Angular?
+**Difficulty: Medium**
+
+**Answer:**
+Angular provides powerful form validation capabilities through reactive forms and custom validators.
+
+**Custom Validators:**
+```typescript
+import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+
+// Synchronous custom validator
+export function emailDomainValidator(allowedDomain: string): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    if (!control.value) return null;
+    
+    const email = control.value;
+    const domain = email.substring(email.lastIndexOf('@') + 1);
+    
+    if (domain.toLowerCase() === allowedDomain.toLowerCase()) {
+      return null;
+    }
+    
+    return { emailDomain: { requiredDomain: allowedDomain, actualDomain: domain } };
+  };
+}
+
+// Asynchronous validator
+export function uniqueEmailValidator(userService: UserService): AsyncValidatorFn {
+  return (control: AbstractControl): Observable<ValidationErrors | null> => {
+    if (!control.value) {
+      return of(null);
+    }
+    
+    return userService.checkEmailExists(control.value).pipe(
+      map(exists => exists ? { emailExists: true } : null),
+      catchError(() => of(null))
+    );
+  };
+}
+
+// Cross-field validator
+export function passwordMatchValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+  const password = control.get('password');
+  const confirmPassword = control.get('confirmPassword');
+  
+  if (!password || !confirmPassword) {
+    return null;
+  }
+  
+  return password.value === confirmPassword.value ? null : { passwordMismatch: true };
+};
+```
+
+**Complex Form Implementation:**
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+
+@Component({
+  selector: 'app-user-registration',
+  template: `
+    <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()">
+      <!-- Personal Information -->
+      <div formGroupName="personalInfo">
+        <h3>Personal Information</h3>
+        
+        <div class="form-field">
+          <label>First Name</label>
+          <input formControlName="firstName" type="text">
+          <div *ngIf="getFieldError('personalInfo.firstName') as error" class="error">
+            <span *ngIf="error['required']">First name is required</span>
+            <span *ngIf="error['minlength']">Minimum 2 characters required</span>
+          </div>
+        </div>
+        
+        <div class="form-field">
+          <label>Email</label>
+          <input formControlName="email" type="email">
+          <div *ngIf="getFieldError('personalInfo.email') as error" class="error">
+            <span *ngIf="error['required']">Email is required</span>
+            <span *ngIf="error['email']">Invalid email format</span>
+            <span *ngIf="error['emailDomain']">Email must be from {{ error['emailDomain'].requiredDomain }}</span>
+            <span *ngIf="error['emailExists']">Email already exists</span>
+          </div>
+          <div *ngIf="isFieldPending('personalInfo.email')" class="pending">
+            Checking email availability...
+          </div>
+        </div>
+      </div>
+      
+      <!-- Password Section -->
+      <div formGroupName="passwordGroup">
+        <h3>Password</h3>
+        
+        <div class="form-field">
+          <label>Password</label>
+          <input formControlName="password" type="password">
+          <div *ngIf="getFieldError('passwordGroup.password') as error" class="error">
+            <span *ngIf="error['required']">Password is required</span>
+            <span *ngIf="error['minlength']">Password must be at least 8 characters</span>
+            <span *ngIf="error['pattern']">Password must contain uppercase, lowercase, number and special character</span>
+          </div>
+        </div>
+        
+        <div class="form-field">
+          <label>Confirm Password</label>
+          <input formControlName="confirmPassword" type="password">
+          <div *ngIf="getFieldError('passwordGroup') as error" class="error">
+            <span *ngIf="error['passwordMismatch']">Passwords do not match</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Dynamic Skills Array -->
+      <div>
+        <h3>Skills</h3>
+        <div formArrayName="skills">
+          <div *ngFor="let skill of skillsArray.controls; let i = index" [formGroupName]="i">
+            <input formControlName="name" placeholder="Skill name">
+            <select formControlName="level">
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+            <button type="button" (click)="removeSkill(i)">Remove</button>
+          </div>
+        </div>
+        <button type="button" (click)="addSkill()">Add Skill</button>
+      </div>
+      
+      <button type="submit" [disabled]="registrationForm.invalid">Register</button>
+    </form>
+    
+    <!-- Form Debug Info -->
+    <div class="debug" *ngIf="showDebug">
+      <h4>Form Status</h4>
+      <p>Valid: {{ registrationForm.valid }}</p>
+      <p>Errors: {{ getFormErrors() | json }}</p>
+      <p>Value: {{ registrationForm.value | json }}</p>
+    </div>
+  `
+})
+export class UserRegistrationComponent implements OnInit {
+  registrationForm!: FormGroup;
+  showDebug = false;
+
+  constructor(
+    private fb: FormBuilder,
+    private userService: UserService
+  ) {}
+
+  ngOnInit() {
+    this.createForm();
+    this.setupFormSubscriptions();
+  }
+
+  private createForm() {
+    this.registrationForm = this.fb.group({
+      personalInfo: this.fb.group({
+        firstName: ['', [Validators.required, Validators.minLength(2)]],
+        lastName: ['', [Validators.required, Validators.minLength(2)]],
+        email: [
+          '',
+          [Validators.required, Validators.email, emailDomainValidator('company.com')],
+          [uniqueEmailValidator(this.userService)]
+        ]
+      }),
+      passwordGroup: this.fb.group({
+        password: [
+          '',
+          [
+            Validators.required,
+            Validators.minLength(8),
+            Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+          ]
+        ],
+        confirmPassword: ['', Validators.required]
+      }, { validators: passwordMatchValidator }),
+      skills: this.fb.array([this.createSkillGroup()])
+    });
+  }
+
+  private createSkillGroup(): FormGroup {
+    return this.fb.group({
+      name: ['', Validators.required],
+      level: ['beginner', Validators.required]
+    });
+  }
+
+  get skillsArray(): FormArray {
+    return this.registrationForm.get('skills') as FormArray;
+  }
+
+  addSkill() {
+    this.skillsArray.push(this.createSkillGroup());
+  }
+
+  removeSkill(index: number) {
+    this.skillsArray.removeAt(index);
+  }
+
+  private setupFormSubscriptions() {
+    // Watch for email changes and validate
+    this.registrationForm.get('personalInfo.email')?.valueChanges
+      .pipe(
+        debounceTime(500),
+        distinctUntilChanged()
+      )
+      .subscribe(email => {
+        if (email) {
+          console.log('Email changed:', email);
+        }
+      });
+  }
+
+  getFieldError(fieldPath: string): any {
+    const field = this.registrationForm.get(fieldPath);
+    return field && field.invalid && (field.dirty || field.touched) ? field.errors : null;
+  }
+
+  isFieldPending(fieldPath: string): boolean {
+    const field = this.registrationForm.get(fieldPath);
+    return field ? field.pending : false;
+  }
+
+  getFormErrors(): any {
+    let formErrors: any = {};
+    
+    Object.keys(this.registrationForm.controls).forEach(key => {
+      const controlErrors = this.registrationForm.get(key)?.errors;
+      if (controlErrors) {
+        formErrors[key] = controlErrors;
+      }
+    });
+    
+    return formErrors;
+  }
+
+  onSubmit() {
+    if (this.registrationForm.valid) {
+      const formValue = this.registrationForm.value;
+      console.log('Form submitted:', formValue);
+      // Process form submission
+    } else {
+      // Mark all fields as touched to show validation errors
+      this.markFormGroupTouched(this.registrationForm);
+    }
+  }
+
+  private markFormGroupTouched(formGroup: FormGroup) {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      control?.markAsTouched();
+      
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
+  }
+}
+```
+
+---
+
+### Q10: How do you optimize Angular application performance?
+**Difficulty: Hard**
+
+**Answer:**
+Angular performance optimization involves multiple strategies across different areas.
+
+**Bundle Optimization:**
+```typescript
+// Lazy loading with preloading strategy
+import { PreloadingStrategy, Route } from '@angular/router';
+import { Injectable } from '@angular/core';
+import { Observable, of } from 'rxjs';
+
+@Injectable()
+export class SelectivePreloadingStrategy implements PreloadingStrategy {
+  preload(route: Route, load: () => Observable<any>): Observable<any> {
+    if (route.data && route.data['preload']) {
+      return load();
+    }
+    return of(null);
+  }
+}
+
+// Usage in routing
+const routes: Routes = [
+  {
+    path: 'feature',
+    loadChildren: () => import('./feature/feature.module').then(m => m.FeatureModule),
+    data: { preload: true }
+  }
+];
+```
+
+**Change Detection Optimization:**
+```typescript
+import { Component, ChangeDetectionStrategy, OnPush } from '@angular/core';
+import { Observable } from 'rxjs';
+
+@Component({
+  selector: 'app-optimized-list',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="list-container">
+      <div 
+        *ngFor="let item of items$ | async; trackBy: trackByFn" 
+        class="list-item"
+      >
+        <app-item [data]="item"></app-item>
+      </div>
+    </div>
+  `
+})
+export class OptimizedListComponent {
+  items$: Observable<Item[]>;
+
+  constructor(private itemService: ItemService) {
+    this.items$ = this.itemService.getItems();
+  }
+
+  trackByFn(index: number, item: Item): any {
+    return item.id; // Use unique identifier for tracking
+  }
+}
+```
+
+**Virtual Scrolling for Large Lists:**
+```typescript
+import { Component } from '@angular/core';
+import { ScrollingModule } from '@angular/cdk/scrolling';
+
+@Component({
+  selector: 'app-virtual-scroll',
+  template: `
+    <cdk-virtual-scroll-viewport itemSize="50" class="viewport">
+      <div *cdkVirtualFor="let item of items; trackBy: trackByFn" class="item">
+        {{ item.name }}
+      </div>
+    </cdk-virtual-scroll-viewport>
+  `,
+  styles: [`
+    .viewport {
+      height: 400px;
+      width: 100%;
+    }
+    .item {
+      height: 50px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid #ccc;
+    }
+  `]
+})
+export class VirtualScrollComponent {
+  items = Array.from({ length: 100000 }, (_, i) => ({ id: i, name: `Item ${i}` }));
+
+  trackByFn(index: number, item: any) {
+    return item.id;
+  }
+}
+```
+
+**Image Optimization:**
+```typescript
+@Component({
+  selector: 'app-optimized-image',
+  template: `
+    <img 
+      [src]="imageSrc" 
+      [alt]="imageAlt"
+      loading="lazy"
+      [style.width.px]="imageWidth"
+      [style.height.px]="imageHeight"
+      (load)="onImageLoad()"
+      (error)="onImageError()"
+    >
+  `
+})
+export class OptimizedImageComponent {
+  @Input() imageSrc!: string;
+  @Input() imageAlt!: string;
+  @Input() imageWidth = 300;
+  @Input() imageHeight = 200;
+
+  onImageLoad() {
+    console.log('Image loaded successfully');
+  }
+
+  onImageError() {
+    console.log('Image failed to load');
+    // Fallback to placeholder image
+    this.imageSrc = '/assets/placeholder.jpg';
+  }
+}
+```
+
+**Service Worker for Caching:**
+```typescript
+// Add service worker
+ng add @angular/pwa
+
+// Custom service worker configuration
+// ngsw-config.json
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "resources": {
+        "files": [
+          "/favicon.ico",
+          "/index.html",
+          "/manifest.webmanifest",
+          "/*.css",
+          "/*.js"
+        ]
+      }
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/assets/**",
+          "/*.(eot|svg|cur|jpg|png|webp|gif|otf|ttf|woff|woff2|ani)"
+        ]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "api-performance",
+      "urls": ["/api/performance/**"],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 100,
+        "maxAge": "3d"
+      }
+    }
+  ]
+}
+```
+
+**Memory Leak Prevention:**
+```typescript
+import { Component, OnDestroy } from '@angular/core';
+import { Subject, takeUntil } from 'rxjs';
+
+@Component({
+  selector: 'app-leak-prevention',
+  template: `<div>Component with proper cleanup</div>`
+})
+export class LeakPreventionComponent implements OnDestroy {
+  private destroy$ = new Subject<void>();
+
+  constructor(private dataService: DataService) {
+    // Proper subscription management
+    this.dataService.getData()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        console.log('Data received:', data);
+      });
+
+    // Multiple subscriptions
+    this.dataService.getUpdates()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(update => {
+        console.log('Update received:', update);
+      });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+}
+```
+
+**Performance Monitoring:**
+```typescript
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class PerformanceService {
+  measureComponentLoad(componentName: string) {
+    const startTime = performance.now();
+    
+    return () => {
+      const endTime = performance.now();
+      const loadTime = endTime - startTime;
+      console.log(`${componentName} loaded in ${loadTime.toFixed(2)}ms`);
+      
+      // Send to analytics
+      this.sendPerformanceMetric(componentName, loadTime);
+    };
+  }
+
+  private sendPerformanceMetric(component: string, time: number) {
+    // Send to your analytics service
+    if ('sendBeacon' in navigator) {
+      navigator.sendBeacon('/api/performance', JSON.stringify({
+        component,
+        loadTime: time,
+        timestamp: Date.now()
+      }));
+    }
+  }
+}
+
+// Usage in component
+@Component({
+  selector: 'app-monitored',
+  template: `<div>Monitored component</div>`
+})
+export class MonitoredComponent implements OnInit {
+  private measureLoad = this.performanceService.measureComponentLoad('MonitoredComponent');
+
+  constructor(private performanceService: PerformanceService) {}
+
+  ngOnInit() {
+    // Component initialization logic
+    setTimeout(() => {
+      this.measureLoad(); // Call when component is fully loaded
+    });
+  }
+}
+```
+
+@Component({
+  selector: 'app-user-card',
+  template: `
+    <div class="user-card">
+      <h3>{{ user.name }}</h3>
+      <p>{{ user.email }}</p>
+      <button (click)="onEdit()">Edit</button>
       <button (click)="onDelete()">Delete</button>
     </div>
   `,
@@ -7576,4 +8864,2243 @@ export class ErrorService {
 
 ---
 
-**Note**: This comprehensive Angular 14 interview preparation continues with more detailed questions covering state management, performance optimization, testing strategies, and Angular 14 specific features. Each question includes practical examples and real-world scenarios to demonstrate deep understanding of Angular concepts.
+### Q13: How do you implement advanced Angular architecture patterns?
+
+**Answer:**
+Advanced Angular architecture involves implementing scalable patterns that promote maintainability, testability, and performance.
+
+**1. Feature Module Architecture:**
+```typescript
+// Core module (singleton services)
+@NgModule({
+  providers: [
+    AuthService,
+    ErrorHandlerService,
+    LoggingService,
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true }
+  ]
+})
+export class CoreModule {
+  constructor(@Optional() @SkipSelf() parentModule: CoreModule) {
+    if (parentModule) {
+      throw new Error('CoreModule is already loaded. Import only once.');
+    }
+  }
+}
+
+// Shared module (common components/pipes/directives)
+@NgModule({
+  declarations: [
+    LoadingSpinnerComponent,
+    ConfirmDialogComponent,
+    TruncatePipe,
+    HighlightDirective
+  ],
+  imports: [CommonModule, MaterialModule],
+  exports: [
+    CommonModule,
+    MaterialModule,
+    LoadingSpinnerComponent,
+    ConfirmDialogComponent,
+    TruncatePipe,
+    HighlightDirective
+  ]
+})
+export class SharedModule {}
+
+// Feature module
+@NgModule({
+  declarations: [UserListComponent, UserDetailComponent],
+  imports: [
+    SharedModule,
+    UserRoutingModule
+  ],
+  providers: [UserService] // Feature-specific services
+})
+export class UserModule {}
+```
+
+**2. Smart/Dumb Component Pattern:**
+```typescript
+// Smart Component (Container)
+@Component({
+  selector: 'app-user-container',
+  template: `
+    <app-user-list
+      [users]="users$ | async"
+      [loading]="loading$ | async"
+      [error]="error$ | async"
+      (userSelected)="onUserSelected($event)"
+      (userDeleted)="onUserDeleted($event)"
+      (refreshRequested)="onRefresh()">
+    </app-user-list>
+  `
+})
+export class UserContainerComponent implements OnInit {
+  users$ = this.store.select(selectUsers);
+  loading$ = this.store.select(selectUsersLoading);
+  error$ = this.store.select(selectUsersError);
+
+  constructor(private store: Store) {}
+
+  ngOnInit() {
+    this.store.dispatch(loadUsers());
+  }
+
+  onUserSelected(user: User) {
+    this.store.dispatch(selectUser({ user }));
+  }
+
+  onUserDeleted(userId: string) {
+    this.store.dispatch(deleteUser({ userId }));
+  }
+
+  onRefresh() {
+    this.store.dispatch(loadUsers());
+  }
+}
+
+// Dumb Component (Presentational)
+@Component({
+  selector: 'app-user-list',
+  template: `
+    <div class="user-list">
+      <div class="user-list__header">
+        <h2>Users</h2>
+        <button (click)="refresh.emit()" [disabled]="loading">
+          Refresh
+        </button>
+      </div>
+      
+      <app-loading-spinner *ngIf="loading"></app-loading-spinner>
+      
+      <div *ngIf="error" class="error-message">
+        {{ error }}
+      </div>
+      
+      <div class="user-grid" *ngIf="!loading && !error">
+        <app-user-card
+          *ngFor="let user of users; trackBy: trackByUserId"
+          [user]="user"
+          (selected)="userSelected.emit(user)"
+          (deleted)="userDeleted.emit(user.id)">
+        </app-user-card>
+      </div>
+    </div>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class UserListComponent {
+  @Input() users: User[] | null = null;
+  @Input() loading: boolean | null = false;
+  @Input() error: string | null = null;
+  
+  @Output() userSelected = new EventEmitter<User>();
+  @Output() userDeleted = new EventEmitter<string>();
+  @Output() refreshRequested = new EventEmitter<void>();
+
+  trackByUserId(index: number, user: User): string {
+    return user.id;
+  }
+}
+```
+
+**3. Advanced Service Patterns:**
+```typescript
+// Repository Pattern
+export abstract class UserRepository {
+  abstract getUsers(): Observable<User[]>;
+  abstract getUserById(id: string): Observable<User>;
+  abstract createUser(user: CreateUserDto): Observable<User>;
+  abstract updateUser(id: string, user: UpdateUserDto): Observable<User>;
+  abstract deleteUser(id: string): Observable<void>;
+}
+
+@Injectable()
+export class HttpUserRepository implements UserRepository {
+  constructor(private http: HttpClient) {}
+
+  getUsers(): Observable<User[]> {
+    return this.http.get<User[]>('/api/users').pipe(
+      map(users => users.map(user => new User(user))),
+      catchError(this.handleError)
+    );
+  }
+
+  getUserById(id: string): Observable<User> {
+    return this.http.get<User>(`/api/users/${id}`).pipe(
+      map(user => new User(user)),
+      catchError(this.handleError)
+    );
+  }
+
+  createUser(user: CreateUserDto): Observable<User> {
+    return this.http.post<User>('/api/users', user).pipe(
+      map(user => new User(user)),
+      catchError(this.handleError)
+    );
+  }
+
+  updateUser(id: string, user: UpdateUserDto): Observable<User> {
+    return this.http.put<User>(`/api/users/${id}`, user).pipe(
+      map(user => new User(user)),
+      catchError(this.handleError)
+    );
+  }
+
+  deleteUser(id: string): Observable<void> {
+    return this.http.delete<void>(`/api/users/${id}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  private handleError = (error: HttpErrorResponse): Observable<never> => {
+    console.error('User repository error:', error);
+    return throwError(() => new Error('User operation failed'));
+  };
+}
+
+// Facade Pattern
+@Injectable({ providedIn: 'root' })
+export class UserFacade {
+  // Selectors
+  users$ = this.store.select(selectUsers);
+  selectedUser$ = this.store.select(selectSelectedUser);
+  loading$ = this.store.select(selectUsersLoading);
+  error$ = this.store.select(selectUsersError);
+
+  constructor(private store: Store) {}
+
+  // Actions
+  loadUsers() {
+    this.store.dispatch(loadUsers());
+  }
+
+  loadUser(id: string) {
+    this.store.dispatch(loadUser({ id }));
+  }
+
+  createUser(user: CreateUserDto) {
+    this.store.dispatch(createUser({ user }));
+  }
+
+  updateUser(id: string, user: UpdateUserDto) {
+    this.store.dispatch(updateUser({ id, user }));
+  }
+
+  deleteUser(id: string) {
+    this.store.dispatch(deleteUser({ id }));
+  }
+
+  selectUser(user: User) {
+    this.store.dispatch(selectUser({ user }));
+  }
+
+  clearSelection() {
+    this.store.dispatch(clearUserSelection());
+  }
+}
+```
+
+**4. Advanced State Management with NgRx:**
+```typescript
+// Feature State
+export interface UserState {
+  users: User[];
+  selectedUser: User | null;
+  loading: boolean;
+  error: string | null;
+  filters: UserFilters;
+  pagination: PaginationState;
+}
+
+const initialState: UserState = {
+  users: [],
+  selectedUser: null,
+  loading: false,
+  error: null,
+  filters: {
+    search: '',
+    role: null,
+    status: null
+  },
+  pagination: {
+    page: 1,
+    pageSize: 10,
+    total: 0
+  }
+};
+
+// Actions
+export const loadUsers = createAction(
+  '[User] Load Users',
+  props<{ filters?: UserFilters; pagination?: PaginationState }>()
+);
+
+export const loadUsersSuccess = createAction(
+  '[User] Load Users Success',
+  props<{ users: User[]; total: number }>()
+);
+
+export const loadUsersFailure = createAction(
+  '[User] Load Users Failure',
+  props<{ error: string }>()
+);
+
+// Reducer
+const userReducer = createReducer(
+  initialState,
+  on(loadUsers, (state, { filters, pagination }) => ({
+    ...state,
+    loading: true,
+    error: null,
+    filters: filters ? { ...state.filters, ...filters } : state.filters,
+    pagination: pagination ? { ...state.pagination, ...pagination } : state.pagination
+  })),
+  on(loadUsersSuccess, (state, { users, total }) => ({
+    ...state,
+    users,
+    loading: false,
+    error: null,
+    pagination: {
+      ...state.pagination,
+      total
+    }
+  })),
+  on(loadUsersFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error
+  }))
+);
+
+// Effects
+@Injectable()
+export class UserEffects {
+  loadUsers$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(loadUsers),
+      withLatestFrom(this.store.select(selectUserFilters)),
+      switchMap(([action, currentFilters]) => {
+        const filters = action.filters || currentFilters;
+        const pagination = action.pagination || { page: 1, pageSize: 10 };
+        
+        return this.userRepository.getUsers(filters, pagination).pipe(
+          map(response => loadUsersSuccess({ 
+            users: response.users, 
+            total: response.total 
+          })),
+          catchError(error => of(loadUsersFailure({ 
+            error: error.message 
+          })))
+        );
+      })
+    )
+  );
+
+  constructor(
+    private actions$: Actions,
+    private store: Store,
+    private userRepository: UserRepository
+  ) {}
+}
+
+// Selectors
+export const selectUserState = createFeatureSelector<UserState>('users');
+
+export const selectUsers = createSelector(
+  selectUserState,
+  (state) => state.users
+);
+
+export const selectFilteredUsers = createSelector(
+  selectUsers,
+  selectUserFilters,
+  (users, filters) => {
+    return users.filter(user => {
+      if (filters.search && !user.name.toLowerCase().includes(filters.search.toLowerCase())) {
+        return false;
+      }
+      if (filters.role && user.role !== filters.role) {
+        return false;
+      }
+      if (filters.status && user.status !== filters.status) {
+        return false;
+      }
+      return true;
+    });
+  }
+);
+
+export const selectUsersPaginated = createSelector(
+  selectFilteredUsers,
+  selectUserPagination,
+  (users, pagination) => {
+    const start = (pagination.page - 1) * pagination.pageSize;
+    const end = start + pagination.pageSize;
+    return users.slice(start, end);
+  }
+);
+```
+
+### Q14: How do you implement advanced performance optimization techniques?
+
+**Answer:**
+Advanced performance optimization in Angular involves multiple strategies from bundle optimization to runtime performance.
+
+**1. Advanced Lazy Loading Strategies:**
+```typescript
+// Route-based lazy loading with preloading
+const routes: Routes = [
+  {
+    path: 'users',
+    loadChildren: () => import('./user/user.module').then(m => m.UserModule),
+    data: { preload: true }
+  },
+  {
+    path: 'admin',
+    loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule),
+    canLoad: [AdminGuard],
+    data: { preload: false }
+  }
+];
+
+// Custom preloading strategy
+@Injectable()
+export class CustomPreloadingStrategy implements PreloadingStrategy {
+  preload(route: Route, load: () => Observable<any>): Observable<any> {
+    if (route.data && route.data['preload']) {
+      return load();
+    }
+    return of(null);
+  }
+}
+
+// Component-level lazy loading
+@Component({
+  selector: 'app-dashboard',
+  template: `
+    <div class="dashboard">
+      <div class="sidebar">
+        <!-- Always loaded content -->
+      </div>
+      <div class="main-content">
+        <ng-container *ngIf="showAdvancedFeatures">
+          <ng-container *ngComponentOutlet="advancedComponent"></ng-container>
+        </ng-container>
+      </div>
+    </div>
+  `
+})
+export class DashboardComponent implements OnInit {
+  advancedComponent: any;
+  showAdvancedFeatures = false;
+
+  async ngOnInit() {
+    // Load component only when needed
+    if (this.userHasAdvancedPermissions()) {
+      const { AdvancedAnalyticsComponent } = await import('./advanced-analytics/advanced-analytics.component');
+      this.advancedComponent = AdvancedAnalyticsComponent;
+      this.showAdvancedFeatures = true;
+    }
+  }
+
+  private userHasAdvancedPermissions(): boolean {
+    // Check user permissions
+    return true;
+  }
+}
+```
+
+**2. Advanced Change Detection Optimization:**
+```typescript
+// OnPush strategy with immutable data
+@Component({
+  selector: 'app-user-list',
+  template: `
+    <div class="user-list">
+      <app-user-item
+        *ngFor="let user of users; trackBy: trackByUserId"
+        [user]="user"
+        (userUpdated)="onUserUpdated($event)">
+      </app-user-item>
+    </div>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class UserListComponent {
+  @Input() users: readonly User[] = [];
+  @Output() userUpdated = new EventEmitter<User>();
+
+  constructor(private cdr: ChangeDetectorRef) {}
+
+  trackByUserId(index: number, user: User): string {
+    return user.id;
+  }
+
+  onUserUpdated(updatedUser: User) {
+    // Emit immutable update
+    this.userUpdated.emit(updatedUser);
+  }
+
+  // Manual change detection when needed
+  refreshView() {
+    this.cdr.markForCheck();
+  }
+}
+
+// Detached change detection for heavy components
+@Component({
+  selector: 'app-heavy-chart',
+  template: `
+    <div class="chart-container">
+      <canvas #chartCanvas></canvas>
+    </div>
+  `
+})
+export class HeavyChartComponent implements OnInit, OnDestroy {
+  @ViewChild('chartCanvas', { static: true }) canvas!: ElementRef<HTMLCanvasElement>;
+  
+  private chart: any;
+  private animationId: number | null = null;
+
+  constructor(private cdr: ChangeDetectorRef) {
+    // Detach from change detection
+    this.cdr.detach();
+  }
+
+  ngOnInit() {
+    this.initChart();
+    this.startAnimation();
+  }
+
+  ngOnDestroy() {
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
+    }
+  }
+
+  private initChart() {
+    // Initialize heavy chart library
+  }
+
+  private startAnimation() {
+    const animate = () => {
+      // Update chart
+      this.updateChart();
+      
+      // Manual change detection only when needed
+      this.cdr.detectChanges();
+      
+      this.animationId = requestAnimationFrame(animate);
+    };
+    
+    animate();
+  }
+
+  private updateChart() {
+    // Chart update logic
+  }
+}
+```
+
+**3. Advanced Bundle Optimization:**
+```typescript
+// Dynamic imports for code splitting
+export class FeatureService {
+  async loadFeature(featureName: string) {
+    switch (featureName) {
+      case 'analytics':
+        const { AnalyticsModule } = await import('./analytics/analytics.module');
+        return AnalyticsModule;
+      case 'reporting':
+        const { ReportingModule } = await import('./reporting/reporting.module');
+        return ReportingModule;
+      default:
+        throw new Error(`Unknown feature: ${featureName}`);
+    }
+  }
+}
+
+// Tree-shakable providers
+@Injectable({
+  providedIn: 'root',
+  useFactory: () => {
+    if (environment.production) {
+      return new ProductionAnalyticsService();
+    } else {
+      return new DevelopmentAnalyticsService();
+    }
+  }
+})
+export class AnalyticsService {
+  abstract trackEvent(event: string, properties?: any): void;
+}
+
+// Conditional feature loading
+@NgModule({
+  imports: [
+    CommonModule,
+    // Conditionally import modules
+    ...(environment.features.includes('advanced-analytics') 
+      ? [AdvancedAnalyticsModule] 
+      : []),
+    ...(environment.features.includes('real-time-updates') 
+      ? [RealTimeModule] 
+      : [])
+  ]
+})
+export class FeatureModule {}
+```
+
+**4. Memory Management and Leak Prevention:**
+```typescript
+// Advanced subscription management
+@Component({
+  selector: 'app-data-component'
+})
+export class DataComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+  private subscriptions = new Map<string, Subscription>();
+
+  constructor(
+    private dataService: DataService,
+    private websocketService: WebSocketService
+  ) {}
+
+  ngOnInit() {
+    // Method 1: takeUntil pattern
+    this.dataService.getData()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => this.handleData(data));
+
+    // Method 2: Manual subscription management
+    const realtimeSubscription = this.websocketService.connect()
+      .subscribe(message => this.handleRealtimeMessage(message));
+    
+    this.subscriptions.set('realtime', realtimeSubscription);
+
+    // Method 3: Async pipe (automatic unsubscription)
+    this.data$ = this.dataService.getData().pipe(
+      shareReplay(1),
+      takeUntil(this.destroy$)
+    );
+  }
+
+  ngOnDestroy() {
+    // Cleanup observables
+    this.destroy$.next();
+    this.destroy$.complete();
+
+    // Cleanup manual subscriptions
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.subscriptions.clear();
+  }
+
+  private handleData(data: any) {
+    // Process data
+  }
+
+  private handleRealtimeMessage(message: any) {
+    // Handle real-time updates
+  }
+}
+
+// Memory-efficient virtual scrolling
+@Component({
+  selector: 'app-virtual-list',
+  template: `
+    <cdk-virtual-scroll-viewport 
+      itemSize="50" 
+      class="viewport"
+      [maxBufferPx]="200"
+      [minBufferPx]="100">
+      <div 
+        *cdkVirtualFor="let item of items; trackBy: trackByFn; templateCacheSize: 20"
+        class="list-item">
+        {{ item.name }}
+      </div>
+    </cdk-virtual-scroll-viewport>
+  `
+})
+export class VirtualListComponent {
+  @Input() items: any[] = [];
+
+  trackByFn(index: number, item: any): any {
+    return item.id;
+  }
+}
+```
+
+### Q15: How do you implement advanced testing strategies?
+
+**Answer:**
+Advanced testing in Angular involves comprehensive strategies covering unit tests, integration tests, and end-to-end testing.
+
+**1. Advanced Unit Testing Patterns:**
+```typescript
+// Testing with NgRx
+describe('UserEffects', () => {
+  let effects: UserEffects;
+  let actions$: Observable<any>;
+  let userService: jasmine.SpyObj<UserService>;
+  let store: MockStore;
+
+  beforeEach(() => {
+    const userServiceSpy = jasmine.createSpyObj('UserService', ['getUsers', 'createUser']);
+
+    TestBed.configureTestingModule({
+      providers: [
+        UserEffects,
+        provideMockActions(() => actions$),
+        provideMockStore({
+          initialState: {
+            users: {
+              users: [],
+              loading: false,
+              error: null
+            }
+          }
+        }),
+        { provide: UserService, useValue: userServiceSpy }
+      ]
+    });
+
+    effects = TestBed.inject(UserEffects);
+    userService = TestBed.inject(UserService) as jasmine.SpyObj<UserService>;
+    store = TestBed.inject(MockStore);
+  });
+
+  describe('loadUsers$', () => {
+    it('should return loadUsersSuccess action on successful API call', () => {
+      const users = [{ id: '1', name: 'John' }];
+      const action = loadUsers();
+      const outcome = loadUsersSuccess({ users, total: 1 });
+
+      actions$ = hot('-a', { a: action });
+      const response = cold('-a|', { a: { users, total: 1 } });
+      userService.getUsers.and.returnValue(response);
+
+      const expected = cold('--b', { b: outcome });
+      expect(effects.loadUsers$).toBeObservable(expected);
+    });
+
+    it('should return loadUsersFailure action on API error', () => {
+      const action = loadUsers();
+      const error = new Error('API Error');
+      const outcome = loadUsersFailure({ error: error.message });
+
+      actions$ = hot('-a', { a: action });
+      const response = cold('-#|', {}, error);
+      userService.getUsers.and.returnValue(response);
+
+      const expected = cold('--b', { b: outcome });
+      expect(effects.loadUsers$).toBeObservable(expected);
+    });
+  });
+});
+
+// Testing components with complex interactions
+describe('UserFormComponent', () => {
+  let component: UserFormComponent;
+  let fixture: ComponentFixture<UserFormComponent>;
+  let userService: jasmine.SpyObj<UserService>;
+  let router: jasmine.SpyObj<Router>;
+  let snackBar: jasmine.SpyObj<MatSnackBar>;
+
+  beforeEach(async () => {
+    const userServiceSpy = jasmine.createSpyObj('UserService', ['createUser', 'updateUser']);
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    const snackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
+
+    await TestBed.configureTestingModule({
+      declarations: [UserFormComponent],
+      imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, NoopAnimationsModule],
+      providers: [
+        { provide: UserService, useValue: userServiceSpy },
+        { provide: Router, useValue: routerSpy },
+        { provide: MatSnackBar, useValue: snackBarSpy }
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(UserFormComponent);
+    component = fixture.componentInstance;
+    userService = TestBed.inject(UserService) as jasmine.SpyObj<UserService>;
+    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    snackBar = TestBed.inject(MatSnackBar) as jasmine.SpyObj<MatSnackBar>;
+  });
+
+  describe('form validation', () => {
+    it('should show validation errors for invalid form', () => {
+      component.ngOnInit();
+      fixture.detectChanges();
+
+      // Submit empty form
+      component.onSubmit();
+      fixture.detectChanges();
+
+      const nameError = fixture.debugElement.query(By.css('[data-testid="name-error"]'));
+      const emailError = fixture.debugElement.query(By.css('[data-testid="email-error"]'));
+
+      expect(nameError.nativeElement.textContent).toContain('Name is required');
+      expect(emailError.nativeElement.textContent).toContain('Email is required');
+    });
+
+    it('should validate email format', () => {
+      component.ngOnInit();
+      
+      component.userForm.patchValue({
+        name: 'John Doe',
+        email: 'invalid-email'
+      });
+      
+      fixture.detectChanges();
+      component.onSubmit();
+      fixture.detectChanges();
+
+      const emailError = fixture.debugElement.query(By.css('[data-testid="email-error"]'));
+      expect(emailError.nativeElement.textContent).toContain('Invalid email format');
+    });
+  });
+
+  describe('form submission', () => {
+    it('should create user and navigate on successful submission', fakeAsync(() => {
+      const newUser = { name: 'John Doe', email: 'john@example.com' };
+      const createdUser = { id: '1', ...newUser };
+      
+      userService.createUser.and.returnValue(of(createdUser));
+      
+      component.ngOnInit();
+      component.userForm.patchValue(newUser);
+      
+      component.onSubmit();
+      tick();
+      
+      expect(userService.createUser).toHaveBeenCalledWith(newUser);
+      expect(snackBar.open).toHaveBeenCalledWith('User created successfully', 'Close', { duration: 3000 });
+      expect(router.navigate).toHaveBeenCalledWith(['/users']);
+    }));
+
+    it('should handle creation error', fakeAsync(() => {
+      const newUser = { name: 'John Doe', email: 'john@example.com' };
+      const error = new Error('Creation failed');
+      
+      userService.createUser.and.returnValue(throwError(() => error));
+      
+      component.ngOnInit();
+      component.userForm.patchValue(newUser);
+      
+      component.onSubmit();
+      tick();
+      
+      expect(component.isSubmitting).toBeFalse();
+      expect(snackBar.open).toHaveBeenCalledWith('Error creating user: Creation failed', 'Close', { duration: 5000 });
+    }));
+  });
+});
+```
+
+**2. Integration Testing:**
+```typescript
+// Testing module integration
+describe('UserModule Integration', () => {
+  let store: Store;
+  let httpMock: HttpTestingController;
+  let router: Router;
+  let location: Location;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [
+        UserModule,
+        StoreModule.forRoot({}),
+        EffectsModule.forRoot([]),
+        StoreModule.forFeature('users', userReducer),
+        EffectsModule.forFeature([UserEffects]),
+        HttpClientTestingModule,
+        RouterTestingModule.withRoutes([
+          { path: 'users', component: UserListComponent },
+          { path: 'users/:id', component: UserDetailComponent }
+        ])
+      ]
+    }).compileComponents();
+
+    store = TestBed.inject(Store);
+    httpMock = TestBed.inject(HttpTestingController);
+    router = TestBed.inject(Router);
+    location = TestBed.inject(Location);
+  });
+
+  afterEach(() => {
+    httpMock.verify();
+  });
+
+  it('should load users and update store', fakeAsync(() => {
+    const users = [{ id: '1', name: 'John' }, { id: '2', name: 'Jane' }];
+    
+    store.dispatch(loadUsers());
+    
+    const req = httpMock.expectOne('/api/users');
+    expect(req.request.method).toBe('GET');
+    req.flush({ users, total: 2 });
+    
+    tick();
+    
+    store.select(selectUsers).subscribe(loadedUsers => {
+      expect(loadedUsers).toEqual(users);
+    });
+  }));
+
+  it('should navigate to user detail on selection', fakeAsync(() => {
+    const fixture = TestBed.createComponent(UserListComponent);
+    const component = fixture.componentInstance;
+    
+    router.navigate(['/users']);
+    tick();
+    
+    expect(location.path()).toBe('/users');
+    
+    component.onUserSelected({ id: '1', name: 'John' });
+    tick();
+    
+    expect(location.path()).toBe('/users/1');
+  }));
+});
+```
+
+**3. End-to-End Testing with Cypress:**
+```typescript
+// cypress/integration/user-management.spec.ts
+describe('User Management', () => {
+  beforeEach(() => {
+    cy.intercept('GET', '/api/users', { fixture: 'users.json' }).as('getUsers');
+    cy.intercept('POST', '/api/users', { fixture: 'user.json' }).as('createUser');
+    cy.intercept('DELETE', '/api/users/*', {}).as('deleteUser');
+    
+    cy.visit('/users');
+    cy.wait('@getUsers');
+  });
+
+  it('should display user list', () => {
+    cy.get('[data-testid="user-list"]').should('be.visible');
+    cy.get('[data-testid="user-item"]').should('have.length.greaterThan', 0);
+  });
+
+  it('should create new user', () => {
+    cy.get('[data-testid="add-user-button"]').click();
+    
+    cy.get('[data-testid="user-name-input"]').type('John Doe');
+    cy.get('[data-testid="user-email-input"]').type('john@example.com');
+    cy.get('[data-testid="user-role-select"]').select('Admin');
+    
+    cy.get('[data-testid="submit-button"]').click();
+    
+    cy.wait('@createUser');
+    cy.get('[data-testid="success-message"]').should('contain', 'User created successfully');
+  });
+
+  it('should delete user with confirmation', () => {
+    cy.get('[data-testid="user-item"]').first().within(() => {
+      cy.get('[data-testid="delete-button"]').click();
+    });
+    
+    cy.get('[data-testid="confirm-dialog"]').should('be.visible');
+    cy.get('[data-testid="confirm-delete-button"]').click();
+    
+    cy.wait('@deleteUser');
+    cy.get('[data-testid="success-message"]').should('contain', 'User deleted successfully');
+  });
+
+  it('should filter users by search term', () => {
+    cy.get('[data-testid="search-input"]').type('John');
+    
+    cy.get('[data-testid="user-item"]').should('have.length', 1);
+    cy.get('[data-testid="user-item"]').should('contain', 'John');
+  });
+
+  it('should handle pagination', () => {
+    cy.get('[data-testid="pagination"]').should('be.visible');
+    cy.get('[data-testid="next-page-button"]').click();
+    
+    cy.url().should('include', 'page=2');
+    cy.get('[data-testid="user-item"]').should('have.length.greaterThan', 0);
+  });
+});
+
+// Custom commands
+Cypress.Commands.add('login', (username: string, password: string) => {
+  cy.session([username, password], () => {
+    cy.visit('/login');
+    cy.get('[data-testid="username-input"]').type(username);
+    cy.get('[data-testid="password-input"]').type(password);
+    cy.get('[data-testid="login-button"]').click();
+    cy.url().should('not.include', '/login');
+  });
+});
+
+Cypress.Commands.add('createUser', (user: { name: string; email: string; role: string }) => {
+  cy.get('[data-testid="add-user-button"]').click();
+  cy.get('[data-testid="user-name-input"]').type(user.name);
+  cy.get('[data-testid="user-email-input"]').type(user.email);
+  cy.get('[data-testid="user-role-select"]').select(user.role);
+  cy.get('[data-testid="submit-button"]').click();
+});
+```
+
+This comprehensive Angular guide now covers advanced architecture patterns, performance optimization techniques, and sophisticated testing strategies essential for senior Angular development roles.
+
+---
+
+## Angular 15+ Modern Features and Patterns
+
+### Q13: How do you implement standalone components and the new Angular architecture?
+**Difficulty: Advanced**
+
+**Answer:**
+Angular 15+ introduces standalone components, which eliminate the need for NgModules in many cases and provide a more streamlined development experience.
+
+**1. Standalone Components:**
+```typescript
+// Standalone component without NgModule
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+import { UserService } from './user.service';
+
+@Component({
+  selector: 'app-user-profile',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterModule],
+  template: `
+    <div class="user-profile">
+      <h2>{{ user()?.name }}</h2>
+      <p>{{ user()?.email }}</p>
+      
+      @if (isEditing()) {
+        <form (ngSubmit)="saveUser()">
+          <input [(ngModel)]="editForm.name" name="name" required>
+          <input [(ngModel)]="editForm.email" name="email" type="email" required>
+          <button type="submit">Save</button>
+          <button type="button" (click)="cancelEdit()">Cancel</button>
+        </form>
+      } @else {
+        <button (click)="startEdit()">Edit Profile</button>
+      }
+      
+      @for (skill of user()?.skills; track skill.id) {
+        <span class="skill-tag">{{ skill.name }}</span>
+      } @empty {
+        <p>No skills added yet.</p>
+      }
+    </div>
+  `,
+  styleUrls: ['./user-profile.component.scss']
+})
+export class UserProfileComponent {
+  private userService = inject(UserService);
+  
+  // Signals for reactive state management
+  user = signal<User | null>(null);
+  isEditing = signal(false);
+  editForm = {
+    name: '',
+    email: ''
+  };
+  
+  ngOnInit() {
+    this.loadUser();
+  }
+  
+  async loadUser() {
+    try {
+      const userData = await this.userService.getCurrentUser();
+      this.user.set(userData);
+    } catch (error) {
+      console.error('Failed to load user:', error);
+    }
+  }
+  
+  startEdit() {
+    const currentUser = this.user();
+    if (currentUser) {
+      this.editForm = {
+        name: currentUser.name,
+        email: currentUser.email
+      };
+      this.isEditing.set(true);
+    }
+  }
+  
+  async saveUser() {
+    try {
+      const updatedUser = await this.userService.updateUser(this.editForm);
+      this.user.set(updatedUser);
+      this.isEditing.set(false);
+    } catch (error) {
+      console.error('Failed to save user:', error);
+    }
+  }
+  
+  cancelEdit() {
+    this.isEditing.set(false);
+  }
+}
+```
+
+**2. Standalone Application Bootstrap:**
+```typescript
+// main.ts - Bootstrap standalone application
+import { bootstrapApplication } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { importProvidersFrom } from '@angular/core';
+
+import { AppComponent } from './app/app.component';
+import { routes } from './app/app.routes';
+import { authInterceptor } from './app/interceptors/auth.interceptor';
+import { errorInterceptor } from './app/interceptors/error.interceptor';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideRouter(routes),
+    provideHttpClient(
+      withInterceptors([authInterceptor, errorInterceptor])
+    ),
+    provideAnimations(),
+    // Import providers from existing modules if needed
+    importProvidersFrom(/* existing modules */)
+  ]
+}).catch(err => console.error(err));
+```
+
+**3. Modern Routing with Standalone Components:**
+```typescript
+// app.routes.ts
+import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { AuthGuard } from './guards/auth.guard';
+
+export const routes: Routes = [
+  {
+    path: '',
+    redirectTo: '/dashboard',
+    pathMatch: 'full'
+  },
+  {
+    path: 'dashboard',
+    loadComponent: () => import('./dashboard/dashboard.component')
+      .then(c => c.DashboardComponent),
+    canActivate: [() => inject(AuthGuard).canActivate()]
+  },
+  {
+    path: 'users',
+    loadChildren: () => import('./users/users.routes')
+      .then(r => r.userRoutes)
+  },
+  {
+    path: 'profile',
+    loadComponent: () => import('./profile/profile.component')
+      .then(c => c.ProfileComponent),
+    resolve: {
+      user: () => inject(UserService).getCurrentUser()
+    }
+  },
+  {
+    path: '**',
+    loadComponent: () => import('./not-found/not-found.component')
+      .then(c => c.NotFoundComponent)
+  }
+];
+
+// users.routes.ts - Feature routes
+import { Routes } from '@angular/router';
+
+export const userRoutes: Routes = [
+  {
+    path: '',
+    loadComponent: () => import('./user-list/user-list.component')
+      .then(c => c.UserListComponent)
+  },
+  {
+    path: ':id',
+    loadComponent: () => import('./user-detail/user-detail.component')
+      .then(c => c.UserDetailComponent)
+  },
+  {
+    path: ':id/edit',
+    loadComponent: () => import('./user-edit/user-edit.component')
+      .then(c => c.UserEditComponent)
+  }
+];
+```
+
+**4. Angular Signals for State Management:**
+```typescript
+// signals-based state management
+import { Injectable, signal, computed, effect } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+interface AppState {
+  users: User[];
+  currentUser: User | null;
+  loading: boolean;
+  error: string | null;
+}
+
+@Injectable({ providedIn: 'root' })
+export class StateService {
+  private http = inject(HttpClient);
+  
+  // Private signals for internal state
+  private _users = signal<User[]>([]);
+  private _currentUser = signal<User | null>(null);
+  private _loading = signal(false);
+  private _error = signal<string | null>(null);
+  
+  // Public readonly signals
+  readonly users = this._users.asReadonly();
+  readonly currentUser = this._currentUser.asReadonly();
+  readonly loading = this._loading.asReadonly();
+  readonly error = this._error.asReadonly();
+  
+  // Computed signals
+  readonly activeUsers = computed(() => 
+    this.users().filter(user => user.isActive)
+  );
+  
+  readonly userCount = computed(() => this.users().length);
+  
+  readonly isAuthenticated = computed(() => 
+    this.currentUser() !== null
+  );
+  
+  constructor() {
+    // Effects for side effects
+    effect(() => {
+      const user = this.currentUser();
+      if (user) {
+        localStorage.setItem('currentUser', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('currentUser');
+      }
+    });
+    
+    // Load initial state
+    this.loadInitialState();
+  }
+  
+  async loadUsers() {
+    this._loading.set(true);
+    this._error.set(null);
+    
+    try {
+      const users = await this.http.get<User[]>('/api/users').toPromise();
+      this._users.set(users || []);
+    } catch (error) {
+      this._error.set('Failed to load users');
+      console.error('Error loading users:', error);
+    } finally {
+      this._loading.set(false);
+    }
+  }
+  
+  async addUser(user: Omit<User, 'id'>) {
+    this._loading.set(true);
+    
+    try {
+      const newUser = await this.http.post<User>('/api/users', user).toPromise();
+      if (newUser) {
+        this._users.update(users => [...users, newUser]);
+      }
+    } catch (error) {
+      this._error.set('Failed to add user');
+      throw error;
+    } finally {
+      this._loading.set(false);
+    }
+  }
+  
+  async updateUser(id: string, updates: Partial<User>) {
+    this._loading.set(true);
+    
+    try {
+      const updatedUser = await this.http.put<User>(`/api/users/${id}`, updates).toPromise();
+      if (updatedUser) {
+        this._users.update(users => 
+          users.map(user => user.id === id ? updatedUser : user)
+        );
+        
+        // Update current user if it's the same
+        if (this.currentUser()?.id === id) {
+          this._currentUser.set(updatedUser);
+        }
+      }
+    } catch (error) {
+      this._error.set('Failed to update user');
+      throw error;
+    } finally {
+      this._loading.set(false);
+    }
+  }
+  
+  async deleteUser(id: string) {
+    this._loading.set(true);
+    
+    try {
+      await this.http.delete(`/api/users/${id}`).toPromise();
+      this._users.update(users => users.filter(user => user.id !== id));
+    } catch (error) {
+      this._error.set('Failed to delete user');
+      throw error;
+    } finally {
+      this._loading.set(false);
+    }
+  }
+  
+  setCurrentUser(user: User | null) {
+    this._currentUser.set(user);
+  }
+  
+  clearError() {
+    this._error.set(null);
+  }
+  
+  private loadInitialState() {
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      try {
+        this._currentUser.set(JSON.parse(savedUser));
+      } catch (error) {
+        console.error('Failed to parse saved user:', error);
+      }
+    }
+  }
+}
+```
+
+**5. Modern Component with New Control Flow:**
+```typescript
+// Component using new @if, @for, @switch syntax
+import { Component, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { StateService } from '../services/state.service';
+
+@Component({
+  selector: 'app-user-dashboard',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="dashboard">
+      <header>
+        <h1>User Dashboard</h1>
+        @if (stateService.isAuthenticated()) {
+          <div class="user-info">
+            Welcome, {{ stateService.currentUser()?.name }}!
+            <button (click)="logout()">Logout</button>
+          </div>
+        }
+      </header>
+      
+      <main>
+        @if (stateService.loading()) {
+          <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading users...</p>
+          </div>
+        } @else if (stateService.error()) {
+          <div class="error-message">
+            <p>{{ stateService.error() }}</p>
+            <button (click)="retry()">Retry</button>
+          </div>
+        } @else {
+          <div class="user-management">
+            <div class="filters">
+              <input 
+                [(ngModel)]="searchTerm" 
+                placeholder="Search users..."
+                (input)="onSearchChange()">
+              
+              <select [(ngModel)]="selectedRole" (change)="onRoleChange()">
+                <option value="">All Roles</option>
+                <option value="admin">Admin</option>
+                <option value="user">User</option>
+                <option value="moderator">Moderator</option>
+              </select>
+            </div>
+            
+            <div class="user-stats">
+              <div class="stat-card">
+                <h3>Total Users</h3>
+                <p>{{ stateService.userCount() }}</p>
+              </div>
+              <div class="stat-card">
+                <h3>Active Users</h3>
+                <p>{{ stateService.activeUsers().length }}</p>
+              </div>
+              <div class="stat-card">
+                <h3>Filtered Results</h3>
+                <p>{{ filteredUsers().length }}</p>
+              </div>
+            </div>
+            
+            <div class="user-grid">
+              @for (user of filteredUsers(); track user.id) {
+                <div class="user-card" [class.active]="user.isActive">
+                  <div class="user-avatar">
+                    <img [src]="user.avatar || '/assets/default-avatar.png'" 
+                         [alt]="user.name">
+                  </div>
+                  
+                  <div class="user-details">
+                    <h3>{{ user.name }}</h3>
+                    <p>{{ user.email }}</p>
+                    
+                    @switch (user.role) {
+                      @case ('admin') {
+                        <span class="role-badge admin">Administrator</span>
+                      }
+                      @case ('moderator') {
+                        <span class="role-badge moderator">Moderator</span>
+                      }
+                      @default {
+                        <span class="role-badge user">User</span>
+                      }
+                    }
+                    
+                    <div class="user-actions">
+                      <button (click)="editUser(user)">Edit</button>
+                      <button (click)="deleteUser(user.id)" 
+                              class="danger">Delete</button>
+                    </div>
+                  </div>
+                </div>
+              } @empty {
+                <div class="empty-state">
+                  <p>No users found matching your criteria.</p>
+                  <button (click)="clearFilters()">Clear Filters</button>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </main>
+    </div>
+  `,
+  styleUrls: ['./user-dashboard.component.scss']
+})
+export class UserDashboardComponent {
+  stateService = inject(StateService);
+  
+  searchTerm = signal('');
+  selectedRole = signal('');
+  
+  // Computed signal for filtered users
+  filteredUsers = computed(() => {
+    const users = this.stateService.users();
+    const search = this.searchTerm().toLowerCase();
+    const role = this.selectedRole();
+    
+    return users.filter(user => {
+      const matchesSearch = !search || 
+        user.name.toLowerCase().includes(search) ||
+        user.email.toLowerCase().includes(search);
+      
+      const matchesRole = !role || user.role === role;
+      
+      return matchesSearch && matchesRole;
+    });
+  });
+  
+  ngOnInit() {
+    this.stateService.loadUsers();
+  }
+  
+  onSearchChange() {
+    // Search term is automatically updated via signal
+    // Filtered users will be recomputed automatically
+  }
+  
+  onRoleChange() {
+    // Role filter is automatically updated via signal
+  }
+  
+  clearFilters() {
+    this.searchTerm.set('');
+    this.selectedRole.set('');
+  }
+  
+  editUser(user: User) {
+    // Navigate to edit page or open modal
+    console.log('Edit user:', user);
+  }
+  
+  async deleteUser(id: string) {
+    if (confirm('Are you sure you want to delete this user?')) {
+      try {
+        await this.stateService.deleteUser(id);
+      } catch (error) {
+        console.error('Failed to delete user:', error);
+      }
+    }
+  }
+  
+  logout() {
+    this.stateService.setCurrentUser(null);
+  }
+  
+  retry() {
+    this.stateService.clearError();
+    this.stateService.loadUsers();
+  }
+}
+```
+
+**6. Modern HTTP Interceptors:**
+```typescript
+// Functional interceptors (Angular 15+)
+import { HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { AuthService } from '../services/auth.service';
+import { LoadingService } from '../services/loading.service';
+import { finalize } from 'rxjs/operators';
+
+// Auth interceptor
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const authService = inject(AuthService);
+  const token = authService.getToken();
+  
+  if (token) {
+    const authReq = req.clone({
+      setHeaders: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return next(authReq);
+  }
+  
+  return next(req);
+};
+
+// Loading interceptor
+export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
+  const loadingService = inject(LoadingService);
+  
+  loadingService.show();
+  
+  return next(req).pipe(
+    finalize(() => loadingService.hide())
+  );
+};
+
+// Error interceptor
+export const errorInterceptor: HttpInterceptorFn = (req, next) => {
+  return next(req).pipe(
+    catchError((error: HttpErrorResponse) => {
+      let errorMessage = 'An unknown error occurred';
+      
+      if (error.error instanceof ErrorEvent) {
+        // Client-side error
+        errorMessage = error.error.message;
+      } else {
+        // Server-side error
+        switch (error.status) {
+          case 401:
+            errorMessage = 'Unauthorized access';
+            // Redirect to login
+            inject(Router).navigate(['/login']);
+            break;
+          case 403:
+            errorMessage = 'Access forbidden';
+            break;
+          case 404:
+            errorMessage = 'Resource not found';
+            break;
+          case 500:
+            errorMessage = 'Internal server error';
+            break;
+          default:
+            errorMessage = `Error: ${error.message}`;
+        }
+      }
+      
+      // Show error notification
+      inject(NotificationService).showError(errorMessage);
+      
+      return throwError(() => error);
+    })
+  );
+};
+```
+
+This enhanced Angular guide now includes the latest Angular 15+ features including standalone components, signals, new control flow syntax, functional interceptors, and modern architectural patterns that represent the cutting edge of Angular development.
+
+---
+
+## Advanced Angular Architecture and Patterns
+
+### Q14: How do you implement micro-frontends with Angular and Module Federation?
+**Difficulty: Expert**
+
+**Answer:**
+Micro-frontends allow you to break down large Angular applications into smaller, independently deployable pieces. Module Federation is the recommended approach for implementing micro-frontends in Angular.
+
+**1. Shell Application Configuration:**
+```typescript
+// webpack.config.js (Shell/Host Application)
+const ModuleFederationPlugin = require('@module-federation/webpack');
+
+module.exports = {
+  mode: 'development',
+  plugins: [
+    new ModuleFederationPlugin({
+      name: 'shell',
+      remotes: {
+        'user-management': 'userManagement@http://localhost:4201/remoteEntry.js',
+        'product-catalog': 'productCatalog@http://localhost:4202/remoteEntry.js',
+        'order-processing': 'orderProcessing@http://localhost:4203/remoteEntry.js'
+      },
+      shared: {
+        '@angular/core': { singleton: true, strictVersion: true },
+        '@angular/common': { singleton: true, strictVersion: true },
+        '@angular/router': { singleton: true, strictVersion: true },
+        '@angular/platform-browser': { singleton: true, strictVersion: true }
+      }
+    })
+  ]
+};
+
+// Shell application routes
+import { Routes } from '@angular/router';
+import { loadRemoteModule } from '@angular-architects/module-federation';
+
+export const routes: Routes = [
+  {
+    path: '',
+    redirectTo: '/dashboard',
+    pathMatch: 'full'
+  },
+  {
+    path: 'dashboard',
+    loadComponent: () => import('./dashboard/dashboard.component')
+      .then(c => c.DashboardComponent)
+  },
+  {
+    path: 'users',
+    loadChildren: () => loadRemoteModule({
+      type: 'module',
+      remoteEntry: 'http://localhost:4201/remoteEntry.js',
+      exposedModule: './UserModule'
+    }).then(m => m.UserModule)
+  },
+  {
+    path: 'products',
+    loadChildren: () => loadRemoteModule({
+      type: 'module',
+      remoteEntry: 'http://localhost:4202/remoteEntry.js',
+      exposedModule: './ProductModule'
+    }).then(m => m.ProductModule)
+  },
+  {
+    path: 'orders',
+    loadChildren: () => loadRemoteModule({
+      type: 'module',
+      remoteEntry: 'http://localhost:4203/remoteEntry.js',
+      exposedModule: './OrderModule'
+    }).then(m => m.OrderModule)
+  }
+];
+```
+
+**2. Micro-frontend Configuration:**
+```typescript
+// webpack.config.js (User Management Micro-frontend)
+const ModuleFederationPlugin = require('@module-federation/webpack');
+
+module.exports = {
+  mode: 'development',
+  plugins: [
+    new ModuleFederationPlugin({
+      name: 'userManagement',
+      filename: 'remoteEntry.js',
+      exposes: {
+        './UserModule': './src/app/user/user.module.ts',
+        './UserService': './src/app/user/services/user.service.ts'
+      },
+      shared: {
+        '@angular/core': { singleton: true, strictVersion: true },
+        '@angular/common': { singleton: true, strictVersion: true },
+        '@angular/router': { singleton: true, strictVersion: true }
+      }
+    })
+  ]
+};
+
+// User module (exposed)
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { UserListComponent } from './components/user-list.component';
+import { UserDetailComponent } from './components/user-detail.component';
+import { UserService } from './services/user.service';
+
+const routes: Routes = [
+  { path: '', component: UserListComponent },
+  { path: ':id', component: UserDetailComponent }
+];
+
+@NgModule({
+  declarations: [
+    UserListComponent,
+    UserDetailComponent
+  ],
+  imports: [
+    CommonModule,
+    RouterModule.forChild(routes)
+  ],
+  providers: [UserService]
+})
+export class UserModule { }
+```
+
+**3. Shared State Management Across Micro-frontends:**
+```typescript
+// Shared event bus service
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+
+interface MicroFrontendEvent {
+  type: string;
+  payload: any;
+  source: string;
+  timestamp: number;
+}
+
+@Injectable({ providedIn: 'root' })
+export class MicroFrontendEventBus {
+  private eventSubject = new BehaviorSubject<MicroFrontendEvent | null>(null);
+  
+  emit(type: string, payload: any, source: string) {
+    const event: MicroFrontendEvent = {
+      type,
+      payload,
+      source,
+      timestamp: Date.now()
+    };
+    
+    this.eventSubject.next(event);
+    
+    // Also emit to window for cross-application communication
+    window.dispatchEvent(new CustomEvent('mf-event', { detail: event }));
+  }
+  
+  on<T = any>(eventType: string): Observable<T> {
+    return this.eventSubject.pipe(
+      filter(event => event !== null && event.type === eventType),
+      map(event => event!.payload)
+    );
+  }
+  
+  onFromSource<T = any>(eventType: string, source: string): Observable<T> {
+    return this.eventSubject.pipe(
+      filter(event => 
+        event !== null && 
+        event.type === eventType && 
+        event.source === source
+      ),
+      map(event => event!.payload)
+    );
+  }
+}
+
+// Shared state service
+@Injectable({ providedIn: 'root' })
+export class SharedStateService {
+  private eventBus = inject(MicroFrontendEventBus);
+  
+  private _currentUser = signal<User | null>(null);
+  private _theme = signal<'light' | 'dark'>('light');
+  private _notifications = signal<Notification[]>([]);
+  
+  readonly currentUser = this._currentUser.asReadonly();
+  readonly theme = this._theme.asReadonly();
+  readonly notifications = this._notifications.asReadonly();
+  
+  constructor() {
+    // Listen for cross-application events
+    window.addEventListener('mf-event', (event: any) => {
+      const mfEvent = event.detail as MicroFrontendEvent;
+      this.handleCrossAppEvent(mfEvent);
+    });
+    
+    // Listen for internal events
+    this.eventBus.on('user-updated').subscribe(user => {
+      this._currentUser.set(user);
+    });
+    
+    this.eventBus.on('theme-changed').subscribe(theme => {
+      this._theme.set(theme);
+    });
+    
+    this.eventBus.on('notification-added').subscribe(notification => {
+      this._notifications.update(notifications => [...notifications, notification]);
+    });
+  }
+  
+  setCurrentUser(user: User | null, source = 'shell') {
+    this._currentUser.set(user);
+    this.eventBus.emit('user-updated', user, source);
+  }
+  
+  setTheme(theme: 'light' | 'dark', source = 'shell') {
+    this._theme.set(theme);
+    this.eventBus.emit('theme-changed', theme, source);
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+  
+  addNotification(notification: Omit<Notification, 'id'>, source = 'shell') {
+    const newNotification = {
+      ...notification,
+      id: Date.now().toString()
+    };
+    
+    this._notifications.update(notifications => [...notifications, newNotification]);
+    this.eventBus.emit('notification-added', newNotification, source);
+  }
+  
+  private handleCrossAppEvent(event: MicroFrontendEvent) {
+    switch (event.type) {
+      case 'user-updated':
+        if (event.source !== 'shell') {
+          this._currentUser.set(event.payload);
+        }
+        break;
+      case 'theme-changed':
+        if (event.source !== 'shell') {
+          this._theme.set(event.payload);
+          document.documentElement.setAttribute('data-theme', event.payload);
+        }
+        break;
+      case 'notification-added':
+        if (event.source !== 'shell') {
+          this._notifications.update(notifications => [...notifications, event.payload]);
+        }
+        break;
+    }
+  }
+}
+```
+
+**4. Advanced Performance Optimization:**
+```typescript
+// Performance monitoring service
+import { Injectable, signal, computed } from '@angular/core';
+import { fromEvent, merge } from 'rxjs';
+import { debounceTime, map } from 'rxjs/operators';
+
+interface PerformanceMetrics {
+  fcp: number; // First Contentful Paint
+  lcp: number; // Largest Contentful Paint
+  fid: number; // First Input Delay
+  cls: number; // Cumulative Layout Shift
+  ttfb: number; // Time to First Byte
+  memoryUsage: number;
+  bundleSize: number;
+}
+
+@Injectable({ providedIn: 'root' })
+export class PerformanceService {
+  private _metrics = signal<Partial<PerformanceMetrics>>({});
+  private _isOptimized = computed(() => {
+    const metrics = this._metrics();
+    return (
+      (metrics.fcp || 0) < 1800 &&
+      (metrics.lcp || 0) < 2500 &&
+      (metrics.fid || 0) < 100 &&
+      (metrics.cls || 0) < 0.1
+    );
+  });
+  
+  readonly metrics = this._metrics.asReadonly();
+  readonly isOptimized = this._isOptimized;
+  
+  constructor() {
+    this.initializePerformanceMonitoring();
+  }
+  
+  private initializePerformanceMonitoring() {
+    // Core Web Vitals monitoring
+    this.observeWebVitals();
+    
+    // Memory usage monitoring
+    this.observeMemoryUsage();
+    
+    // Bundle size analysis
+    this.analyzeBundleSize();
+    
+    // Custom performance marks
+    this.setupCustomMarks();
+  }
+  
+  private observeWebVitals() {
+    // First Contentful Paint
+    new PerformanceObserver((list) => {
+      const entries = list.getEntries();
+      const fcp = entries.find(entry => entry.name === 'first-contentful-paint');
+      if (fcp) {
+        this._metrics.update(m => ({ ...m, fcp: fcp.startTime }));
+      }
+    }).observe({ entryTypes: ['paint'] });
+    
+    // Largest Contentful Paint
+    new PerformanceObserver((list) => {
+      const entries = list.getEntries();
+      const lastEntry = entries[entries.length - 1];
+      this._metrics.update(m => ({ ...m, lcp: lastEntry.startTime }));
+    }).observe({ entryTypes: ['largest-contentful-paint'] });
+    
+    // First Input Delay
+    new PerformanceObserver((list) => {
+      const entries = list.getEntries();
+      entries.forEach(entry => {
+        this._metrics.update(m => ({ ...m, fid: entry.processingStart - entry.startTime }));
+      });
+    }).observe({ entryTypes: ['first-input'] });
+    
+    // Cumulative Layout Shift
+    let clsValue = 0;
+    new PerformanceObserver((list) => {
+      const entries = list.getEntries();
+      entries.forEach(entry => {
+        if (!entry.hadRecentInput) {
+          clsValue += entry.value;
+          this._metrics.update(m => ({ ...m, cls: clsValue }));
+        }
+      });
+    }).observe({ entryTypes: ['layout-shift'] });
+  }
+  
+  private observeMemoryUsage() {
+    if ('memory' in performance) {
+      setInterval(() => {
+        const memory = (performance as any).memory;
+        const memoryUsage = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
+        this._metrics.update(m => ({ ...m, memoryUsage }));
+      }, 5000);
+    }
+  }
+  
+  private analyzeBundleSize() {
+    // Analyze loaded resources
+    const resources = performance.getEntriesByType('resource');
+    const totalSize = resources.reduce((total, resource) => {
+      return total + (resource.transferSize || 0);
+    }, 0);
+    
+    this._metrics.update(m => ({ ...m, bundleSize: totalSize }));
+  }
+  
+  private setupCustomMarks() {
+    // Mark component initialization
+    performance.mark('app-init-start');
+    
+    // Mark when app is ready
+    setTimeout(() => {
+      performance.mark('app-init-end');
+      performance.measure('app-initialization', 'app-init-start', 'app-init-end');
+    }, 0);
+  }
+  
+  markFeatureLoad(featureName: string) {
+    performance.mark(`${featureName}-load-start`);
+  }
+  
+  markFeatureReady(featureName: string) {
+    performance.mark(`${featureName}-load-end`);
+    performance.measure(
+      `${featureName}-load-time`,
+      `${featureName}-load-start`,
+      `${featureName}-load-end`
+    );
+  }
+  
+  getPerformanceReport(): PerformanceMetrics {
+    return this._metrics() as PerformanceMetrics;
+  }
+  
+  exportMetrics() {
+    const metrics = this.getPerformanceReport();
+    const report = {
+      timestamp: new Date().toISOString(),
+      url: window.location.href,
+      userAgent: navigator.userAgent,
+      metrics,
+      recommendations: this.getRecommendations(metrics)
+    };
+    
+    // Send to analytics service
+    console.log('Performance Report:', report);
+    return report;
+  }
+  
+  private getRecommendations(metrics: Partial<PerformanceMetrics>): string[] {
+    const recommendations: string[] = [];
+    
+    if ((metrics.fcp || 0) > 1800) {
+      recommendations.push('Optimize First Contentful Paint by reducing render-blocking resources');
+    }
+    
+    if ((metrics.lcp || 0) > 2500) {
+      recommendations.push('Improve Largest Contentful Paint by optimizing images and critical resources');
+    }
+    
+    if ((metrics.fid || 0) > 100) {
+      recommendations.push('Reduce First Input Delay by minimizing JavaScript execution time');
+    }
+    
+    if ((metrics.cls || 0) > 0.1) {
+      recommendations.push('Minimize Cumulative Layout Shift by setting dimensions for media elements');
+    }
+    
+    if ((metrics.memoryUsage || 0) > 0.8) {
+      recommendations.push('Optimize memory usage by implementing proper cleanup and avoiding memory leaks');
+    }
+    
+    return recommendations;
+  }
+}
+```
+
+**5. Advanced Caching and State Persistence:**
+```typescript
+// Advanced caching service with IndexedDB
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable, from, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
+
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  ttl: number;
+  version: string;
+}
+
+@Injectable({ providedIn: 'root' })
+export class AdvancedCacheService {
+  private dbName = 'angular-app-cache';
+  private dbVersion = 1;
+  private db: IDBDatabase | null = null;
+  
+  constructor() {
+    this.initializeDB();
+  }
+  
+  private async initializeDB(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, this.dbVersion);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        this.db = request.result;
+        resolve();
+      };
+      
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        
+        // Create object stores
+        if (!db.objectStoreNames.contains('cache')) {
+          db.createObjectStore('cache', { keyPath: 'key' });
+        }
+        
+        if (!db.objectStoreNames.contains('user-preferences')) {
+          db.createObjectStore('user-preferences', { keyPath: 'userId' });
+        }
+        
+        if (!db.objectStoreNames.contains('offline-queue')) {
+          db.createObjectStore('offline-queue', { keyPath: 'id', autoIncrement: true });
+        }
+      };
+    });
+  }
+  
+  async set<T>(key: string, data: T, ttlMinutes = 60): Promise<void> {
+    if (!this.db) await this.initializeDB();
+    
+    const entry: CacheEntry<T> & { key: string } = {
+      key,
+      data,
+      timestamp: Date.now(),
+      ttl: ttlMinutes * 60 * 1000,
+      version: '1.0'
+    };
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['cache'], 'readwrite');
+      const store = transaction.objectStore('cache');
+      const request = store.put(entry);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+  
+  async get<T>(key: string): Promise<T | null> {
+    if (!this.db) await this.initializeDB();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['cache'], 'readonly');
+      const store = transaction.objectStore('cache');
+      const request = store.get(key);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const result = request.result;
+        
+        if (!result) {
+          resolve(null);
+          return;
+        }
+        
+        // Check if cache entry is expired
+        const now = Date.now();
+        if (now - result.timestamp > result.ttl) {
+          this.delete(key); // Clean up expired entry
+          resolve(null);
+          return;
+        }
+        
+        resolve(result.data);
+      };
+    });
+  }
+  
+  async delete(key: string): Promise<void> {
+    if (!this.db) await this.initializeDB();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['cache'], 'readwrite');
+      const store = transaction.objectStore('cache');
+      const request = store.delete(key);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+  
+  async clear(): Promise<void> {
+    if (!this.db) await this.initializeDB();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['cache'], 'readwrite');
+      const store = transaction.objectStore('cache');
+      const request = store.clear();
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+  
+  // Cache with automatic refresh
+  getWithRefresh<T>(
+    key: string,
+    refreshFn: () => Observable<T>,
+    ttlMinutes = 60
+  ): Observable<T> {
+    return from(this.get<T>(key)).pipe(
+      switchMap(cachedData => {
+        if (cachedData) {
+          return of(cachedData);
+        }
+        
+        return refreshFn().pipe(
+          switchMap(freshData => {
+            return from(this.set(key, freshData, ttlMinutes)).pipe(
+              map(() => freshData)
+            );
+          })
+        );
+      }),
+      catchError(error => {
+        console.error('Cache error:', error);
+        return refreshFn();
+      })
+    );
+  }
+  
+  // User preferences persistence
+  async saveUserPreferences(userId: string, preferences: any): Promise<void> {
+    if (!this.db) await this.initializeDB();
+    
+    const entry = {
+      userId,
+      preferences,
+      timestamp: Date.now()
+    };
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['user-preferences'], 'readwrite');
+      const store = transaction.objectStore('user-preferences');
+      const request = store.put(entry);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+  
+  async getUserPreferences(userId: string): Promise<any | null> {
+    if (!this.db) await this.initializeDB();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['user-preferences'], 'readonly');
+      const store = transaction.objectStore('user-preferences');
+      const request = store.get(userId);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const result = request.result;
+        resolve(result ? result.preferences : null);
+      };
+    });
+  }
+  
+  // Offline queue for failed requests
+  async queueOfflineAction(action: any): Promise<void> {
+    if (!this.db) await this.initializeDB();
+    
+    const entry = {
+      action,
+      timestamp: Date.now(),
+      retryCount: 0
+    };
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['offline-queue'], 'readwrite');
+      const store = transaction.objectStore('offline-queue');
+      const request = store.add(entry);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+  
+  async getOfflineQueue(): Promise<any[]> {
+    if (!this.db) await this.initializeDB();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['offline-queue'], 'readonly');
+      const store = transaction.objectStore('offline-queue');
+      const request = store.getAll();
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
+  }
+}
+```
+
+This comprehensive Angular guide now covers the most advanced topics including micro-frontends with Module Federation, cross-application state management, advanced performance monitoring, and sophisticated caching strategies essential for enterprise-level Angular applications.

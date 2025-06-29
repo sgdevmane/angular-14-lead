@@ -1052,6 +1052,1476 @@ const userData = {
 
 const safeHTML = compiledTemplate(userData);
 console.log(safeHTML); // XSS content will be escaped
+This security guide provides comprehensive protection against XSS and other common web vulnerabilities with practical implementation examples.
+
+---
+
+## Advanced Security Patterns
+
+### Q11: How do you implement advanced authentication and authorization patterns?
+
+**Answer:**
+Advanced authentication and authorization require sophisticated patterns including multi-factor authentication, role-based access control, and secure session management.
+
+**Advanced Authentication System:**
+```typescript
+// Multi-Factor Authentication Manager
+class MFAManager {
+  private totpSecrets = new Map<string, string>();
+  private backupCodes = new Map<string, string[]>();
+  private trustedDevices = new Map<string, Set<string>>();
+  private rateLimiter: RateLimiter;
+  
+  constructor() {
+    this.rateLimiter = new RateLimiter({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      maxAttempts: 5
+    });
+  }
+  
+  async generateTOTPSecret(userId: string): Promise<{ secret: string; qrCode: string }> {
+    const secret = this.generateRandomSecret();
+    this.totpSecrets.set(userId, secret);
+    
+    const qrCode = await this.generateQRCode(userId, secret);
+    
+    return { secret, qrCode };
+  }
+  
+  async verifyTOTP(userId: string, token: string, deviceId?: string): Promise<boolean> {
+    // Rate limiting
+    if (!this.rateLimiter.isAllowed(userId)) {
+      throw new Error('Too many authentication attempts');
+    }
+    
+    const secret = this.totpSecrets.get(userId);
+    if (!secret) {
+      return false;
+    }
+    
+    const isValid = this.validateTOTPToken(secret, token);
+    
+    if (isValid && deviceId) {
+      this.addTrustedDevice(userId, deviceId);
+    }
+    
+    return isValid;
+  }
+  
+  async generateBackupCodes(userId: string): Promise<string[]> {
+    const codes = Array.from({ length: 10 }, () => this.generateBackupCode());
+    this.backupCodes.set(userId, codes);
+    return codes;
+  }
+  
+  async verifyBackupCode(userId: string, code: string): Promise<boolean> {
+    const codes = this.backupCodes.get(userId);
+    if (!codes) {
+      return false;
+    }
+    
+    const index = codes.indexOf(code);
+    if (index === -1) {
+      return false;
+    }
+    
+    // Remove used backup code
+    codes.splice(index, 1);
+    this.backupCodes.set(userId, codes);
+    
+    return true;
+  }
+  
+  isDeviceTrusted(userId: string, deviceId: string): boolean {
+    const devices = this.trustedDevices.get(userId);
+    return devices ? devices.has(deviceId) : false;
+  }
+  
+  private addTrustedDevice(userId: string, deviceId: string): void {
+    if (!this.trustedDevices.has(userId)) {
+      this.trustedDevices.set(userId, new Set());
+    }
+    this.trustedDevices.get(userId)!.add(deviceId);
+  }
+  
+  private generateRandomSecret(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let secret = '';
+    for (let i = 0; i < 32; i++) {
+      secret += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return secret;
+  }
+  
+  private generateBackupCode(): string {
+    return Math.random().toString(36).substring(2, 10).toUpperCase();
+  }
+  
+  private async generateQRCode(userId: string, secret: string): Promise<string> {
+    const issuer = 'YourApp';
+    const otpauth = `otpauth://totp/${issuer}:${userId}?secret=${secret}&issuer=${issuer}`;
+    
+    // In a real implementation, use a QR code library
+    return `data:image/svg+xml;base64,${btoa(this.generateQRCodeSVG(otpauth))}`;
+  }
+  
+  private generateQRCodeSVG(data: string): string {
+    // Simplified QR code generation - use a proper library in production
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+      <rect width="200" height="200" fill="white"/>
+      <text x="100" y="100" text-anchor="middle" font-size="12">${data}</text>
+    </svg>`;
+  }
+  
+  private validateTOTPToken(secret: string, token: string): boolean {
+    const window = 1; // Allow 1 time step before/after
+    const timeStep = 30; // 30 seconds
+    const currentTime = Math.floor(Date.now() / 1000 / timeStep);
+    
+    for (let i = -window; i <= window; i++) {
+      const time = currentTime + i;
+      const expectedToken = this.generateTOTPToken(secret, time);
+      if (expectedToken === token) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  private generateTOTPToken(secret: string, time: number): string {
+    // Simplified TOTP implementation - use a proper library in production
+    const hash = this.hmacSHA1(secret, time.toString());
+    const offset = hash.charCodeAt(hash.length - 1) & 0xf;
+    const code = ((hash.charCodeAt(offset) & 0x7f) << 24) |
+                 ((hash.charCodeAt(offset + 1) & 0xff) << 16) |
+                 ((hash.charCodeAt(offset + 2) & 0xff) << 8) |
+                 (hash.charCodeAt(offset + 3) & 0xff);
+    
+    return (code % 1000000).toString().padStart(6, '0');
+  }
+  
+  private hmacSHA1(key: string, data: string): string {
+    // Simplified HMAC-SHA1 - use crypto library in production
+    return btoa(key + data).substring(0, 20);
+  }
+}
+
+// Role-Based Access Control (RBAC)
+class RBACManager {
+  private roles = new Map<string, Role>();
+  private userRoles = new Map<string, Set<string>>();
+  private permissions = new Map<string, Permission>();
+  private roleHierarchy = new Map<string, Set<string>>();
+  
+  constructor() {
+    this.initializeDefaultRoles();
+  }
+  
+  private initializeDefaultRoles(): void {
+    // Define permissions
+    this.permissions.set('user:read', { id: 'user:read', resource: 'user', action: 'read' });
+    this.permissions.set('user:write', { id: 'user:write', resource: 'user', action: 'write' });
+    this.permissions.set('user:delete', { id: 'user:delete', resource: 'user', action: 'delete' });
+    this.permissions.set('admin:all', { id: 'admin:all', resource: '*', action: '*' });
+    
+    // Define roles
+    this.roles.set('guest', {
+      id: 'guest',
+      name: 'Guest',
+      permissions: new Set(['user:read'])
+    });
+    
+    this.roles.set('user', {
+      id: 'user',
+      name: 'User',
+      permissions: new Set(['user:read', 'user:write'])
+    });
+    
+    this.roles.set('admin', {
+      id: 'admin',
+      name: 'Administrator',
+      permissions: new Set(['admin:all'])
+    });
+    
+    // Define role hierarchy
+    this.roleHierarchy.set('admin', new Set(['user', 'guest']));
+    this.roleHierarchy.set('user', new Set(['guest']));
+  }
+  
+  assignRole(userId: string, roleId: string): void {
+    if (!this.roles.has(roleId)) {
+      throw new Error(`Role ${roleId} does not exist`);
+    }
+    
+    if (!this.userRoles.has(userId)) {
+      this.userRoles.set(userId, new Set());
+    }
+    
+    this.userRoles.get(userId)!.add(roleId);
+  }
+  
+  revokeRole(userId: string, roleId: string): void {
+    const roles = this.userRoles.get(userId);
+    if (roles) {
+      roles.delete(roleId);
+    }
+  }
+  
+  hasPermission(userId: string, permissionId: string): boolean {
+    const userRoles = this.userRoles.get(userId);
+    if (!userRoles) {
+      return false;
+    }
+    
+    // Check direct permissions
+    for (const roleId of userRoles) {
+      if (this.roleHasPermission(roleId, permissionId)) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  hasRole(userId: string, roleId: string): boolean {
+    const userRoles = this.userRoles.get(userId);
+    if (!userRoles) {
+      return false;
+    }
+    
+    // Check direct role
+    if (userRoles.has(roleId)) {
+      return true;
+    }
+    
+    // Check inherited roles
+    for (const userRole of userRoles) {
+      if (this.isRoleInherited(userRole, roleId)) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  private roleHasPermission(roleId: string, permissionId: string): boolean {
+    const role = this.roles.get(roleId);
+    if (!role) {
+      return false;
+    }
+    
+    // Check direct permission
+    if (role.permissions.has(permissionId)) {
+      return true;
+    }
+    
+    // Check wildcard permissions
+    if (role.permissions.has('admin:all')) {
+      return true;
+    }
+    
+    // Check inherited permissions from role hierarchy
+    const inheritedRoles = this.roleHierarchy.get(roleId);
+    if (inheritedRoles) {
+      for (const inheritedRole of inheritedRoles) {
+        if (this.roleHasPermission(inheritedRole, permissionId)) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  }
+  
+  private isRoleInherited(parentRole: string, targetRole: string): boolean {
+    const inheritedRoles = this.roleHierarchy.get(parentRole);
+    if (!inheritedRoles) {
+      return false;
+    }
+    
+    if (inheritedRoles.has(targetRole)) {
+      return true;
+    }
+    
+    // Check nested inheritance
+    for (const inheritedRole of inheritedRoles) {
+      if (this.isRoleInherited(inheritedRole, targetRole)) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  getUserPermissions(userId: string): Set<string> {
+    const permissions = new Set<string>();
+    const userRoles = this.userRoles.get(userId);
+    
+    if (!userRoles) {
+      return permissions;
+    }
+    
+    for (const roleId of userRoles) {
+      const rolePermissions = this.getRolePermissions(roleId);
+      rolePermissions.forEach(permission => permissions.add(permission));
+    }
+    
+    return permissions;
+  }
+  
+  private getRolePermissions(roleId: string): Set<string> {
+    const permissions = new Set<string>();
+    const role = this.roles.get(roleId);
+    
+    if (!role) {
+      return permissions;
+    }
+    
+    // Add direct permissions
+    role.permissions.forEach(permission => permissions.add(permission));
+    
+    // Add inherited permissions
+    const inheritedRoles = this.roleHierarchy.get(roleId);
+    if (inheritedRoles) {
+      for (const inheritedRole of inheritedRoles) {
+        const inheritedPermissions = this.getRolePermissions(inheritedRole);
+        inheritedPermissions.forEach(permission => permissions.add(permission));
+      }
+    }
+    
+    return permissions;
+  }
+}
+
+// Secure Session Manager
+class SecureSessionManager {
+  private sessions = new Map<string, SessionData>();
+  private sessionTimeout: number;
+  private maxSessions: number;
+  private encryptionKey: string;
+  
+  constructor(options: SessionOptions = {}) {
+    this.sessionTimeout = options.timeout || 30 * 60 * 1000; // 30 minutes
+    this.maxSessions = options.maxSessions || 5;
+    this.encryptionKey = options.encryptionKey || this.generateEncryptionKey();
+    
+    // Cleanup expired sessions
+    setInterval(() => this.cleanupExpiredSessions(), 5 * 60 * 1000); // 5 minutes
+  }
+  
+  async createSession(userId: string, deviceInfo: DeviceInfo): Promise<string> {
+    // Limit concurrent sessions
+    this.limitUserSessions(userId);
+    
+    const sessionId = this.generateSessionId();
+    const sessionData: SessionData = {
+      id: sessionId,
+      userId,
+      deviceInfo,
+      createdAt: Date.now(),
+      lastAccessedAt: Date.now(),
+      expiresAt: Date.now() + this.sessionTimeout,
+      isActive: true,
+      ipAddress: deviceInfo.ipAddress,
+      userAgent: deviceInfo.userAgent
+    };
+    
+    this.sessions.set(sessionId, sessionData);
+    
+    // Create secure session token
+    const token = await this.createSessionToken(sessionData);
+    
+    return token;
+  }
+  
+  async validateSession(token: string): Promise<SessionData | null> {
+    try {
+      const sessionData = await this.decryptSessionToken(token);
+      const session = this.sessions.get(sessionData.id);
+      
+      if (!session || !session.isActive) {
+        return null;
+      }
+      
+      // Check expiration
+      if (Date.now() > session.expiresAt) {
+        this.invalidateSession(session.id);
+        return null;
+      }
+      
+      // Update last accessed time
+      session.lastAccessedAt = Date.now();
+      session.expiresAt = Date.now() + this.sessionTimeout;
+      
+      return session;
+    } catch (error) {
+      return null;
+    }
+  }
+  
+  invalidateSession(sessionId: string): void {
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      session.isActive = false;
+    }
+  }
+  
+  invalidateAllUserSessions(userId: string): void {
+    for (const session of this.sessions.values()) {
+      if (session.userId === userId) {
+        session.isActive = false;
+      }
+    }
+  }
+  
+  getUserSessions(userId: string): SessionData[] {
+    return Array.from(this.sessions.values())
+      .filter(session => session.userId === userId && session.isActive);
+  }
+  
+  private limitUserSessions(userId: string): void {
+    const userSessions = this.getUserSessions(userId);
+    
+    if (userSessions.length >= this.maxSessions) {
+      // Remove oldest session
+      const oldestSession = userSessions
+        .sort((a, b) => a.lastAccessedAt - b.lastAccessedAt)[0];
+      
+      this.invalidateSession(oldestSession.id);
+    }
+  }
+  
+  private cleanupExpiredSessions(): void {
+    const now = Date.now();
+    const expiredSessions = Array.from(this.sessions.entries())
+      .filter(([_, session]) => now > session.expiresAt || !session.isActive);
+    
+    expiredSessions.forEach(([sessionId]) => {
+      this.sessions.delete(sessionId);
+    });
+  }
+  
+  private generateSessionId(): string {
+    return crypto.getRandomValues(new Uint8Array(32))
+      .reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
+  }
+  
+  private generateEncryptionKey(): string {
+    return crypto.getRandomValues(new Uint8Array(32))
+      .reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
+  }
+  
+  private async createSessionToken(sessionData: SessionData): Promise<string> {
+    const payload = {
+      id: sessionData.id,
+      userId: sessionData.userId,
+      exp: sessionData.expiresAt
+    };
+    
+    // In production, use proper JWT library with encryption
+    const token = btoa(JSON.stringify(payload));
+    return this.encrypt(token);
+  }
+  
+  private async decryptSessionToken(token: string): Promise<{ id: string; userId: string; exp: number }> {
+    const decrypted = this.decrypt(token);
+    return JSON.parse(atob(decrypted));
+  }
+  
+  private encrypt(data: string): string {
+    // Simplified encryption - use proper crypto library in production
+    return btoa(data + this.encryptionKey);
+  }
+  
+  private decrypt(encryptedData: string): string {
+    // Simplified decryption - use proper crypto library in production
+    const decoded = atob(encryptedData);
+    return decoded.substring(0, decoded.length - this.encryptionKey.length);
+  }
+}
+
+// Rate Limiter
+class RateLimiter {
+  private attempts = new Map<string, AttemptRecord[]>();
+  private windowMs: number;
+  private maxAttempts: number;
+  
+  constructor(options: RateLimitOptions) {
+    this.windowMs = options.windowMs;
+    this.maxAttempts = options.maxAttempts;
+    
+    // Cleanup old records
+    setInterval(() => this.cleanup(), this.windowMs);
+  }
+  
+  isAllowed(identifier: string): boolean {
+    const now = Date.now();
+    const attempts = this.attempts.get(identifier) || [];
+    
+    // Remove old attempts outside the window
+    const validAttempts = attempts.filter(attempt => 
+      now - attempt.timestamp < this.windowMs
+    );
+    
+    if (validAttempts.length >= this.maxAttempts) {
+      return false;
+    }
+    
+    // Record this attempt
+    validAttempts.push({ timestamp: now });
+    this.attempts.set(identifier, validAttempts);
+    
+    return true;
+  }
+  
+  getRemainingAttempts(identifier: string): number {
+    const now = Date.now();
+    const attempts = this.attempts.get(identifier) || [];
+    
+    const validAttempts = attempts.filter(attempt => 
+      now - attempt.timestamp < this.windowMs
+    );
+    
+    return Math.max(0, this.maxAttempts - validAttempts.length);
+  }
+  
+  reset(identifier: string): void {
+    this.attempts.delete(identifier);
+  }
+  
+  private cleanup(): void {
+    const now = Date.now();
+    
+    for (const [identifier, attempts] of this.attempts.entries()) {
+      const validAttempts = attempts.filter(attempt => 
+        now - attempt.timestamp < this.windowMs
+      );
+      
+      if (validAttempts.length === 0) {
+        this.attempts.delete(identifier);
+      } else {
+        this.attempts.set(identifier, validAttempts);
+      }
+    }
+  }
+}
+
+// Interfaces
+interface Role {
+  id: string;
+  name: string;
+  permissions: Set<string>;
+}
+
+interface Permission {
+  id: string;
+  resource: string;
+  action: string;
+}
+
+interface SessionData {
+  id: string;
+  userId: string;
+  deviceInfo: DeviceInfo;
+  createdAt: number;
+  lastAccessedAt: number;
+  expiresAt: number;
+  isActive: boolean;
+  ipAddress: string;
+  userAgent: string;
+}
+
+interface DeviceInfo {
+  ipAddress: string;
+  userAgent: string;
+  deviceId?: string;
+  location?: string;
+}
+
+interface SessionOptions {
+  timeout?: number;
+  maxSessions?: number;
+  encryptionKey?: string;
+}
+
+interface RateLimitOptions {
+  windowMs: number;
+  maxAttempts: number;
+}
+
+interface AttemptRecord {
+  timestamp: number;
+}
 ```
 
-This security guide provides comprehensive protection against XSS and other common web vulnerabilities with practical implementation examples.
+### Q12: How do you implement advanced threat detection and security monitoring?
+
+**Answer:**
+Advanced threat detection requires real-time monitoring, anomaly detection, and automated response systems to identify and mitigate security threats.
+
+**Advanced Security Monitoring System:**
+```typescript
+// Security Event Monitor
+class SecurityEventMonitor {
+  private eventStore: SecurityEvent[] = [];
+  private alertThresholds = new Map<string, AlertThreshold>();
+  private anomalyDetector: AnomalyDetector;
+  private responseSystem: SecurityResponseSystem;
+  private maxEvents: number;
+  
+  constructor(
+    private config: SecurityMonitorConfig,
+    responseSystem: SecurityResponseSystem
+  ) {
+    this.maxEvents = config.maxEvents || 10000;
+    this.anomalyDetector = new AnomalyDetector(config.anomalyConfig);
+    this.responseSystem = responseSystem;
+    
+    this.setupDefaultThresholds();
+    this.startMonitoring();
+  }
+  
+  private setupDefaultThresholds(): void {
+    this.alertThresholds.set('failed_login', {
+      count: 5,
+      timeWindow: 5 * 60 * 1000, // 5 minutes
+      severity: 'medium'
+    });
+    
+    this.alertThresholds.set('suspicious_activity', {
+      count: 3,
+      timeWindow: 10 * 60 * 1000, // 10 minutes
+      severity: 'high'
+    });
+    
+    this.alertThresholds.set('data_breach_attempt', {
+      count: 1,
+      timeWindow: 60 * 1000, // 1 minute
+      severity: 'critical'
+    });
+  }
+  
+  recordEvent(event: Partial<SecurityEvent>): void {
+    const securityEvent: SecurityEvent = {
+      id: this.generateEventId(),
+      timestamp: Date.now(),
+      type: event.type || 'unknown',
+      severity: event.severity || 'low',
+      source: event.source || 'unknown',
+      userId: event.userId,
+      ipAddress: event.ipAddress,
+      userAgent: event.userAgent,
+      details: event.details || {},
+      location: event.location
+    };
+    
+    this.eventStore.push(securityEvent);
+    
+    // Maintain event store size
+    if (this.eventStore.length > this.maxEvents) {
+      this.eventStore.shift();
+    }
+    
+    // Check for immediate threats
+    this.analyzeEvent(securityEvent);
+    
+    // Check for patterns and anomalies
+    this.checkForAnomalies(securityEvent);
+    
+    // Check alert thresholds
+    this.checkAlertThresholds(securityEvent);
+  }
+  
+  private analyzeEvent(event: SecurityEvent): void {
+    // Immediate threat detection
+    const threats = this.detectImmediateThreats(event);
+    
+    threats.forEach(threat => {
+      this.responseSystem.handleThreat(threat);
+    });
+  }
+  
+  private detectImmediateThreats(event: SecurityEvent): SecurityThreat[] {
+    const threats: SecurityThreat[] = [];
+    
+    // SQL Injection detection
+    if (event.type === 'request' && event.details.query) {
+      const sqlPatterns = [
+        /('|(\-\-)|(;)|(\||\|)|(\*|\*))/i,
+        /(union|select|insert|delete|update|drop|create|alter|exec|execute)/i
+      ];
+      
+      if (sqlPatterns.some(pattern => pattern.test(event.details.query))) {
+        threats.push({
+          id: this.generateThreatId(),
+          type: 'sql_injection',
+          severity: 'high',
+          event,
+          description: 'Potential SQL injection attempt detected',
+          timestamp: Date.now()
+        });
+      }
+    }
+    
+    // XSS detection
+    if (event.type === 'input' && event.details.value) {
+      const xssPatterns = [
+        /<script[^>]*>.*?<\/script>/gi,
+        /javascript:/gi,
+        /on\w+\s*=/gi
+      ];
+      
+      if (xssPatterns.some(pattern => pattern.test(event.details.value))) {
+        threats.push({
+          id: this.generateThreatId(),
+          type: 'xss_attempt',
+          severity: 'high',
+          event,
+          description: 'Potential XSS attempt detected',
+          timestamp: Date.now()
+        });
+      }
+    }
+    
+    // Brute force detection
+    if (event.type === 'failed_login') {
+      const recentFailures = this.getRecentEvents('failed_login', event.ipAddress, 5 * 60 * 1000);
+      
+      if (recentFailures.length >= 5) {
+        threats.push({
+          id: this.generateThreatId(),
+          type: 'brute_force',
+          severity: 'medium',
+          event,
+          description: 'Brute force attack detected',
+          timestamp: Date.now()
+        });
+      }
+    }
+    
+    // Privilege escalation detection
+    if (event.type === 'permission_change' && event.details.newRole) {
+      const isEscalation = this.isPrivilegeEscalation(
+        event.details.oldRole,
+        event.details.newRole
+      );
+      
+      if (isEscalation) {
+        threats.push({
+          id: this.generateThreatId(),
+          type: 'privilege_escalation',
+          severity: 'critical',
+          event,
+          description: 'Unauthorized privilege escalation detected',
+          timestamp: Date.now()
+        });
+      }
+    }
+    
+    return threats;
+  }
+  
+  private checkForAnomalies(event: SecurityEvent): void {
+    const anomalies = this.anomalyDetector.detectAnomalies(event, this.eventStore);
+    
+    anomalies.forEach(anomaly => {
+      const threat: SecurityThreat = {
+        id: this.generateThreatId(),
+        type: 'anomaly',
+        severity: anomaly.severity,
+        event,
+        description: anomaly.description,
+        timestamp: Date.now(),
+        metadata: anomaly.metadata
+      };
+      
+      this.responseSystem.handleThreat(threat);
+    });
+  }
+  
+  private checkAlertThresholds(event: SecurityEvent): void {
+    const threshold = this.alertThresholds.get(event.type);
+    if (!threshold) return;
+    
+    const recentEvents = this.getRecentEvents(event.type, event.ipAddress, threshold.timeWindow);
+    
+    if (recentEvents.length >= threshold.count) {
+      const alert: SecurityAlert = {
+        id: this.generateAlertId(),
+        type: event.type,
+        severity: threshold.severity,
+        count: recentEvents.length,
+        timeWindow: threshold.timeWindow,
+        events: recentEvents,
+        timestamp: Date.now()
+      };
+      
+      this.responseSystem.handleAlert(alert);
+    }
+  }
+  
+  private getRecentEvents(
+    type: string,
+    ipAddress?: string,
+    timeWindow: number = 5 * 60 * 1000
+  ): SecurityEvent[] {
+    const cutoff = Date.now() - timeWindow;
+    
+    return this.eventStore.filter(event => 
+      event.timestamp > cutoff &&
+      event.type === type &&
+      (!ipAddress || event.ipAddress === ipAddress)
+    );
+  }
+  
+  private isPrivilegeEscalation(oldRole: string, newRole: string): boolean {
+    const roleHierarchy = {
+      'guest': 0,
+      'user': 1,
+      'moderator': 2,
+      'admin': 3,
+      'superadmin': 4
+    };
+    
+    const oldLevel = roleHierarchy[oldRole as keyof typeof roleHierarchy] || 0;
+    const newLevel = roleHierarchy[newRole as keyof typeof roleHierarchy] || 0;
+    
+    return newLevel > oldLevel + 1; // More than one level jump is suspicious
+  }
+  
+  private startMonitoring(): void {
+    // Real-time monitoring
+    setInterval(() => {
+      this.performPeriodicAnalysis();
+    }, 60 * 1000); // Every minute
+    
+    // Cleanup old events
+    setInterval(() => {
+      this.cleanupOldEvents();
+    }, 60 * 60 * 1000); // Every hour
+  }
+  
+  private performPeriodicAnalysis(): void {
+    // Analyze patterns over time
+    const patterns = this.analyzePatterns();
+    
+    patterns.forEach(pattern => {
+      if (pattern.riskScore > 0.7) {
+        const threat: SecurityThreat = {
+          id: this.generateThreatId(),
+          type: 'pattern_analysis',
+          severity: pattern.riskScore > 0.9 ? 'critical' : 'high',
+          event: pattern.events[0], // Representative event
+          description: pattern.description,
+          timestamp: Date.now(),
+          metadata: { pattern, riskScore: pattern.riskScore }
+        };
+        
+        this.responseSystem.handleThreat(threat);
+      }
+    });
+  }
+  
+  private analyzePatterns(): SecurityPattern[] {
+    const patterns: SecurityPattern[] = [];
+    
+    // Analyze IP-based patterns
+    const ipGroups = this.groupEventsByIP();
+    
+    for (const [ip, events] of ipGroups) {
+      const pattern = this.analyzeIPPattern(ip, events);
+      if (pattern) {
+        patterns.push(pattern);
+      }
+    }
+    
+    // Analyze user-based patterns
+    const userGroups = this.groupEventsByUser();
+    
+    for (const [userId, events] of userGroups) {
+      const pattern = this.analyzeUserPattern(userId, events);
+      if (pattern) {
+        patterns.push(pattern);
+      }
+    }
+    
+    return patterns;
+  }
+  
+  private groupEventsByIP(): Map<string, SecurityEvent[]> {
+    const groups = new Map<string, SecurityEvent[]>();
+    
+    this.eventStore.forEach(event => {
+      if (event.ipAddress) {
+        if (!groups.has(event.ipAddress)) {
+          groups.set(event.ipAddress, []);
+        }
+        groups.get(event.ipAddress)!.push(event);
+      }
+    });
+    
+    return groups;
+  }
+  
+  private groupEventsByUser(): Map<string, SecurityEvent[]> {
+    const groups = new Map<string, SecurityEvent[]>();
+    
+    this.eventStore.forEach(event => {
+      if (event.userId) {
+        if (!groups.has(event.userId)) {
+          groups.set(event.userId, []);
+        }
+        groups.get(event.userId)!.push(event);
+      }
+    });
+    
+    return groups;
+  }
+  
+  private analyzeIPPattern(ip: string, events: SecurityEvent[]): SecurityPattern | null {
+    if (events.length < 10) return null;
+    
+    const recentEvents = events.filter(e => Date.now() - e.timestamp < 60 * 60 * 1000); // Last hour
+    
+    if (recentEvents.length < 5) return null;
+    
+    let riskScore = 0;
+    let description = '';
+    
+    // High frequency of events
+    if (recentEvents.length > 50) {
+      riskScore += 0.3;
+      description += 'High frequency of events. ';
+    }
+    
+    // Multiple failed logins
+    const failedLogins = recentEvents.filter(e => e.type === 'failed_login');
+    if (failedLogins.length > 10) {
+      riskScore += 0.4;
+      description += 'Multiple failed login attempts. ';
+    }
+    
+    // Diverse attack types
+    const attackTypes = new Set(recentEvents.map(e => e.type));
+    if (attackTypes.size > 3) {
+      riskScore += 0.3;
+      description += 'Multiple attack vectors. ';
+    }
+    
+    if (riskScore > 0.5) {
+      return {
+        id: this.generatePatternId(),
+        type: 'ip_analysis',
+        riskScore,
+        description: `Suspicious activity from IP ${ip}: ${description}`,
+        events: recentEvents,
+        metadata: { ip, eventCount: recentEvents.length }
+      };
+    }
+    
+    return null;
+  }
+  
+  private analyzeUserPattern(userId: string, events: SecurityEvent[]): SecurityPattern | null {
+    if (events.length < 5) return null;
+    
+    const recentEvents = events.filter(e => Date.now() - e.timestamp < 24 * 60 * 60 * 1000); // Last 24 hours
+    
+    if (recentEvents.length < 3) return null;
+    
+    let riskScore = 0;
+    let description = '';
+    
+    // Unusual login times
+    const loginTimes = recentEvents
+      .filter(e => e.type === 'login')
+      .map(e => new Date(e.timestamp).getHours());
+    
+    const unusualHours = loginTimes.filter(hour => hour < 6 || hour > 22);
+    if (unusualHours.length > 2) {
+      riskScore += 0.2;
+      description += 'Unusual login times. ';
+    }
+    
+    // Multiple IP addresses
+    const ipAddresses = new Set(recentEvents.map(e => e.ipAddress));
+    if (ipAddresses.size > 3) {
+      riskScore += 0.3;
+      description += 'Multiple IP addresses. ';
+    }
+    
+    // Permission changes
+    const permissionChanges = recentEvents.filter(e => e.type === 'permission_change');
+    if (permissionChanges.length > 1) {
+      riskScore += 0.4;
+      description += 'Multiple permission changes. ';
+    }
+    
+    if (riskScore > 0.4) {
+      return {
+        id: this.generatePatternId(),
+        type: 'user_analysis',
+        riskScore,
+        description: `Suspicious activity for user ${userId}: ${description}`,
+        events: recentEvents,
+        metadata: { userId, ipCount: ipAddresses.size }
+      };
+    }
+    
+    return null;
+  }
+  
+  private cleanupOldEvents(): void {
+    const cutoff = Date.now() - (24 * 60 * 60 * 1000); // 24 hours
+    this.eventStore = this.eventStore.filter(event => event.timestamp > cutoff);
+  }
+  
+  private generateEventId(): string {
+    return `evt_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+  }
+  
+  private generateThreatId(): string {
+    return `thr_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+  }
+  
+  private generateAlertId(): string {
+    return `alt_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+  }
+  
+  private generatePatternId(): string {
+    return `pat_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+  }
+  
+  getSecurityReport(timeRange: number = 24 * 60 * 60 * 1000): SecurityReport {
+    const cutoff = Date.now() - timeRange;
+    const recentEvents = this.eventStore.filter(event => event.timestamp > cutoff);
+    
+    const eventsByType = new Map<string, number>();
+    const eventsBySeverity = new Map<string, number>();
+    const topIPs = new Map<string, number>();
+    
+    recentEvents.forEach(event => {
+      // Count by type
+      eventsByType.set(event.type, (eventsByType.get(event.type) || 0) + 1);
+      
+      // Count by severity
+      eventsBySeverity.set(event.severity, (eventsBySeverity.get(event.severity) || 0) + 1);
+      
+      // Count by IP
+      if (event.ipAddress) {
+        topIPs.set(event.ipAddress, (topIPs.get(event.ipAddress) || 0) + 1);
+      }
+    });
+    
+    return {
+      timeRange,
+      totalEvents: recentEvents.length,
+      eventsByType: Object.fromEntries(eventsByType),
+      eventsBySeverity: Object.fromEntries(eventsBySeverity),
+      topIPs: Object.fromEntries(
+        Array.from(topIPs.entries())
+          .sort(([,a], [,b]) => b - a)
+          .slice(0, 10)
+      ),
+      generatedAt: Date.now()
+    };
+  }
+}
+
+// Anomaly Detector
+class AnomalyDetector {
+  private baselines = new Map<string, Baseline>();
+  
+  constructor(private config: AnomalyConfig) {
+    this.initializeBaselines();
+  }
+  
+  private initializeBaselines(): void {
+    // Initialize baseline patterns for normal behavior
+    this.baselines.set('login_frequency', {
+      metric: 'login_frequency',
+      mean: 5, // Average logins per hour
+      stdDev: 2,
+      threshold: 3 // 3 standard deviations
+    });
+    
+    this.baselines.set('request_rate', {
+      metric: 'request_rate',
+      mean: 100, // Average requests per minute
+      stdDev: 20,
+      threshold: 2.5
+    });
+  }
+  
+  detectAnomalies(event: SecurityEvent, eventHistory: SecurityEvent[]): Anomaly[] {
+    const anomalies: Anomaly[] = [];
+    
+    // Detect frequency anomalies
+    const frequencyAnomaly = this.detectFrequencyAnomaly(event, eventHistory);
+    if (frequencyAnomaly) {
+      anomalies.push(frequencyAnomaly);
+    }
+    
+    // Detect geographic anomalies
+    const geoAnomaly = this.detectGeographicAnomaly(event, eventHistory);
+    if (geoAnomaly) {
+      anomalies.push(geoAnomaly);
+    }
+    
+    // Detect behavioral anomalies
+    const behaviorAnomaly = this.detectBehavioralAnomaly(event, eventHistory);
+    if (behaviorAnomaly) {
+      anomalies.push(behaviorAnomaly);
+    }
+    
+    return anomalies;
+  }
+  
+  private detectFrequencyAnomaly(event: SecurityEvent, eventHistory: SecurityEvent[]): Anomaly | null {
+    if (!event.userId) return null;
+    
+    const userEvents = eventHistory.filter(e => 
+      e.userId === event.userId && 
+      e.type === event.type &&
+      Date.now() - e.timestamp < 60 * 60 * 1000 // Last hour
+    );
+    
+    const baseline = this.baselines.get('login_frequency');
+    if (!baseline) return null;
+    
+    const frequency = userEvents.length;
+    const zScore = Math.abs(frequency - baseline.mean) / baseline.stdDev;
+    
+    if (zScore > baseline.threshold) {
+      return {
+        id: this.generateAnomalyId(),
+        type: 'frequency',
+        severity: zScore > baseline.threshold * 1.5 ? 'high' : 'medium',
+        description: `Unusual ${event.type} frequency for user ${event.userId}`,
+        metadata: {
+          frequency,
+          expected: baseline.mean,
+          zScore
+        }
+      };
+    }
+    
+    return null;
+  }
+  
+  private detectGeographicAnomaly(event: SecurityEvent, eventHistory: SecurityEvent[]): Anomaly | null {
+    if (!event.userId || !event.location) return null;
+    
+    const userEvents = eventHistory.filter(e => 
+      e.userId === event.userId && 
+      e.location &&
+      Date.now() - e.timestamp < 7 * 24 * 60 * 60 * 1000 // Last week
+    );
+    
+    if (userEvents.length < 5) return null;
+    
+    const locations = userEvents.map(e => e.location!);
+    const uniqueLocations = new Set(locations);
+    
+    // Check if current location is significantly different
+    if (!uniqueLocations.has(event.location) && uniqueLocations.size < 3) {
+      return {
+        id: this.generateAnomalyId(),
+        type: 'geographic',
+        severity: 'medium',
+        description: `Unusual login location for user ${event.userId}`,
+        metadata: {
+          currentLocation: event.location,
+          usualLocations: Array.from(uniqueLocations)
+        }
+      };
+    }
+    
+    return null;
+  }
+  
+  private detectBehavioralAnomaly(event: SecurityEvent, eventHistory: SecurityEvent[]): Anomaly | null {
+    if (!event.userId) return null;
+    
+    const userEvents = eventHistory.filter(e => 
+      e.userId === event.userId &&
+      Date.now() - e.timestamp < 30 * 24 * 60 * 60 * 1000 // Last 30 days
+    );
+    
+    if (userEvents.length < 20) return null;
+    
+    // Analyze typical behavior patterns
+    const typicalHours = this.getTypicalActiveHours(userEvents);
+    const currentHour = new Date(event.timestamp).getHours();
+    
+    if (!typicalHours.includes(currentHour)) {
+      return {
+        id: this.generateAnomalyId(),
+        type: 'behavioral',
+        severity: 'low',
+        description: `Unusual activity time for user ${event.userId}`,
+        metadata: {
+          currentHour,
+          typicalHours
+        }
+      };
+    }
+    
+    return null;
+  }
+  
+  private getTypicalActiveHours(events: SecurityEvent[]): number[] {
+    const hourCounts = new Map<number, number>();
+    
+    events.forEach(event => {
+      const hour = new Date(event.timestamp).getHours();
+      hourCounts.set(hour, (hourCounts.get(hour) || 0) + 1);
+    });
+    
+    const totalEvents = events.length;
+    const threshold = totalEvents * 0.05; // 5% threshold
+    
+    return Array.from(hourCounts.entries())
+      .filter(([_, count]) => count > threshold)
+      .map(([hour]) => hour);
+  }
+  
+  private generateAnomalyId(): string {
+    return `ano_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+  }
+}
+
+// Security Response System
+class SecurityResponseSystem {
+  private responseActions = new Map<string, ResponseAction[]>();
+  private blockedIPs = new Set<string>();
+  private suspendedUsers = new Set<string>();
+  
+  constructor() {
+    this.initializeResponseActions();
+  }
+  
+  private initializeResponseActions(): void {
+    this.responseActions.set('brute_force', [
+      { type: 'block_ip', duration: 60 * 60 * 1000 }, // 1 hour
+      { type: 'alert_admin', priority: 'medium' }
+    ]);
+    
+    this.responseActions.set('sql_injection', [
+      { type: 'block_ip', duration: 24 * 60 * 60 * 1000 }, // 24 hours
+      { type: 'alert_admin', priority: 'high' },
+      { type: 'log_incident', severity: 'high' }
+    ]);
+    
+    this.responseActions.set('privilege_escalation', [
+      { type: 'suspend_user', duration: 24 * 60 * 60 * 1000 },
+      { type: 'alert_admin', priority: 'critical' },
+      { type: 'log_incident', severity: 'critical' }
+    ]);
+  }
+  
+  handleThreat(threat: SecurityThreat): void {
+    const actions = this.responseActions.get(threat.type) || [];
+    
+    actions.forEach(action => {
+      this.executeAction(action, threat);
+    });
+  }
+  
+  handleAlert(alert: SecurityAlert): void {
+    // Log alert
+    console.warn('Security Alert:', alert);
+    
+    // Execute appropriate response based on severity
+    if (alert.severity === 'critical') {
+      this.executeAction({ type: 'alert_admin', priority: 'critical' }, null);
+    }
+  }
+  
+  private executeAction(action: ResponseAction, threat: SecurityThreat | null): void {
+    switch (action.type) {
+      case 'block_ip':
+        if (threat?.event.ipAddress) {
+          this.blockIP(threat.event.ipAddress, action.duration || 60 * 60 * 1000);
+        }
+        break;
+        
+      case 'suspend_user':
+        if (threat?.event.userId) {
+          this.suspendUser(threat.event.userId, action.duration || 24 * 60 * 60 * 1000);
+        }
+        break;
+        
+      case 'alert_admin':
+        this.alertAdmin(threat, action.priority || 'medium');
+        break;
+        
+      case 'log_incident':
+        this.logIncident(threat, action.severity || 'medium');
+        break;
+    }
+  }
+  
+  private blockIP(ipAddress: string, duration: number): void {
+    this.blockedIPs.add(ipAddress);
+    
+    setTimeout(() => {
+      this.blockedIPs.delete(ipAddress);
+    }, duration);
+    
+    console.log(`Blocked IP ${ipAddress} for ${duration}ms`);
+  }
+  
+  private suspendUser(userId: string, duration: number): void {
+    this.suspendedUsers.add(userId);
+    
+    setTimeout(() => {
+      this.suspendedUsers.delete(userId);
+    }, duration);
+    
+    console.log(`Suspended user ${userId} for ${duration}ms`);
+  }
+  
+  private alertAdmin(threat: SecurityThreat | null, priority: string): void {
+    // In production, send email/SMS/Slack notification
+    console.error(`ADMIN ALERT [${priority.toUpperCase()}]:`, threat);
+  }
+  
+  private logIncident(threat: SecurityThreat | null, severity: string): void {
+    // In production, log to security incident management system
+    console.log(`SECURITY INCIDENT [${severity.toUpperCase()}]:`, threat);
+  }
+  
+  isIPBlocked(ipAddress: string): boolean {
+    return this.blockedIPs.has(ipAddress);
+  }
+  
+  isUserSuspended(userId: string): boolean {
+    return this.suspendedUsers.has(userId);
+  }
+}
+
+// Interfaces
+interface SecurityEvent {
+  id: string;
+  timestamp: number;
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  source: string;
+  userId?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  details: Record<string, any>;
+  location?: string;
+}
+
+interface SecurityThreat {
+  id: string;
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  event: SecurityEvent;
+  description: string;
+  timestamp: number;
+  metadata?: Record<string, any>;
+}
+
+interface SecurityAlert {
+  id: string;
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  count: number;
+  timeWindow: number;
+  events: SecurityEvent[];
+  timestamp: number;
+}
+
+interface SecurityPattern {
+  id: string;
+  type: string;
+  riskScore: number;
+  description: string;
+  events: SecurityEvent[];
+  metadata: Record<string, any>;
+}
+
+interface Anomaly {
+  id: string;
+  type: string;
+  severity: 'low' | 'medium' | 'high';
+  description: string;
+  metadata: Record<string, any>;
+}
+
+interface Baseline {
+  metric: string;
+  mean: number;
+  stdDev: number;
+  threshold: number;
+}
+
+interface ResponseAction {
+  type: 'block_ip' | 'suspend_user' | 'alert_admin' | 'log_incident';
+  duration?: number;
+  priority?: string;
+  severity?: string;
+}
+
+interface SecurityMonitorConfig {
+  maxEvents?: number;
+  anomalyConfig?: AnomalyConfig;
+}
+
+interface AnomalyConfig {
+  enableFrequencyDetection?: boolean;
+  enableGeographicDetection?: boolean;
+  enableBehavioralDetection?: boolean;
+}
+
+interface AlertThreshold {
+  count: number;
+  timeWindow: number;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+}
+
+interface SecurityReport {
+  timeRange: number;
+  totalEvents: number;
+  eventsByType: Record<string, number>;
+  eventsBySeverity: Record<string, number>;
+  topIPs: Record<string, number>;
+  generatedAt: number;
+}
+
+// Usage Example
+const responseSystem = new SecurityResponseSystem();
+const securityMonitor = new SecurityEventMonitor(
+  {
+    maxEvents: 10000,
+    anomalyConfig: {
+      enableFrequencyDetection: true,
+      enableGeographicDetection: true,
+      enableBehavioralDetection: true
+    }
+  },
+  responseSystem
+);
+
+// Record security events
+securityMonitor.recordEvent({
+  type: 'failed_login',
+  severity: 'medium',
+  source: 'web_app',
+  userId: 'user123',
+  ipAddress: '192.168.1.100',
+  userAgent: 'Mozilla/5.0...',
+  details: { username: 'admin', reason: 'invalid_password' }
+});
+
+// Generate security report
+const report = securityMonitor.getSecurityReport(24 * 60 * 60 * 1000); // Last 24 hours
+console.log('Security Report:', report);
+```
+
+This advanced security guide now includes sophisticated authentication patterns with MFA, comprehensive RBAC, secure session management, and intelligent threat detection with automated response capabilities.
+```

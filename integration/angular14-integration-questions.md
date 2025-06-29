@@ -1234,3 +1234,939 @@ export class ModalExampleComponent {
 ```
 
 This comprehensive guide covers Angular 14's new features and integration patterns, providing practical examples for modern Angular development.
+
+---
+
+## Advanced Angular 14 Integration Patterns
+
+### Q11: How do you implement micro-frontend architecture with Angular 14?
+
+**Answer:**
+Micro-frontend architecture allows teams to develop and deploy frontend applications independently. Angular 14 provides excellent support for this pattern.
+
+**Module Federation Setup:**
+```typescript
+// webpack.config.js for Shell Application
+const ModuleFederationPlugin = require('@module-federation/webpack');
+
+module.exports = {
+  mode: 'development',
+  devServer: {
+    port: 4200,
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: 'shell',
+      remotes: {
+        'mfe1': 'mfe1@http://localhost:4201/remoteEntry.js',
+        'mfe2': 'mfe2@http://localhost:4202/remoteEntry.js',
+      },
+      shared: {
+        '@angular/core': { singleton: true, strictVersion: true },
+        '@angular/common': { singleton: true, strictVersion: true },
+        '@angular/router': { singleton: true, strictVersion: true },
+      },
+    }),
+  ],
+};
+
+// webpack.config.js for Micro-frontend
+const ModuleFederationPlugin = require('@module-federation/webpack');
+
+module.exports = {
+  mode: 'development',
+  devServer: {
+    port: 4201,
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: 'mfe1',
+      filename: 'remoteEntry.js',
+      exposes: {
+        './Component': './src/app/mfe1/mfe1.component.ts',
+        './Module': './src/app/mfe1/mfe1.module.ts',
+      },
+      shared: {
+        '@angular/core': { singleton: true, strictVersion: true },
+        '@angular/common': { singleton: true, strictVersion: true },
+        '@angular/router': { singleton: true, strictVersion: true },
+      },
+    }),
+  ],
+};
+```
+
+**Dynamic Component Loading:**
+```typescript
+// Dynamic MFE Loader Service
+import { Injectable, ComponentRef, ViewContainerRef } from '@angular/core';
+import { loadRemoteModule } from '@module-federation/runtime';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class MicroFrontendLoaderService {
+  private loadedComponents = new Map<string, ComponentRef<any>>();
+
+  async loadMicroFrontend(
+    containerRef: ViewContainerRef,
+    remoteName: string,
+    exposedModule: string,
+    componentName: string
+  ): Promise<ComponentRef<any>> {
+    try {
+      // Clear existing component
+      containerRef.clear();
+
+      // Load remote module
+      const module = await loadRemoteModule({
+        remoteName,
+        exposedModule
+      });
+
+      // Get component from module
+      const component = module[componentName];
+      
+      // Create component
+      const componentRef = containerRef.createComponent(component);
+      
+      // Store reference for cleanup
+      this.loadedComponents.set(`${remoteName}-${componentName}`, componentRef);
+      
+      return componentRef;
+    } catch (error) {
+      console.error(`Failed to load micro-frontend: ${remoteName}`, error);
+      throw error;
+    }
+  }
+
+  unloadMicroFrontend(remoteName: string, componentName: string): void {
+    const key = `${remoteName}-${componentName}`;
+    const componentRef = this.loadedComponents.get(key);
+    
+    if (componentRef) {
+      componentRef.destroy();
+      this.loadedComponents.delete(key);
+    }
+  }
+
+  unloadAllMicroFrontends(): void {
+    this.loadedComponents.forEach(componentRef => componentRef.destroy());
+    this.loadedComponents.clear();
+  }
+}
+
+// Shell Component
+@Component({
+  selector: 'app-shell',
+  template: `
+    <nav class="navigation">
+      <button (click)="loadMFE('mfe1', 'UserManagement')">User Management</button>
+      <button (click)="loadMFE('mfe2', 'ProductCatalog')">Product Catalog</button>
+      <button (click)="unloadAll()">Clear All</button>
+    </nav>
+    
+    <div class="mfe-container" #mfeContainer></div>
+    
+    <div class="error-boundary" *ngIf="error">
+      <h3>Error Loading Micro-Frontend</h3>
+      <p>{{ error }}</p>
+      <button (click)="clearError()">Dismiss</button>
+    </div>
+  `,
+  styles: [`
+    .navigation {
+      padding: 20px;
+      background: #f5f5f5;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .navigation button {
+      margin-right: 10px;
+      padding: 10px 20px;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .mfe-container {
+      padding: 20px;
+      min-height: 400px;
+    }
+    
+    .error-boundary {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 20px;
+      border: 1px solid #f5c6cb;
+      border-radius: 4px;
+      margin: 20px;
+    }
+  `]
+})
+export class ShellComponent implements OnDestroy {
+  @ViewChild('mfeContainer', { read: ViewContainerRef }) 
+  mfeContainer!: ViewContainerRef;
+  
+  error: string | null = null;
+  
+  constructor(private mfeLoader: MicroFrontendLoaderService) {}
+  
+  async loadMFE(remoteName: string, componentName: string): Promise<void> {
+    try {
+      this.error = null;
+      await this.mfeLoader.loadMicroFrontend(
+        this.mfeContainer,
+        remoteName,
+        './Component',
+        componentName
+      );
+    } catch (error) {
+      this.error = `Failed to load ${componentName} from ${remoteName}`;
+      console.error(error);
+    }
+  }
+  
+  unloadAll(): void {
+    this.mfeLoader.unloadAllMicroFrontends();
+    this.mfeContainer.clear();
+  }
+  
+  clearError(): void {
+    this.error = null;
+  }
+  
+  ngOnDestroy(): void {
+    this.unloadAll();
+  }
+}
+```
+
+**Inter-MFE Communication:**
+```typescript
+// Shared Event Bus Service
+import { Injectable } from '@angular/core';
+import { Subject, Observable } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+
+interface MFEEvent {
+  type: string;
+  source: string;
+  target?: string;
+  payload: any;
+  timestamp: number;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class MFEEventBusService {
+  private eventSubject = new Subject<MFEEvent>();
+  private events$ = this.eventSubject.asObservable();
+  
+  // Emit event to other MFEs
+  emit(type: string, payload: any, source: string, target?: string): void {
+    const event: MFEEvent = {
+      type,
+      source,
+      target,
+      payload,
+      timestamp: Date.now()
+    };
+    
+    this.eventSubject.next(event);
+  }
+  
+  // Listen for specific event types
+  on(eventType: string, source?: string): Observable<MFEEvent> {
+    return this.events$.pipe(
+      filter(event => {
+        const typeMatch = event.type === eventType;
+        const sourceMatch = !source || event.source === source;
+        return typeMatch && sourceMatch;
+      })
+    );
+  }
+  
+  // Listen for events targeted to specific MFE
+  onTargeted(target: string): Observable<MFEEvent> {
+    return this.events$.pipe(
+      filter(event => event.target === target)
+    );
+  }
+  
+  // Get event payload directly
+  onPayload<T>(eventType: string, source?: string): Observable<T> {
+    return this.on(eventType, source).pipe(
+      map(event => event.payload as T)
+    );
+  }
+}
+
+// Usage in MFE1
+@Component({
+  selector: 'app-user-management',
+  template: `
+    <div class="user-management">
+      <h2>User Management MFE</h2>
+      <button (click)="selectUser()">Select User</button>
+      <div *ngIf="selectedProduct">
+        <h3>Related Product: {{ selectedProduct.name }}</h3>
+        <p>Price: {{ selectedProduct.price | currency }}</p>
+      </div>
+    </div>
+  `
+})
+export class UserManagementComponent implements OnInit, OnDestroy {
+  selectedProduct: any = null;
+  private destroy$ = new Subject<void>();
+  
+  constructor(private eventBus: MFEEventBusService) {}
+  
+  ngOnInit(): void {
+    // Listen for product selection from other MFEs
+    this.eventBus.onPayload<any>('product-selected')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(product => {
+        this.selectedProduct = product;
+      });
+  }
+  
+  selectUser(): void {
+    const user = {
+      id: 1,
+      name: 'John Doe',
+      email: 'john@example.com'
+    };
+    
+    // Emit user selection event
+    this.eventBus.emit('user-selected', user, 'mfe1');
+  }
+  
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+}
+```
+
+### Q12: How do you implement advanced state sharing between Angular 14 applications?
+
+**Answer:**
+Advanced state sharing involves multiple strategies for different scenarios, from simple cross-component communication to complex distributed state management.
+
+**Cross-Application State Management:**
+```typescript
+// Shared State Service using BroadcastChannel
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable, fromEvent } from 'rxjs';
+import { map, filter } from 'rxjs/operators';
+
+interface StateMessage {
+  type: string;
+  payload: any;
+  timestamp: number;
+  source: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class CrossAppStateService {
+  private channel: BroadcastChannel;
+  private localState = new BehaviorSubject<any>({});
+  private channelMessages$: Observable<StateMessage>;
+  
+  constructor() {
+    this.channel = new BroadcastChannel('app-state-sync');
+    
+    // Listen for messages from other app instances
+    this.channelMessages$ = fromEvent<MessageEvent>(this.channel, 'message')
+      .pipe(
+        map(event => event.data as StateMessage),
+        filter(message => message.source !== this.getAppId())
+      );
+    
+    // Subscribe to external state changes
+    this.channelMessages$.subscribe(message => {
+      this.handleExternalStateChange(message);
+    });
+  }
+  
+  // Update local state and broadcast to other instances
+  updateState(key: string, value: any): void {
+    const currentState = this.localState.value;
+    const newState = { ...currentState, [key]: value };
+    
+    this.localState.next(newState);
+    
+    // Broadcast to other app instances
+    this.broadcastStateChange(key, value);
+  }
+  
+  // Get current state
+  getState(): Observable<any> {
+    return this.localState.asObservable();
+  }
+  
+  // Get specific state slice
+  getStateSlice<T>(key: string): Observable<T> {
+    return this.localState.pipe(
+      map(state => state[key] as T),
+      filter(value => value !== undefined)
+    );
+  }
+  
+  // Listen for external state changes
+  onExternalStateChange(type?: string): Observable<StateMessage> {
+    return this.channelMessages$.pipe(
+      filter(message => !type || message.type === type)
+    );
+  }
+  
+  private broadcastStateChange(key: string, value: any): void {
+    const message: StateMessage = {
+      type: 'state-update',
+      payload: { key, value },
+      timestamp: Date.now(),
+      source: this.getAppId()
+    };
+    
+    this.channel.postMessage(message);
+  }
+  
+  private handleExternalStateChange(message: StateMessage): void {
+    if (message.type === 'state-update') {
+      const { key, value } = message.payload;
+      const currentState = this.localState.value;
+      const newState = { ...currentState, [key]: value };
+      
+      // Update local state without broadcasting (to avoid loops)
+      this.localState.next(newState);
+    }
+  }
+  
+  private getAppId(): string {
+    // Generate or retrieve unique app instance ID
+    if (!sessionStorage.getItem('app-instance-id')) {
+      sessionStorage.setItem('app-instance-id', 
+        `app-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+    }
+    return sessionStorage.getItem('app-instance-id')!;
+  }
+  
+  destroy(): void {
+    this.channel.close();
+  }
+}
+
+// Advanced State Synchronization with Conflict Resolution
+@Injectable({
+  providedIn: 'root'
+})
+export class AdvancedStateSync {
+  private stateVersions = new Map<string, number>();
+  private conflictResolver = new Map<string, (local: any, remote: any) => any>();
+  
+  constructor(private crossAppState: CrossAppStateService) {
+    this.setupConflictResolvers();
+    this.listenForConflicts();
+  }
+  
+  // Register conflict resolution strategy
+  registerConflictResolver(
+    key: string, 
+    resolver: (local: any, remote: any) => any
+  ): void {
+    this.conflictResolver.set(key, resolver);
+  }
+  
+  // Update state with versioning
+  updateVersionedState(key: string, value: any): void {
+    const version = (this.stateVersions.get(key) || 0) + 1;
+    this.stateVersions.set(key, version);
+    
+    const versionedValue = {
+      data: value,
+      version,
+      timestamp: Date.now(),
+      source: this.getInstanceId()
+    };
+    
+    this.crossAppState.updateState(key, versionedValue);
+  }
+  
+  private setupConflictResolvers(): void {
+    // Last-write-wins resolver
+    this.registerConflictResolver('user-preferences', 
+      (local, remote) => remote.timestamp > local.timestamp ? remote : local
+    );
+    
+    // Merge resolver for arrays
+    this.registerConflictResolver('notifications', 
+      (local, remote) => {
+        const localIds = new Set(local.data.map((item: any) => item.id));
+        const mergedData = [
+          ...local.data,
+          ...remote.data.filter((item: any) => !localIds.has(item.id))
+        ];
+        return {
+          data: mergedData,
+          version: Math.max(local.version, remote.version),
+          timestamp: Math.max(local.timestamp, remote.timestamp),
+          source: 'merged'
+        };
+      }
+    );
+    
+    // Custom business logic resolver
+    this.registerConflictResolver('shopping-cart', 
+      (local, remote) => {
+        // Merge cart items, sum quantities for same products
+        const mergedItems = new Map();
+        
+        [...local.data.items, ...remote.data.items].forEach((item: any) => {
+          const existing = mergedItems.get(item.productId);
+          if (existing) {
+            existing.quantity += item.quantity;
+          } else {
+            mergedItems.set(item.productId, { ...item });
+          }
+        });
+        
+        return {
+          data: {
+            items: Array.from(mergedItems.values()),
+            total: Array.from(mergedItems.values())
+              .reduce((sum, item) => sum + (item.price * item.quantity), 0)
+          },
+          version: Math.max(local.version, remote.version) + 1,
+          timestamp: Date.now(),
+          source: 'conflict-resolved'
+        };
+      }
+    );
+  }
+  
+  private listenForConflicts(): void {
+    this.crossAppState.onExternalStateChange('state-update')
+      .subscribe(message => {
+        const { key, value: remoteValue } = message.payload;
+        
+        this.crossAppState.getStateSlice(key).pipe(
+          take(1)
+        ).subscribe(localValue => {
+          if (localValue && this.hasConflict(localValue, remoteValue)) {
+            this.resolveConflict(key, localValue, remoteValue);
+          }
+        });
+      });
+  }
+  
+  private hasConflict(local: any, remote: any): boolean {
+    return local.version !== remote.version && 
+           local.source !== remote.source;
+  }
+  
+  private resolveConflict(key: string, local: any, remote: any): void {
+    const resolver = this.conflictResolver.get(key);
+    
+    if (resolver) {
+      const resolved = resolver(local, remote);
+      this.crossAppState.updateState(key, resolved);
+    } else {
+      // Default: use timestamp-based resolution
+      const winner = remote.timestamp > local.timestamp ? remote : local;
+      this.crossAppState.updateState(key, winner);
+    }
+  }
+  
+  private getInstanceId(): string {
+    return sessionStorage.getItem('app-instance-id') || 'unknown';
+  }
+}
+```
+
+### Q13: How do you implement real-time collaboration features in Angular 14?
+
+**Answer:**
+Real-time collaboration requires WebSocket connections, operational transformation, and conflict resolution strategies.
+
+**Real-time Collaboration Service:**
+```typescript
+// WebSocket-based Collaboration Service
+import { Injectable } from '@angular/core';
+import { Observable, Subject, BehaviorSubject } from 'rxjs';
+import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
+import { retry, catchError } from 'rxjs/operators';
+
+interface CollaborationEvent {
+  type: 'operation' | 'cursor' | 'selection' | 'user-join' | 'user-leave';
+  userId: string;
+  documentId: string;
+  operation?: Operation;
+  cursor?: CursorPosition;
+  selection?: SelectionRange;
+  timestamp: number;
+}
+
+interface Operation {
+  type: 'insert' | 'delete' | 'retain';
+  position: number;
+  content?: string;
+  length?: number;
+  attributes?: any;
+}
+
+interface CursorPosition {
+  line: number;
+  column: number;
+  color: string;
+}
+
+interface SelectionRange {
+  start: { line: number; column: number };
+  end: { line: number; column: number };
+  color: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class CollaborationService {
+  private socket$: WebSocketSubject<any> | null = null;
+  private connectionStatus$ = new BehaviorSubject<'connected' | 'disconnected' | 'connecting'>('disconnected');
+  private collaborationEvents$ = new Subject<CollaborationEvent>();
+  private activeUsers$ = new BehaviorSubject<Map<string, any>>(new Map());
+  
+  private currentUserId: string;
+  private currentDocumentId: string | null = null;
+  
+  constructor() {
+    this.currentUserId = this.generateUserId();
+  }
+  
+  // Connect to collaboration server
+  connect(documentId: string, wsUrl: string): Observable<CollaborationEvent> {
+    this.currentDocumentId = documentId;
+    this.connectionStatus$.next('connecting');
+    
+    this.socket$ = webSocket({
+      url: `${wsUrl}?documentId=${documentId}&userId=${this.currentUserId}`,
+      openObserver: {
+        next: () => {
+          this.connectionStatus$.next('connected');
+          this.joinDocument(documentId);
+        }
+      },
+      closeObserver: {
+        next: () => {
+          this.connectionStatus$.next('disconnected');
+        }
+      }
+    });
+    
+    // Handle incoming messages
+    this.socket$.pipe(
+      retry({ delay: 3000 }),
+      catchError(error => {
+        console.error('WebSocket error:', error);
+        this.connectionStatus$.next('disconnected');
+        throw error;
+      })
+    ).subscribe(event => {
+      this.handleCollaborationEvent(event);
+    });
+    
+    return this.collaborationEvents$.asObservable();
+  }
+  
+  // Send operation to other collaborators
+  sendOperation(operation: Operation): void {
+    if (this.socket$ && this.currentDocumentId) {
+      const event: CollaborationEvent = {
+        type: 'operation',
+        userId: this.currentUserId,
+        documentId: this.currentDocumentId,
+        operation,
+        timestamp: Date.now()
+      };
+      
+      this.socket$.next(event);
+    }
+  }
+  
+  // Send cursor position
+  sendCursorPosition(cursor: CursorPosition): void {
+    if (this.socket$ && this.currentDocumentId) {
+      const event: CollaborationEvent = {
+        type: 'cursor',
+        userId: this.currentUserId,
+        documentId: this.currentDocumentId,
+        cursor,
+        timestamp: Date.now()
+      };
+      
+      this.socket$.next(event);
+    }
+  }
+  
+  // Send selection range
+  sendSelection(selection: SelectionRange): void {
+    if (this.socket$ && this.currentDocumentId) {
+      const event: CollaborationEvent = {
+        type: 'selection',
+        userId: this.currentUserId,
+        documentId: this.currentDocumentId,
+        selection,
+        timestamp: Date.now()
+      };
+      
+      this.socket$.next(event);
+    }
+  }
+  
+  // Get connection status
+  getConnectionStatus(): Observable<'connected' | 'disconnected' | 'connecting'> {
+    return this.connectionStatus$.asObservable();
+  }
+  
+  // Get active users
+  getActiveUsers(): Observable<Map<string, any>> {
+    return this.activeUsers$.asObservable();
+  }
+  
+  // Disconnect from collaboration
+  disconnect(): void {
+    if (this.socket$) {
+      this.socket$.complete();
+      this.socket$ = null;
+    }
+    this.connectionStatus$.next('disconnected');
+    this.activeUsers$.next(new Map());
+  }
+  
+  private joinDocument(documentId: string): void {
+    if (this.socket$) {
+      this.socket$.next({
+        type: 'user-join',
+        userId: this.currentUserId,
+        documentId,
+        userInfo: {
+          name: this.getUserName(),
+          avatar: this.getUserAvatar(),
+          color: this.getUserColor()
+        },
+        timestamp: Date.now()
+      });
+    }
+  }
+  
+  private handleCollaborationEvent(event: CollaborationEvent): void {
+    // Don't process our own events
+    if (event.userId === this.currentUserId) {
+      return;
+    }
+    
+    switch (event.type) {
+      case 'user-join':
+        this.handleUserJoin(event);
+        break;
+      case 'user-leave':
+        this.handleUserLeave(event);
+        break;
+      default:
+        this.collaborationEvents$.next(event);
+    }
+  }
+  
+  private handleUserJoin(event: CollaborationEvent): void {
+    const users = this.activeUsers$.value;
+    users.set(event.userId, {
+      id: event.userId,
+      ...event,
+      joinedAt: event.timestamp
+    });
+    this.activeUsers$.next(new Map(users));
+    this.collaborationEvents$.next(event);
+  }
+  
+  private handleUserLeave(event: CollaborationEvent): void {
+    const users = this.activeUsers$.value;
+    users.delete(event.userId);
+    this.activeUsers$.next(new Map(users));
+    this.collaborationEvents$.next(event);
+  }
+  
+  private generateUserId(): string {
+    return `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+  
+  private getUserName(): string {
+    return localStorage.getItem('userName') || 'Anonymous User';
+  }
+  
+  private getUserAvatar(): string {
+    return localStorage.getItem('userAvatar') || '/assets/default-avatar.png';
+  }
+  
+  private getUserColor(): string {
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'];
+    const index = this.currentUserId.charCodeAt(0) % colors.length;
+    return colors[index];
+  }
+}
+
+// Operational Transformation for Text Editing
+@Injectable({
+  providedIn: 'root'
+})
+export class OperationalTransformService {
+  // Transform operation against another operation
+  transform(op1: Operation, op2: Operation): [Operation, Operation] {
+    if (op1.type === 'retain' && op2.type === 'retain') {
+      return [op1, op2];
+    }
+    
+    if (op1.type === 'insert' && op2.type === 'insert') {
+      if (op1.position <= op2.position) {
+        return [
+          op1,
+          { ...op2, position: op2.position + (op1.content?.length || 0) }
+        ];
+      } else {
+        return [
+          { ...op1, position: op1.position + (op2.content?.length || 0) },
+          op2
+        ];
+      }
+    }
+    
+    if (op1.type === 'delete' && op2.type === 'delete') {
+      if (op1.position <= op2.position) {
+        return [
+          op1,
+          { ...op2, position: Math.max(op2.position - (op1.length || 0), op1.position) }
+        ];
+      } else {
+        return [
+          { ...op1, position: Math.max(op1.position - (op2.length || 0), op2.position) },
+          op2
+        ];
+      }
+    }
+    
+    if (op1.type === 'insert' && op2.type === 'delete') {
+      if (op1.position <= op2.position) {
+        return [
+          op1,
+          { ...op2, position: op2.position + (op1.content?.length || 0) }
+        ];
+      } else {
+        return [
+          { ...op1, position: Math.max(op1.position - (op2.length || 0), op2.position) },
+          op2
+        ];
+      }
+    }
+    
+    if (op1.type === 'delete' && op2.type === 'insert') {
+      if (op1.position <= op2.position) {
+        return [
+          op1,
+          { ...op2, position: Math.max(op2.position - (op1.length || 0), op1.position) }
+        ];
+      } else {
+        return [
+          { ...op1, position: op1.position + (op2.content?.length || 0) },
+          op2
+        ];
+      }
+    }
+    
+    return [op1, op2];
+  }
+  
+  // Apply operation to text
+  applyOperation(text: string, operation: Operation): string {
+    switch (operation.type) {
+      case 'insert':
+        return text.slice(0, operation.position) + 
+               (operation.content || '') + 
+               text.slice(operation.position);
+      
+      case 'delete':
+        return text.slice(0, operation.position) + 
+               text.slice(operation.position + (operation.length || 0));
+      
+      case 'retain':
+        return text;
+      
+      default:
+        return text;
+    }
+  }
+  
+  // Compose multiple operations
+  composeOperations(ops: Operation[]): Operation[] {
+    if (ops.length === 0) return [];
+    if (ops.length === 1) return ops;
+    
+    const result: Operation[] = [];
+    let current = ops[0];
+    
+    for (let i = 1; i < ops.length; i++) {
+      const next = ops[i];
+      
+      // Try to merge operations
+      if (this.canMerge(current, next)) {
+        current = this.mergeOperations(current, next);
+      } else {
+        result.push(current);
+        current = next;
+      }
+    }
+    
+    result.push(current);
+    return result;
+  }
+  
+  private canMerge(op1: Operation, op2: Operation): boolean {
+    if (op1.type !== op2.type) return false;
+    
+    if (op1.type === 'insert' && op2.type === 'insert') {
+      return op1.position + (op1.content?.length || 0) === op2.position;
+    }
+    
+    if (op1.type === 'delete' && op2.type === 'delete') {
+      return op1.position === op2.position;
+    }
+    
+    return false;
+  }
+  
+  private mergeOperations(op1: Operation, op2: Operation): Operation {
+    if (op1.type === 'insert' && op2.type === 'insert') {
+      return {
+        type: 'insert',
+        position: op1.position,
+        content: (op1.content || '') + (op2.content || '')
+      };
+    }
+    
+    if (op1.type === 'delete' && op2.type === 'delete') {
+      return {
+        type: 'delete',
+        position: op1.position,
+        length: (op1.length || 0) + (op2.length || 0)
+      };
+    }
+    
+    return op1;
+  }
+}
+```
+
+This comprehensive integration guide now covers advanced Angular 14 patterns including micro-frontend architecture, cross-application state management, and real-time collaboration features with practical implementation examples.
