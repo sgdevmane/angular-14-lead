@@ -1,4 +1,4 @@
-# Multi-stage build for Angular 14 Lead Developer Interview Guide
+# Multi-stage build for Lead Developer Interview Guide
 # Stage 1: Build stage (if needed for any build processes)
 FROM node:18-alpine AS builder
 
@@ -39,7 +39,7 @@ RUN chmod 644 /etc/nginx/conf.d/default.conf
 RUN echo '#!/bin/bash' > /docker-entrypoint.sh && \
     echo 'set -e' >> /docker-entrypoint.sh && \
     echo '' >> /docker-entrypoint.sh && \
-    echo 'echo "Starting Angular 14 Lead Developer Interview Guide..."' >> /docker-entrypoint.sh && \
+    echo 'echo "Starting Lead Developer Interview Guide..."' >> /docker-entrypoint.sh && \
     echo 'echo "Application will be available at http://localhost:80"' >> /docker-entrypoint.sh && \
     echo 'echo "Health check available at http://localhost:80/health"' >> /docker-entrypoint.sh && \
     echo '' >> /docker-entrypoint.sh && \
@@ -62,8 +62,8 @@ WORKDIR /usr/share/nginx/html
 CMD ["/docker-entrypoint.sh"]
 
 # Labels for better container management
-LABEL maintainer="Angular 14 Lead Developer" \
-      description="Comprehensive Angular 14 Lead Developer Interview Guide" \
+LABEL maintainer="Lead Developer Guide" \
+      description="Comprehensive Lead Developer Interview Guide" \
       version="1.0.0" \
       org.opencontainers.image.title="Angular 14 Interview Guide" \
       org.opencontainers.image.description="Interactive web application with Angular 14, JavaScript, HTML5, CSS3, NgRx, Performance, and Security interview questions" \

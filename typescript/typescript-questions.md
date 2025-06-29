@@ -2890,7 +2890,7 @@ This comprehensive TypeScript guide covers all essential concepts from basic typ
 
 ## Advanced TypeScript 5.0+ Features and Patterns
 
-### Q13: How do you implement advanced type manipulation and metaprogramming in TypeScript?
+### Q15: How do you implement advanced type manipulation and metaprogramming in TypeScript?
 **Difficulty: Expert**
 
 **Answer:**
@@ -3174,7 +3174,7 @@ class UserModel {
 }
 ```
 
-### Q14: How do you implement advanced type-safe patterns for modern applications?
+### Q16: How do you implement advanced type-safe patterns for modern applications?
 **Difficulty: Expert**
 
 **Answer:**
@@ -3598,4 +3598,946 @@ async function handleUserOperations() {
 }
 ```
 
-This enhanced TypeScript guide now includes cutting-edge type manipulation techniques, advanced metaprogramming patterns, sophisticated state management solutions, type-safe API integration, and robust error handling patterns essential for building enterprise-grade TypeScript applications.
+---
+
+### Q17: How do you implement TypeScript 5.0+ decorators and metadata reflection?
+**Difficulty: Expert**
+
+**Answer:**
+TypeScript 5.0+ introduces the new decorators proposal with enhanced metadata capabilities and better performance.
+
+**1. Modern Decorator Syntax:**
+```typescript
+// Class decorator with metadata
+function Entity(tableName: string) {
+  return function <T extends { new (...args: any[]): {} }>(constructor: T) {
+    return class extends constructor {
+      static tableName = tableName;
+      static getMetadata() {
+        return {
+          tableName,
+          fields: Reflect.getMetadata('fields', constructor) || []
+        };
+      }
+    };
+  };
+}
+
+// Property decorator
+function Column(options: { type: string; nullable?: boolean }) {
+  return function (target: any, propertyKey: string) {
+    const fields = Reflect.getMetadata('fields', target.constructor) || [];
+    fields.push({
+      name: propertyKey,
+      ...options
+    });
+    Reflect.defineMetadata('fields', fields, target.constructor);
+  };
+}
+
+// Method decorator with parameter validation
+function Validate(schema: any) {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    const originalMethod = descriptor.value;
+    
+    descriptor.value = function (...args: any[]) {
+      // Validate arguments against schema
+      const errors = validateSchema(args, schema);
+      if (errors.length > 0) {
+        throw new ValidationError(errors);
+      }
+      return originalMethod.apply(this, args);
+    };
+  };
+}
+
+// Usage
+@Entity('users')
+class User {
+  @Column({ type: 'varchar', nullable: false })
+  name!: string;
+  
+  @Column({ type: 'varchar', nullable: true })
+  email?: string;
+  
+  @Validate({
+    name: { required: true, minLength: 2 },
+    email: { format: 'email' }
+  })
+  updateProfile(name: string, email?: string) {
+    this.name = name;
+    this.email = email;
+  }
+}
+```
+
+**2. Advanced Metadata System:**
+```typescript
+// Metadata registry
+class MetadataRegistry {
+  private static metadata = new WeakMap<any, Map<string, any>>();
+  
+  static define<T>(target: any, key: string, value: T): void {
+    if (!this.metadata.has(target)) {
+      this.metadata.set(target, new Map());
+    }
+    this.metadata.get(target)!.set(key, value);
+  }
+  
+  static get<T>(target: any, key: string): T | undefined {
+    return this.metadata.get(target)?.get(key);
+  }
+  
+  static getAll(target: any): Map<string, any> | undefined {
+    return this.metadata.get(target);
+  }
+}
+
+// Type-safe decorator factory
+function createDecorator<T extends Record<string, any>>() {
+  return function (metadata: T) {
+    return function <TTarget>(target: TTarget, context: ClassDecoratorContext<TTarget>) {
+      MetadataRegistry.define(target, 'decorator-metadata', metadata);
+      
+      // Add metadata to class prototype
+      (target as any).getDecoratorMetadata = () => metadata;
+      
+      return target;
+    };
+  };
+}
+
+// Usage with type safety
+interface ApiMetadata {
+  version: string;
+  deprecated?: boolean;
+  rateLimit?: number;
+}
+
+const ApiController = createDecorator<ApiMetadata>();
+
+@ApiController({
+  version: 'v1',
+  rateLimit: 100
+})
+class UserController {
+  // Implementation
+}
+```
+
+---
+
+### Q18: How do you implement advanced TypeScript patterns for reactive programming?
+**Difficulty: Expert**
+
+**Answer:**
+Advanced TypeScript patterns for reactive programming involve sophisticated type manipulation for observables, signals, and async operations.
+
+**1. Type-Safe Observable Operators:**
+```typescript
+// Advanced observable type definitions
+type ObservableInput<T> = Observable<T> | Promise<T> | ArrayLike<T>;
+
+type OperatorFunction<T, R> = (source: Observable<T>) => Observable<R>;
+
+type MonoTypeOperatorFunction<T> = OperatorFunction<T, T>;
+
+// Custom operator with type inference
+function mapWithIndex<T, R>(
+  project: (value: T, index: number) => R
+): OperatorFunction<T, R> {
+  return (source: Observable<T>) => {
+    return new Observable<R>(subscriber => {
+      let index = 0;
+      return source.subscribe({
+        next: value => {
+          try {
+            const result = project(value, index++);
+            subscriber.next(result);
+          } catch (error) {
+            subscriber.error(error);
+          }
+        },
+        error: err => subscriber.error(err),
+        complete: () => subscriber.complete()
+      });
+    });
+  };
+}
+
+// Type-safe combineLatest with tuple inference
+function combineLatestTyped<T extends readonly Observable<any>[]>(
+  sources: [...T]
+): Observable<{ [K in keyof T]: T[K] extends Observable<infer U> ? U : never }> {
+  return combineLatest(sources) as any;
+}
+
+// Usage
+const user$ = of({ id: 1, name: 'John' });
+const posts$ = of([{ id: 1, title: 'Post 1' }]);
+const settings$ = of({ theme: 'dark' });
+
+const combined$ = combineLatestTyped([user$, posts$, settings$]);
+// Type: Observable<[{ id: number; name: string }, { id: number; title: string }[], { theme: string }]>
+```
+
+**2. Advanced Signal Patterns:**
+```typescript
+// Signal with computed dependencies
+class SignalStore<T> {
+  private _value: T;
+  private _subscribers = new Set<(value: T) => void>();
+  private _computedCache = new WeakMap();
+  
+  constructor(initialValue: T) {
+    this._value = initialValue;
+  }
+  
+  get value(): T {
+    return this._value;
+  }
+  
+  set(value: T): void {
+    if (this._value !== value) {
+      this._value = value;
+      this._notify();
+    }
+  }
+  
+  update(updater: (current: T) => T): void {
+    this.set(updater(this._value));
+  }
+  
+  subscribe(callback: (value: T) => void): () => void {
+    this._subscribers.add(callback);
+    return () => this._subscribers.delete(callback);
+  }
+  
+  computed<R>(selector: (value: T) => R): SignalStore<R> {
+    if (this._computedCache.has(selector)) {
+      return this._computedCache.get(selector);
+    }
+    
+    const computed = new SignalStore(selector(this._value));
+    
+    this.subscribe(value => {
+      computed.set(selector(value));
+    });
+    
+    this._computedCache.set(selector, computed);
+    return computed;
+  }
+  
+  private _notify(): void {
+    this._subscribers.forEach(callback => callback(this._value));
+  }
+}
+
+// Type-safe state management
+interface AppState {
+  user: { id: number; name: string } | null;
+  posts: Array<{ id: number; title: string; authorId: number }>;
+  loading: boolean;
+}
+
+class AppStore {
+  private store = new SignalStore<AppState>({
+    user: null,
+    posts: [],
+    loading: false
+  });
+  
+  // Computed selectors with type safety
+  user = this.store.computed(state => state.user);
+  posts = this.store.computed(state => state.posts);
+  loading = this.store.computed(state => state.loading);
+  
+  userPosts = this.store.computed(state => {
+    if (!state.user) return [];
+    return state.posts.filter(post => post.authorId === state.user!.id);
+  });
+  
+  // Type-safe actions
+  setUser(user: AppState['user']): void {
+    this.store.update(state => ({ ...state, user }));
+  }
+  
+  addPost(post: AppState['posts'][0]): void {
+    this.store.update(state => ({
+      ...state,
+      posts: [...state.posts, post]
+    }));
+  }
+  
+  setLoading(loading: boolean): void {
+    this.store.update(state => ({ ...state, loading }));
+  }
+}
+```
+
+---
+
+### Q13: How do you implement TypeScript 5.0+ const assertions and satisfies operator for advanced type safety?
+
+**Answer:**
+TypeScript 5.0+ introduces powerful features like const assertions, the satisfies operator, and improved type inference for enhanced type safety and developer experience.
+
+**Const Assertions and Satisfies Operator:**
+```typescript
+// Advanced const assertions with satisfies
+const API_ENDPOINTS = {
+  users: '/api/users',
+  posts: '/api/posts',
+  comments: '/api/comments',
+  auth: {
+    login: '/api/auth/login',
+    logout: '/api/auth/logout',
+    refresh: '/api/auth/refresh'
+  }
+} as const satisfies Record<string, string | Record<string, string>>;
+
+// Type-safe endpoint access
+type ApiEndpoint = typeof API_ENDPOINTS;
+type FlatEndpoints = {
+  [K in keyof ApiEndpoint]: ApiEndpoint[K] extends string 
+    ? ApiEndpoint[K]
+    : ApiEndpoint[K] extends Record<string, infer V>
+    ? V
+    : never;
+}[keyof ApiEndpoint];
+
+// Advanced configuration with const assertions
+interface DatabaseConfig {
+  host: string;
+  port: number;
+  ssl: boolean;
+  poolSize: number;
+  timeout: number;
+}
+
+interface CacheConfig {
+  provider: 'redis' | 'memory' | 'memcached';
+  ttl: number;
+  maxSize: number;
+}
+
+interface LoggingConfig {
+  level: 'debug' | 'info' | 'warn' | 'error';
+  format: 'json' | 'text';
+  outputs: readonly ('console' | 'file' | 'syslog')[];
+}
+
+interface AppConfig {
+  database: DatabaseConfig;
+  cache: CacheConfig;
+  logging: LoggingConfig;
+  features: Record<string, boolean>;
+}
+
+// Type-safe configuration with satisfies
+const CONFIG = {
+  database: {
+    host: 'localhost',
+    port: 5432,
+    ssl: false,
+    poolSize: 10,
+    timeout: 30000
+  },
+  cache: {
+    provider: 'redis',
+    ttl: 3600,
+    maxSize: 1000
+  },
+  logging: {
+    level: 'info',
+    format: 'json',
+    outputs: ['console', 'file']
+  },
+  features: {
+    enableNewUI: true,
+    enableAnalytics: false,
+    enableBetaFeatures: false
+  }
+} as const satisfies AppConfig;
+
+// Advanced type manipulation with const assertions
+type ConfigKeys = keyof typeof CONFIG;
+type DatabaseKeys = keyof typeof CONFIG.database;
+type FeatureFlags = keyof typeof CONFIG.features;
+
+// Type-safe feature flag checker
+class FeatureManager {
+  private config = CONFIG;
+  
+  isEnabled<K extends FeatureFlags>(feature: K): boolean {
+    return this.config.features[feature];
+  }
+  
+  getConfig<K extends ConfigKeys>(section: K): typeof CONFIG[K] {
+    return this.config[section];
+  }
+  
+  // Type-safe environment override
+  withOverrides<T extends Partial<AppConfig>>(overrides: T): AppConfig & T {
+    return { ...this.config, ...overrides } satisfies AppConfig & T;
+  }
+}
+
+// Advanced tuple manipulation with const assertions
+const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] as const;
+type HttpMethod = typeof HTTP_METHODS[number];
+
+const STATUS_CODES = {
+  OK: 200,
+  CREATED: 201,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  INTERNAL_SERVER_ERROR: 500
+} as const satisfies Record<string, number>;
+
+type StatusCode = typeof STATUS_CODES[keyof typeof STATUS_CODES];
+type StatusName = keyof typeof STATUS_CODES;
+
+// Type-safe API response builder
+class ApiResponseBuilder {
+  static success<T>(data: T, status: StatusCode = STATUS_CODES.OK) {
+    return {
+      success: true,
+      data,
+      status,
+      timestamp: new Date().toISOString()
+    } as const;
+  }
+  
+  static error(message: string, status: StatusCode, details?: unknown) {
+    return {
+      success: false,
+      error: {
+        message,
+        details
+      },
+      status,
+      timestamp: new Date().toISOString()
+    } as const;
+  }
+}
+
+// Advanced pattern matching with satisfies
+type EventType = 'user_created' | 'user_updated' | 'user_deleted' | 'post_created' | 'post_updated';
+
+interface BaseEvent {
+  id: string;
+  timestamp: Date;
+  userId: string;
+}
+
+interface UserEvent extends BaseEvent {
+  type: 'user_created' | 'user_updated' | 'user_deleted';
+  userData: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+interface PostEvent extends BaseEvent {
+  type: 'post_created' | 'post_updated';
+  postData: {
+    id: string;
+    title: string;
+    content: string;
+  };
+}
+
+type DomainEvent = UserEvent | PostEvent;
+
+// Type-safe event handlers with satisfies
+const EVENT_HANDLERS = {
+  user_created: (event: Extract<DomainEvent, { type: 'user_created' }>) => {
+    console.log(`User created: ${event.userData.name}`);
+    // Send welcome email
+  },
+  user_updated: (event: Extract<DomainEvent, { type: 'user_updated' }>) => {
+    console.log(`User updated: ${event.userData.name}`);
+    // Update search index
+  },
+  user_deleted: (event: Extract<DomainEvent, { type: 'user_deleted' }>) => {
+    console.log(`User deleted: ${event.userData.id}`);
+    // Cleanup user data
+  },
+  post_created: (event: Extract<DomainEvent, { type: 'post_created' }>) => {
+    console.log(`Post created: ${event.postData.title}`);
+    // Update feed
+  },
+  post_updated: (event: Extract<DomainEvent, { type: 'post_updated' }>) => {
+    console.log(`Post updated: ${event.postData.title}`);
+    // Invalidate cache
+  }
+} as const satisfies Record<EventType, (event: any) => void>;
+
+// Type-safe event dispatcher
+class EventDispatcher {
+  dispatch<T extends DomainEvent>(event: T): void {
+    const handler = EVENT_HANDLERS[event.type];
+    if (handler) {
+      handler(event as any); // Type assertion needed due to complex union types
+    }
+  }
+  
+  // Batch event processing with type safety
+  dispatchBatch(events: readonly DomainEvent[]): void {
+    events.forEach(event => this.dispatch(event));
+  }
+}
+```
+
+**Advanced Type Guards with Satisfies:**
+```typescript
+// Type-safe validation schemas
+interface ValidationRule<T> {
+  validate: (value: unknown) => value is T;
+  message: string;
+}
+
+const VALIDATION_RULES = {
+  string: {
+    validate: (value: unknown): value is string => typeof value === 'string',
+    message: 'Must be a string'
+  },
+  number: {
+    validate: (value: unknown): value is number => typeof value === 'number' && !isNaN(value),
+    message: 'Must be a valid number'
+  },
+  email: {
+    validate: (value: unknown): value is string => {
+      return typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    },
+    message: 'Must be a valid email address'
+  },
+  positiveNumber: {
+    validate: (value: unknown): value is number => {
+      return typeof value === 'number' && !isNaN(value) && value > 0;
+    },
+    message: 'Must be a positive number'
+  }
+} as const satisfies Record<string, ValidationRule<any>>;
+
+type ValidationRuleName = keyof typeof VALIDATION_RULES;
+
+// Type-safe form validation
+interface FormField<T> {
+  name: string;
+  rules: readonly ValidationRuleName[];
+  transform?: (value: unknown) => T;
+}
+
+interface UserForm {
+  name: string;
+  email: string;
+  age: number;
+}
+
+const USER_FORM_SCHEMA = {
+  name: {
+    name: 'name',
+    rules: ['string'],
+    transform: (value: unknown) => String(value).trim()
+  },
+  email: {
+    name: 'email',
+    rules: ['string', 'email'],
+    transform: (value: unknown) => String(value).toLowerCase().trim()
+  },
+  age: {
+    name: 'age',
+    rules: ['number', 'positiveNumber'],
+    transform: (value: unknown) => Number(value)
+  }
+} as const satisfies Record<keyof UserForm, FormField<any>>;
+
+// Type-safe validator
+class FormValidator {
+  validate<T extends Record<string, any>>(
+    data: Record<string, unknown>,
+    schema: Record<keyof T, FormField<any>>
+  ): { isValid: boolean; errors: Record<string, string[]>; data?: T } {
+    const errors: Record<string, string[]> = {};
+    const validatedData: Record<string, any> = {};
+    
+    for (const [fieldName, field] of Object.entries(schema)) {
+      const value = data[fieldName];
+      const fieldErrors: string[] = [];
+      
+      for (const ruleName of field.rules) {
+        const rule = VALIDATION_RULES[ruleName];
+        if (!rule.validate(value)) {
+          fieldErrors.push(rule.message);
+        }
+      }
+      
+      if (fieldErrors.length === 0) {
+        validatedData[fieldName] = field.transform ? field.transform(value) : value;
+      } else {
+        errors[fieldName] = fieldErrors;
+      }
+    }
+    
+    const isValid = Object.keys(errors).length === 0;
+    return isValid 
+      ? { isValid: true, errors: {}, data: validatedData as T }
+      : { isValid: false, errors };
+  }
+}
+```
+
+---
+
+### Q14: How do you implement advanced TypeScript 5.0+ decorators and metadata reflection for enterprise applications?
+
+**Answer:**
+TypeScript 5.0+ introduces stage 3 decorators with improved metadata reflection capabilities, enabling powerful enterprise patterns for dependency injection, validation, and aspect-oriented programming.
+
+**Advanced Decorator Implementation:**
+```typescript
+// Advanced metadata reflection system
+interface MetadataKey<T = any> {
+  readonly symbol: symbol;
+  readonly description: string;
+}
+
+function createMetadataKey<T>(description: string): MetadataKey<T> {
+  return {
+    symbol: Symbol(description),
+    description
+  };
+}
+
+// Metadata storage
+class MetadataStorage {
+  private static metadata = new WeakMap<object, Map<symbol, any>>();
+  
+  static set<T>(target: object, key: MetadataKey<T>, value: T): void {
+    if (!this.metadata.has(target)) {
+      this.metadata.set(target, new Map());
+    }
+    this.metadata.get(target)!.set(key.symbol, value);
+  }
+  
+  static get<T>(target: object, key: MetadataKey<T>): T | undefined {
+    return this.metadata.get(target)?.get(key.symbol);
+  }
+  
+  static has(target: object, key: MetadataKey): boolean {
+    return this.metadata.get(target)?.has(key.symbol) ?? false;
+  }
+  
+  static getAll(target: object): Map<symbol, any> | undefined {
+    return this.metadata.get(target);
+  }
+}
+
+// Metadata keys for different concerns
+const INJECTABLE_KEY = createMetadataKey<{ singleton?: boolean; scope?: string }>('injectable');
+const DEPENDENCIES_KEY = createMetadataKey<Array<{ index: number; token: any }>>('dependencies');
+const VALIDATION_KEY = createMetadataKey<Array<{ property: string; rules: ValidationRule[] }>>('validation');
+const ROUTE_KEY = createMetadataKey<{ path: string; method: string; middleware?: Function[] }>('route');
+const CACHE_KEY = createMetadataKey<{ ttl: number; key?: string }>('cache');
+const AUDIT_KEY = createMetadataKey<{ action: string; sensitive?: boolean }>('audit');
+
+// Advanced dependency injection decorators
+function Injectable(options: { singleton?: boolean; scope?: string } = {}) {
+  return function <T extends abstract new (...args: any[]) => any>(target: T, context: ClassDecoratorContext) {
+    MetadataStorage.set(target, INJECTABLE_KEY, options);
+    
+    // Register with DI container
+    DIContainer.register(target, options);
+    
+    return target;
+  };
+}
+
+function Inject(token: any) {
+  return function (target: any, context: ClassFieldDecoratorContext | ClassMethodDecoratorContext) {
+    if (context.kind === 'field') {
+      // Property injection
+      return function (this: any, initialValue: any) {
+        return DIContainer.resolve(token);
+      };
+    } else if (context.kind === 'method') {
+      // Parameter injection for constructor
+      const parameterIndex = (context as any).metadata?.parameterIndex ?? 0;
+      const existing = MetadataStorage.get(target, DEPENDENCIES_KEY) || [];
+      existing.push({ index: parameterIndex, token });
+      MetadataStorage.set(target, DEPENDENCIES_KEY, existing);
+    }
+  };
+}
+
+// Advanced validation decorators
+interface ValidationRule {
+  type: 'required' | 'minLength' | 'maxLength' | 'pattern' | 'custom';
+  value?: any;
+  message?: string;
+  validator?: (value: any) => boolean;
+}
+
+function Validate(rules: ValidationRule[]) {
+  return function (target: any, context: ClassFieldDecoratorContext) {
+    const existing = MetadataStorage.get(target.constructor, VALIDATION_KEY) || [];
+    existing.push({ property: context.name as string, rules });
+    MetadataStorage.set(target.constructor, VALIDATION_KEY, existing);
+  };
+}
+
+function Required(message?: string) {
+  return Validate([{ type: 'required', message: message || 'Field is required' }]);
+}
+
+function MinLength(length: number, message?: string) {
+  return Validate([{ 
+    type: 'minLength', 
+    value: length, 
+    message: message || `Minimum length is ${length}` 
+  }]);
+}
+
+function Pattern(regex: RegExp, message?: string) {
+  return Validate([{ 
+    type: 'pattern', 
+    value: regex, 
+    message: message || 'Invalid format' 
+  }]);
+}
+
+// Advanced HTTP route decorators
+function Controller(basePath: string = '') {
+  return function <T extends abstract new (...args: any[]) => any>(target: T, context: ClassDecoratorContext) {
+    MetadataStorage.set(target, createMetadataKey('controller'), { basePath });
+    return target;
+  };
+}
+
+function Route(method: string, path: string, middleware: Function[] = []) {
+  return function (target: any, context: ClassMethodDecoratorContext) {
+    MetadataStorage.set(target, ROUTE_KEY, { method, path, middleware });
+  };
+}
+
+function Get(path: string, middleware?: Function[]) {
+  return Route('GET', path, middleware);
+}
+
+function Post(path: string, middleware?: Function[]) {
+  return Route('POST', path, middleware);
+}
+
+// Advanced caching decorator
+function Cache(ttl: number, keyGenerator?: (args: any[]) => string) {
+  return function (target: any, context: ClassMethodDecoratorContext) {
+    const originalMethod = target;
+    
+    return function (this: any, ...args: any[]) {
+      const cacheKey = keyGenerator ? keyGenerator(args) : `${context.name as string}:${JSON.stringify(args)}`;
+      
+      // Check cache
+      const cached = CacheManager.get(cacheKey);
+      if (cached) {
+        return cached;
+      }
+      
+      // Execute method and cache result
+      const result = originalMethod.apply(this, args);
+      
+      if (result instanceof Promise) {
+        return result.then(value => {
+          CacheManager.set(cacheKey, value, ttl);
+          return value;
+        });
+      } else {
+        CacheManager.set(cacheKey, result, ttl);
+        return result;
+      }
+    };
+  };
+}
+
+// Advanced audit logging decorator
+function Audit(action: string, options: { sensitive?: boolean; includeArgs?: boolean } = {}) {
+  return function (target: any, context: ClassMethodDecoratorContext) {
+    const originalMethod = target;
+    
+    return function (this: any, ...args: any[]) {
+      const startTime = Date.now();
+      const auditData = {
+        action,
+        timestamp: new Date().toISOString(),
+        user: this.getCurrentUser?.() || 'system',
+        args: options.includeArgs && !options.sensitive ? args : undefined,
+        className: this.constructor.name,
+        methodName: context.name as string
+      };
+      
+      try {
+        const result = originalMethod.apply(this, args);
+        
+        if (result instanceof Promise) {
+          return result
+            .then(value => {
+              AuditLogger.log({ ...auditData, success: true, duration: Date.now() - startTime });
+              return value;
+            })
+            .catch(error => {
+              AuditLogger.log({ 
+                ...auditData, 
+                success: false, 
+                error: error.message, 
+                duration: Date.now() - startTime 
+              });
+              throw error;
+            });
+        } else {
+          AuditLogger.log({ ...auditData, success: true, duration: Date.now() - startTime });
+          return result;
+        }
+      } catch (error) {
+        AuditLogger.log({ 
+          ...auditData, 
+          success: false, 
+          error: (error as Error).message, 
+          duration: Date.now() - startTime 
+        });
+        throw error;
+      }
+    };
+  };
+}
+
+// Enterprise service example
+@Injectable({ singleton: true })
+@Controller('/api/users')
+class UserService {
+  constructor(
+    @Inject('UserRepository') private userRepo: UserRepository,
+    @Inject('EmailService') private emailService: EmailService,
+    @Inject('Logger') private logger: Logger
+  ) {}
+  
+  @Get('/:id')
+  @Cache(300, args => `user:${args[0]}`)
+  @Audit('get_user')
+  async getUser(id: string): Promise<User | null> {
+    return this.userRepo.findById(id);
+  }
+  
+  @Post('/')
+  @Audit('create_user', { includeArgs: true })
+  async createUser(userData: CreateUserDto): Promise<User> {
+    const user = await this.userRepo.create(userData);
+    await this.emailService.sendWelcomeEmail(user.email);
+    return user;
+  }
+  
+  @Post('/:id/reset-password')
+  @Audit('reset_password', { sensitive: true })
+  async resetPassword(id: string): Promise<void> {
+    const user = await this.userRepo.findById(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    const resetToken = this.generateResetToken();
+    await this.userRepo.updateResetToken(id, resetToken);
+    await this.emailService.sendPasswordResetEmail(user.email, resetToken);
+  }
+  
+  private generateResetToken(): string {
+    return Math.random().toString(36).substring(2, 15);
+  }
+}
+
+// Data Transfer Object with validation
+class CreateUserDto {
+  @Required('Name is required')
+  @MinLength(2, 'Name must be at least 2 characters')
+  name!: string;
+  
+  @Required('Email is required')
+  @Pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Invalid email format')
+  email!: string;
+  
+  @Required('Password is required')
+  @MinLength(8, 'Password must be at least 8 characters')
+  @Pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain uppercase, lowercase, and number')
+  password!: string;
+}
+
+// Advanced DI Container
+class DIContainer {
+  private static instances = new Map<any, any>();
+  private static registrations = new Map<any, { factory: Function; options: any }>();
+  
+  static register<T>(token: any, options: { singleton?: boolean } = {}) {
+    this.registrations.set(token, {
+      factory: () => new token(),
+      options
+    });
+  }
+  
+  static resolve<T>(token: any): T {
+    const registration = this.registrations.get(token);
+    if (!registration) {
+      throw new Error(`No registration found for ${token.name || token}`);
+    }
+    
+    if (registration.options.singleton) {
+      if (!this.instances.has(token)) {
+        this.instances.set(token, this.createInstance(token));
+      }
+      return this.instances.get(token);
+    }
+    
+    return this.createInstance(token);
+  }
+  
+  private static createInstance(token: any): any {
+    const dependencies = MetadataStorage.get(token, DEPENDENCIES_KEY) || [];
+    const args = dependencies
+      .sort((a, b) => a.index - b.index)
+      .map(dep => this.resolve(dep.token));
+    
+    return new token(...args);
+  }
+}
+
+// Supporting services
+class CacheManager {
+  private static cache = new Map<string, { value: any; expiry: number }>();
+  
+  static get(key: string): any {
+    const item = this.cache.get(key);
+    if (item && item.expiry > Date.now()) {
+      return item.value;
+    }
+    this.cache.delete(key);
+    return null;
+  }
+  
+  static set(key: string, value: any, ttlSeconds: number): void {
+    this.cache.set(key, {
+      value,
+      expiry: Date.now() + (ttlSeconds * 1000)
+    });
+  }
+}
+
+class AuditLogger {
+  static log(data: any): void {
+    console.log('[AUDIT]', JSON.stringify(data, null, 2));
+    // In real implementation, send to audit service
+  }
+}
+```
+
+This enhanced TypeScript guide now includes cutting-edge type manipulation techniques, advanced metaprogramming patterns, sophisticated state management solutions, type-safe API integration, robust error handling patterns, modern decorators with metadata reflection, TypeScript 5.0+ const assertions and satisfies operator, advanced dependency injection patterns, and reactive programming patterns essential for building enterprise-grade TypeScript applications.

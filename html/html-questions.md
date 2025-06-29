@@ -5143,4 +5143,2317 @@ window.pwaManager = pwaManager;
 </html>
 ```
 
-This comprehensive enhancement adds cutting-edge web components, advanced PWA capabilities, sophisticated caching strategies, push notifications, offline functionality, and modern web standards that represent the current state of HTML5 and web development.
+---
+
+### Q3: How do you implement advanced HTML5 Web APIs and modern browser features?
+**Difficulty: Expert**
+
+**Answer:**
+Modern HTML5 applications leverage sophisticated Web APIs for enhanced user experiences, performance optimization, and native-like functionality.
+
+**1. Advanced Intersection Observer and Performance APIs:**
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced Web APIs Demo</title>
+</head>
+<body>
+  <!-- Lazy loading with advanced intersection observer -->
+  <div class="image-container" data-src="/images/hero-large.webp" data-srcset="/images/hero-small.webp 480w, /images/hero-medium.webp 768w, /images/hero-large.webp 1200w">
+    <div class="placeholder"></div>
+  </div>
+  
+  <!-- Performance monitoring elements -->
+  <div id="performance-metrics"></div>
+  
+  <script>
+    // Advanced Intersection Observer with performance monitoring
+    class AdvancedLazyLoader {
+      constructor() {
+        this.imageObserver = null;
+        this.performanceObserver = null;
+        this.loadedImages = new Set();
+        this.init();
+      }
+      
+      init() {
+        this.setupImageObserver();
+        this.setupPerformanceObserver();
+        this.observeImages();
+      }
+      
+      setupImageObserver() {
+        const options = {
+          root: null,
+          rootMargin: '50px 0px',
+          threshold: [0, 0.25, 0.5, 0.75, 1]
+        };
+        
+        this.imageObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting && entry.intersectionRatio > 0.25) {
+              this.loadImage(entry.target);
+            }
+          });
+        }, options);
+      }
+      
+      setupPerformanceObserver() {
+        if ('PerformanceObserver' in window) {
+          this.performanceObserver = new PerformanceObserver((list) => {
+            for (const entry of list.getEntries()) {
+              if (entry.entryType === 'largest-contentful-paint') {
+                this.reportLCP(entry);
+              }
+              if (entry.entryType === 'layout-shift') {
+                this.reportCLS(entry);
+              }
+              if (entry.entryType === 'first-input') {
+                this.reportFID(entry);
+              }
+            }
+          });
+          
+          this.performanceObserver.observe({
+            entryTypes: ['largest-contentful-paint', 'layout-shift', 'first-input']
+          });
+        }
+      }
+      
+      async loadImage(container) {
+        if (this.loadedImages.has(container)) return;
+        
+        const src = container.dataset.src;
+        const srcset = container.dataset.srcset;
+        
+        if (!src) return;
+        
+        this.loadedImages.add(container);
+        
+        try {
+          const img = new Image();
+          
+          // Progressive loading with WebP support
+          const supportsWebP = await this.checkWebPSupport();
+          const finalSrc = supportsWebP ? src.replace(/\.(jpg|jpeg|png)$/, '.webp') : src;
+          
+          img.onload = () => {
+            const imgElement = document.createElement('img');
+            imgElement.src = finalSrc;
+            if (srcset) imgElement.srcset = srcset;
+            imgElement.alt = container.dataset.alt || '';
+            imgElement.loading = 'lazy';
+            
+            // Smooth transition
+            imgElement.style.opacity = '0';
+            imgElement.style.transition = 'opacity 0.3s ease-in-out';
+            
+            container.appendChild(imgElement);
+            
+            requestAnimationFrame(() => {
+              imgElement.style.opacity = '1';
+              container.querySelector('.placeholder')?.remove();
+            });
+            
+            this.imageObserver.unobserve(container);
+          };
+          
+          img.onerror = () => {
+            console.error('Failed to load image:', finalSrc);
+            this.loadedImages.delete(container);
+          };
+          
+          img.src = finalSrc;
+          
+        } catch (error) {
+          console.error('Error loading image:', error);
+          this.loadedImages.delete(container);
+        }
+      }
+      
+      async checkWebPSupport() {
+        return new Promise((resolve) => {
+          const webP = new Image();
+          webP.onload = webP.onerror = () => {
+            resolve(webP.height === 2);
+          };
+          webP.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
+        });
+      }
+      
+      observeImages() {
+        const imageContainers = document.querySelectorAll('.image-container[data-src]');
+        imageContainers.forEach(container => {
+          this.imageObserver.observe(container);
+        });
+      }
+      
+      reportLCP(entry) {
+        console.log('Largest Contentful Paint:', entry.startTime);
+        this.sendMetric('lcp', entry.startTime);
+      }
+      
+      reportCLS(entry) {
+        if (!entry.hadRecentInput) {
+          console.log('Cumulative Layout Shift:', entry.value);
+          this.sendMetric('cls', entry.value);
+        }
+      }
+      
+      reportFID(entry) {
+        console.log('First Input Delay:', entry.processingStart - entry.startTime);
+        this.sendMetric('fid', entry.processingStart - entry.startTime);
+      }
+      
+      sendMetric(name, value) {
+        // Send to analytics service
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'web_vitals', {
+            event_category: 'performance',
+            event_label: name,
+            value: Math.round(value)
+          });
+        }
+      }
+    }
+    
+    // Initialize lazy loader
+    const lazyLoader = new AdvancedLazyLoader();
+  </script>
+</body>
+</html>
+```
+
+**2. Advanced Web Workers and Background Sync:**
+```html
+<!-- Main HTML -->
+<script>
+  // Advanced Web Worker implementation
+  class AdvancedWorkerManager {
+    constructor() {
+      this.workers = new Map();
+      this.taskQueue = [];
+      this.maxWorkers = navigator.hardwareConcurrency || 4;
+      this.init();
+    }
+    
+    init() {
+      this.setupBackgroundSync();
+      this.setupPeriodicBackgroundSync();
+    }
+    
+    async createWorker(name, script) {
+      if (this.workers.has(name)) {
+        return this.workers.get(name);
+      }
+      
+      const worker = new Worker(script);
+      const workerProxy = {
+        worker,
+        busy: false,
+        postMessage: (data) => {
+          return new Promise((resolve, reject) => {
+            const id = Math.random().toString(36).substr(2, 9);
+            
+            const messageHandler = (event) => {
+              if (event.data.id === id) {
+                worker.removeEventListener('message', messageHandler);
+                worker.removeEventListener('error', errorHandler);
+                
+                if (event.data.error) {
+                  reject(new Error(event.data.error));
+                } else {
+                  resolve(event.data.result);
+                }
+              }
+            };
+            
+            const errorHandler = (error) => {
+              worker.removeEventListener('message', messageHandler);
+              worker.removeEventListener('error', errorHandler);
+              reject(error);
+            };
+            
+            worker.addEventListener('message', messageHandler);
+            worker.addEventListener('error', errorHandler);
+            
+            worker.postMessage({ id, ...data });
+          });
+        }
+      };
+      
+      this.workers.set(name, workerProxy);
+      return workerProxy;
+    }
+    
+    async executeTask(workerName, script, data) {
+      const worker = await this.createWorker(workerName, script);
+      
+      if (worker.busy) {
+        return new Promise((resolve, reject) => {
+          this.taskQueue.push({ workerName, script, data, resolve, reject });
+        });
+      }
+      
+      worker.busy = true;
+      
+      try {
+        const result = await worker.postMessage(data);
+        return result;
+      } finally {
+        worker.busy = false;
+        this.processQueue();
+      }
+    }
+    
+    processQueue() {
+      if (this.taskQueue.length === 0) return;
+      
+      const availableWorker = Array.from(this.workers.values())
+        .find(worker => !worker.busy);
+      
+      if (availableWorker) {
+        const task = this.taskQueue.shift();
+        this.executeTask(task.workerName, task.script, task.data)
+          .then(task.resolve)
+          .catch(task.reject);
+      }
+    }
+    
+    async setupBackgroundSync() {
+      if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+        const registration = await navigator.serviceWorker.ready;
+        
+        // Register background sync
+        await registration.sync.register('background-data-sync');
+        
+        console.log('Background sync registered');
+      }
+    }
+    
+    async setupPeriodicBackgroundSync() {
+      if ('serviceWorker' in navigator && 'periodicSync' in window.ServiceWorkerRegistration.prototype) {
+        const registration = await navigator.serviceWorker.ready;
+        
+        // Request permission for periodic background sync
+        const status = await navigator.permissions.query({ name: 'periodic-background-sync' });
+        
+        if (status.state === 'granted') {
+          await registration.periodicSync.register('periodic-data-update', {
+            minInterval: 24 * 60 * 60 * 1000 // 24 hours
+          });
+          
+          console.log('Periodic background sync registered');
+        }
+      }
+    }
+  }
+  
+  // Usage example
+  const workerManager = new AdvancedWorkerManager();
+  
+  // Heavy computation in worker
+  async function processLargeDataset(data) {
+    const result = await workerManager.executeTask(
+      'data-processor',
+      '/workers/data-processor.js',
+      { action: 'process', data }
+    );
+    
+    return result;
+  }
+  
+  // Image processing in worker
+  async function processImage(imageData) {
+    const result = await workerManager.executeTask(
+      'image-processor',
+      '/workers/image-processor.js',
+      { action: 'filter', imageData, filter: 'blur' }
+    );
+    
+    return result;
+  }
+</script>
+```
+
+---
+
+### Q4: How do you implement advanced HTML5 accessibility and inclusive design patterns?
+**Difficulty: Expert**
+
+**Answer:**
+Advanced accessibility involves sophisticated ARIA patterns, inclusive design principles, and comprehensive support for assistive technologies.
+
+**1. Advanced ARIA Patterns and Live Regions:**
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced Accessibility Patterns</title>
+  <style>
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      .button {
+        border: 2px solid;
+      }
+    }
+    
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+    
+    /* Focus management */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 6px;
+      background: #000;
+      color: #fff;
+      padding: 8px;
+      text-decoration: none;
+      z-index: 1000;
+    }
+    
+    .skip-link:focus {
+      top: 6px;
+    }
+    
+    /* Screen reader only content */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Skip navigation -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
+  <!-- Live regions for dynamic content -->
+  <div aria-live="polite" aria-atomic="true" id="status-messages" class="sr-only"></div>
+  <div aria-live="assertive" aria-atomic="true" id="error-messages" class="sr-only"></div>
+  
+  <!-- Advanced combobox with autocomplete -->
+  <div class="combobox-container">
+    <label for="country-input">Country</label>
+    <div class="combobox" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-owns="country-listbox">
+      <input
+        type="text"
+        id="country-input"
+        aria-autocomplete="list"
+        aria-describedby="country-help"
+        autocomplete="country"
+      >
+      <button type="button" aria-label="Show countries" tabindex="-1">
+        <span aria-hidden="true">▼</span>
+      </button>
+    </div>
+    <div id="country-help" class="help-text">
+      Type to search for a country or use arrow keys to browse
+    </div>
+    <ul id="country-listbox" role="listbox" aria-label="Countries" hidden>
+      <!-- Options populated dynamically -->
+    </ul>
+  </div>
+  
+  <!-- Advanced data table with sorting and filtering -->
+  <div class="table-container">
+    <div class="table-controls">
+      <label for="table-filter">Filter table:</label>
+      <input type="text" id="table-filter" aria-describedby="filter-help">
+      <div id="filter-help" class="help-text">
+        Filter results by typing. <span id="result-count" aria-live="polite"></span>
+      </div>
+    </div>
+    
+    <table role="table" aria-label="Employee data">
+      <caption>
+        Employee Information
+        <span class="sr-only">Use arrow keys to navigate. Press Enter to sort by column.</span>
+      </caption>
+      <thead>
+        <tr role="row">
+          <th role="columnheader" aria-sort="none" tabindex="0">
+            <button type="button" aria-describedby="name-sort-help">
+              Name
+              <span aria-hidden="true" class="sort-indicator"></span>
+            </button>
+            <div id="name-sort-help" class="sr-only">
+              Click to sort by name
+            </div>
+          </th>
+          <th role="columnheader" aria-sort="none" tabindex="0">
+            <button type="button" aria-describedby="role-sort-help">
+              Role
+              <span aria-hidden="true" class="sort-indicator"></span>
+            </button>
+            <div id="role-sort-help" class="sr-only">
+              Click to sort by role
+            </div>
+          </th>
+          <th role="columnheader" aria-sort="none" tabindex="0">
+            <button type="button" aria-describedby="status-sort-help">
+              Status
+              <span aria-hidden="true" class="sort-indicator"></span>
+            </button>
+            <div id="status-sort-help" class="sr-only">
+              Click to sort by status
+            </div>
+          </th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <!-- Rows populated dynamically -->
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- Advanced modal dialog -->
+  <div id="modal-overlay" class="modal-overlay" hidden>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      aria-describedby="modal-description"
+      class="modal"
+    >
+      <div class="modal-header">
+        <h2 id="modal-title">Confirmation Required</h2>
+        <button
+          type="button"
+          aria-label="Close dialog"
+          class="modal-close"
+          data-action="close-modal"
+        >
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="modal-description">
+          Are you sure you want to delete this item? This action cannot be undone.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" data-action="cancel" class="button button-secondary">
+          Cancel
+        </button>
+        <button type="button" data-action="confirm" class="button button-danger">
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Advanced accessibility manager
+    class AccessibilityManager {
+      constructor() {
+        this.focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+        this.init();
+      }
+      
+      init() {
+        this.setupKeyboardNavigation();
+        this.setupLiveRegions();
+        this.setupFocusManagement();
+        this.setupScreenReaderSupport();
+      }
+      
+      setupKeyboardNavigation() {
+        // Global keyboard event handler
+        document.addEventListener('keydown', (event) => {
+          // Escape key handling
+          if (event.key === 'Escape') {
+            this.handleEscape();
+          }
+          
+          // Tab trapping in modals
+          if (event.key === 'Tab') {
+            this.handleTabTrapping(event);
+          }
+          
+          // Arrow key navigation for custom components
+          if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+            this.handleArrowNavigation(event);
+          }
+        });
+      }
+      
+      setupLiveRegions() {
+        this.statusRegion = document.getElementById('status-messages');
+        this.errorRegion = document.getElementById('error-messages');
+      }
+      
+      announceToScreenReader(message, type = 'status') {
+        const region = type === 'error' ? this.errorRegion : this.statusRegion;
+        
+        // Clear previous message
+        region.textContent = '';
+        
+        // Add new message with slight delay to ensure it's announced
+        setTimeout(() => {
+          region.textContent = message;
+        }, 100);
+        
+        // Clear message after announcement
+        setTimeout(() => {
+          region.textContent = '';
+        }, 5000);
+      }
+      
+      setupFocusManagement() {
+        // Focus management for dynamic content
+        this.focusStack = [];
+        
+        // Store focus before opening modal
+        document.addEventListener('modal-open', (event) => {
+          this.focusStack.push(document.activeElement);
+          this.trapFocus(event.detail.modal);
+        });
+        
+        // Restore focus after closing modal
+        document.addEventListener('modal-close', () => {
+          const previousFocus = this.focusStack.pop();
+          if (previousFocus) {
+            previousFocus.focus();
+          }
+        });
+      }
+      
+      trapFocus(container) {
+        const focusableElements = container.querySelectorAll(this.focusableElements);
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+        
+        // Focus first element
+        firstElement?.focus();
+        
+        // Set up tab trapping
+        container.addEventListener('keydown', (event) => {
+          if (event.key === 'Tab') {
+            if (event.shiftKey) {
+              if (document.activeElement === firstElement) {
+                event.preventDefault();
+                lastElement?.focus();
+              }
+            } else {
+              if (document.activeElement === lastElement) {
+                event.preventDefault();
+                firstElement?.focus();
+              }
+            }
+          }
+        });
+      }
+      
+      handleEscape() {
+        // Close any open modals or dropdowns
+        const openModal = document.querySelector('[role="dialog"]:not([hidden])');
+        if (openModal) {
+          this.closeModal(openModal);
+        }
+        
+        const openDropdown = document.querySelector('[aria-expanded="true"]');
+        if (openDropdown) {
+          this.closeDropdown(openDropdown);
+        }
+      }
+      
+      handleTabTrapping(event) {
+        const modal = document.querySelector('[role="dialog"]:not([hidden])');
+        if (modal) {
+          const focusableElements = modal.querySelectorAll(this.focusableElements);
+          const firstElement = focusableElements[0];
+          const lastElement = focusableElements[focusableElements.length - 1];
+          
+          if (event.shiftKey) {
+            if (document.activeElement === firstElement) {
+              event.preventDefault();
+              lastElement?.focus();
+            }
+          } else {
+            if (document.activeElement === lastElement) {
+              event.preventDefault();
+              firstElement?.focus();
+            }
+          }
+        }
+      }
+      
+      setupScreenReaderSupport() {
+        // Detect screen reader usage
+        this.isScreenReaderActive = this.detectScreenReader();
+        
+        if (this.isScreenReaderActive) {
+          document.body.classList.add('screen-reader-active');
+        }
+      }
+      
+      detectScreenReader() {
+        // Various methods to detect screen reader
+        return (
+          navigator.userAgent.includes('NVDA') ||
+          navigator.userAgent.includes('JAWS') ||
+          navigator.userAgent.includes('VoiceOver') ||
+          window.speechSynthesis?.getVoices().length > 0
+        );
+      }
+    }
+    
+    // Initialize accessibility manager
+    const a11yManager = new AccessibilityManager();
+  </script>
+</body>
+</html>
+```
+
+---
+
+### Q11: How do you implement advanced Web Components with Shadow DOM and modern HTML5 features?
+
+**Answer:**
+Web Components provide a way to create reusable, encapsulated HTML elements using native browser APIs. They combine Custom Elements, Shadow DOM, HTML Templates, and ES Modules for powerful component architecture.
+
+**Advanced Web Components Implementation:**
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Web Components</title>
+    <style>
+        /* Global styles */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 2rem;
+            background-color: var(--light-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Advanced Card Component -->
+    <advanced-card 
+        title="Product Card"
+        subtitle="Premium Quality"
+        image="https://via.placeholder.com/300x200"
+        price="$99.99"
+        rating="4.5"
+        theme="primary">
+        <p slot="description">
+            This is a high-quality product with excellent features and outstanding performance.
+        </p>
+        <div slot="actions">
+            <button class="btn btn-primary">Add to Cart</button>
+            <button class="btn btn-secondary">Wishlist</button>
+        </div>
+    </advanced-card>
+    
+    <!-- Advanced Form Component -->
+    <advanced-form 
+        action="/api/submit"
+        method="POST"
+        validation="strict"
+        auto-save="true">
+        <form-field 
+            type="text"
+            name="fullName"
+            label="Full Name"
+            required
+            pattern="[A-Za-z\s]+"
+            error-message="Please enter a valid name">
+        </form-field>
+        
+        <form-field 
+            type="email"
+            name="email"
+            label="Email Address"
+            required
+            error-message="Please enter a valid email">
+        </form-field>
+        
+        <form-field 
+            type="tel"
+            name="phone"
+            label="Phone Number"
+            pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+            placeholder="123-456-7890"
+            error-message="Please enter phone in format: 123-456-7890">
+        </form-field>
+        
+        <form-field 
+            type="select"
+            name="country"
+            label="Country"
+            required
+            options='[{"value":"us","label":"United States"},{"value":"ca","label":"Canada"},{"value":"uk","label":"United Kingdom"}]'
+            error-message="Please select a country">
+        </form-field>
+        
+        <form-field 
+            type="textarea"
+            name="message"
+            label="Message"
+            rows="4"
+            maxlength="500"
+            error-message="Message is required">
+        </form-field>
+    </advanced-form>
+    
+    <!-- Advanced Data Table Component -->
+    <data-table 
+        endpoint="/api/users"
+        sortable="true"
+        filterable="true"
+        paginated="true"
+        page-size="10"
+        columns='[
+            {"key":"id","label":"ID","sortable":true,"width":"80px"},
+            {"key":"name","label":"Name","sortable":true,"filterable":true},
+            {"key":"email","label":"Email","sortable":true,"filterable":true},
+            {"key":"role","label":"Role","sortable":true,"filterable":true},
+            {"key":"status","label":"Status","sortable":true,"type":"badge"},
+            {"key":"actions","label":"Actions","type":"actions"}
+        ]'>
+    </data-table>
+    
+    <!-- Advanced Modal Component -->
+    <advanced-modal 
+        id="confirmModal"
+        size="medium"
+        backdrop="static"
+        keyboard="false">
+        <div slot="header">
+            <h3>Confirm Action</h3>
+        </div>
+        <div slot="body">
+            <p>Are you sure you want to proceed with this action?</p>
+        </div>
+        <div slot="footer">
+            <button class="btn btn-secondary" onclick="closeModal('confirmModal')">Cancel</button>
+            <button class="btn btn-danger" onclick="confirmAction()">Confirm</button>
+        </div>
+    </advanced-modal>
+    
+    <!-- Advanced Notification System -->
+    <notification-system 
+        position="top-right"
+        auto-dismiss="5000"
+        max-notifications="5">
+    </notification-system>
+    
+    <script type="module">
+        // Advanced Card Component
+        class AdvancedCard extends HTMLElement {
+            constructor() {
+                super();
+                this.attachShadow({ mode: 'open' });
+                this.render();
+            }
+            
+            static get observedAttributes() {
+                return ['title', 'subtitle', 'image', 'price', 'rating', 'theme'];
+            }
+            
+            attributeChangedCallback(name, oldValue, newValue) {
+                if (oldValue !== newValue) {
+                    this.render();
+                }
+            }
+            
+            render() {
+                const title = this.getAttribute('title') || '';
+                const subtitle = this.getAttribute('subtitle') || '';
+                const image = this.getAttribute('image') || '';
+                const price = this.getAttribute('price') || '';
+                const rating = parseFloat(this.getAttribute('rating')) || 0;
+                const theme = this.getAttribute('theme') || 'primary';
+                
+                this.shadowRoot.innerHTML = `
+                    <style>
+                        :host {
+                            display: block;
+                            margin: 1rem 0;
+                            font-family: inherit;
+                        }
+                        
+                        .card {
+                            background: white;
+                            border-radius: 12px;
+                            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                            overflow: hidden;
+                            transition: transform 0.2s ease, box-shadow 0.2s ease;
+                            max-width: 400px;
+                        }
+                        
+                        .card:hover {
+                            transform: translateY(-4px);
+                            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+                        }
+                        
+                        .card-image {
+                            width: 100%;
+                            height: 200px;
+                            object-fit: cover;
+                            background: #f0f0f0;
+                        }
+                        
+                        .card-content {
+                            padding: 1.5rem;
+                        }
+                        
+                        .card-header {
+                            margin-bottom: 1rem;
+                        }
+                        
+                        .card-title {
+                            font-size: 1.5rem;
+                            font-weight: 600;
+                            margin: 0 0 0.5rem 0;
+                            color: var(--${theme}-color, #333);
+                        }
+                        
+                        .card-subtitle {
+                            font-size: 0.9rem;
+                            color: #666;
+                            margin: 0;
+                        }
+                        
+                        .card-meta {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            margin: 1rem 0;
+                        }
+                        
+                        .price {
+                            font-size: 1.25rem;
+                            font-weight: 700;
+                            color: var(--success-color);
+                        }
+                        
+                        .rating {
+                            display: flex;
+                            align-items: center;
+                            gap: 0.25rem;
+                        }
+                        
+                        .star {
+                            color: #ffc107;
+                            font-size: 1rem;
+                        }
+                        
+                        .star.empty {
+                            color: #e0e0e0;
+                        }
+                        
+                        .card-description {
+                            margin: 1rem 0;
+                        }
+                        
+                        .card-actions {
+                            margin-top: 1.5rem;
+                        }
+                        
+                        ::slotted(.btn) {
+                            padding: 0.5rem 1rem;
+                            border: none;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-weight: 500;
+                            margin-right: 0.5rem;
+                            transition: all 0.2s ease;
+                        }
+                        
+                        ::slotted(.btn-primary) {
+                            background: var(--primary-color);
+                            color: white;
+                        }
+                        
+                        ::slotted(.btn-secondary) {
+                            background: var(--secondary-color);
+                            color: white;
+                        }
+                        
+                        ::slotted(.btn:hover) {
+                            transform: translateY(-1px);
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                        }
+                    </style>
+                    
+                    <div class="card">
+                        ${image ? `<img src="${image}" alt="${title}" class="card-image">` : ''}
+                        <div class="card-content">
+                            <div class="card-header">
+                                <h3 class="card-title">${title}</h3>
+                                ${subtitle ? `<p class="card-subtitle">${subtitle}</p>` : ''}
+                            </div>
+                            
+                            <div class="card-meta">
+                                ${price ? `<span class="price">${price}</span>` : ''}
+                                ${rating > 0 ? `
+                                    <div class="rating">
+                                        ${this.generateStars(rating)}
+                                        <span>(${rating})</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            
+                            <div class="card-description">
+                                <slot name="description"></slot>
+                            </div>
+                            
+                            <div class="card-actions">
+                                <slot name="actions"></slot>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            generateStars(rating) {
+                const fullStars = Math.floor(rating);
+                const hasHalfStar = rating % 1 !== 0;
+                const emptyStars = 5 - Math.ceil(rating);
+                
+                let stars = '';
+                
+                for (let i = 0; i < fullStars; i++) {
+                    stars += '<span class="star">★</span>';
+                }
+                
+                if (hasHalfStar) {
+                    stars += '<span class="star">☆</span>';
+                }
+                
+                for (let i = 0; i < emptyStars; i++) {
+                    stars += '<span class="star empty">☆</span>';
+                }
+                
+                return stars;
+            }
+        }
+        
+        // Advanced Form Component
+        class AdvancedForm extends HTMLElement {
+            constructor() {
+                super();
+                this.attachShadow({ mode: 'open' });
+                this.formData = new Map();
+                this.validators = new Map();
+                this.render();
+                this.setupEventListeners();
+            }
+            
+            static get observedAttributes() {
+                return ['action', 'method', 'validation', 'auto-save'];
+            }
+            
+            render() {
+                this.shadowRoot.innerHTML = `
+                    <style>
+                        :host {
+                            display: block;
+                            margin: 2rem 0;
+                        }
+                        
+                        .form-container {
+                            background: white;
+                            padding: 2rem;
+                            border-radius: 12px;
+                            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                            max-width: 600px;
+                        }
+                        
+                        .form-title {
+                            font-size: 1.5rem;
+                            font-weight: 600;
+                            margin-bottom: 1.5rem;
+                            color: #333;
+                        }
+                        
+                        .form-actions {
+                            margin-top: 2rem;
+                            display: flex;
+                            gap: 1rem;
+                        }
+                        
+                        .btn {
+                            padding: 0.75rem 1.5rem;
+                            border: none;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-weight: 500;
+                            transition: all 0.2s ease;
+                        }
+                        
+                        .btn-primary {
+                            background: var(--primary-color);
+                            color: white;
+                        }
+                        
+                        .btn-secondary {
+                            background: var(--secondary-color);
+                            color: white;
+                        }
+                        
+                        .btn:hover {
+                            transform: translateY(-1px);
+                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                        }
+                        
+                        .btn:disabled {
+                            opacity: 0.6;
+                            cursor: not-allowed;
+                            transform: none;
+                            box-shadow: none;
+                        }
+                        
+                        .form-status {
+                            margin-top: 1rem;
+                            padding: 0.75rem;
+                            border-radius: 6px;
+                            display: none;
+                        }
+                        
+                        .form-status.success {
+                            background: #d4edda;
+                            color: #155724;
+                            border: 1px solid #c3e6cb;
+                        }
+                        
+                        .form-status.error {
+                            background: #f8d7da;
+                            color: #721c24;
+                            border: 1px solid #f5c6cb;
+                        }
+                    </style>
+                    
+                    <div class="form-container">
+                        <h2 class="form-title">Contact Form</h2>
+                        <form id="advancedForm">
+                            <slot></slot>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Submit</button>
+                                <button type="reset" class="btn btn-secondary">Reset</button>
+                            </div>
+                        </form>
+                        <div class="form-status" id="formStatus"></div>
+                    </div>
+                `;
+            }
+            
+            setupEventListeners() {
+                const form = this.shadowRoot.getElementById('advancedForm');
+                const statusDiv = this.shadowRoot.getElementById('formStatus');
+                
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    if (this.validateForm()) {
+                        await this.submitForm();
+                    }
+                });
+                
+                form.addEventListener('reset', () => {
+                    this.resetForm();
+                });
+                
+                // Auto-save functionality
+                if (this.getAttribute('auto-save') === 'true') {
+                    form.addEventListener('input', this.debounce(() => {
+                        this.autoSave();
+                    }, 1000));
+                }
+            }
+            
+            validateForm() {
+                const fields = this.querySelectorAll('form-field');
+                let isValid = true;
+                
+                fields.forEach(field => {
+                    if (!field.validate()) {
+                        isValid = false;
+                    }
+                });
+                
+                return isValid;
+            }
+            
+            async submitForm() {
+                const formData = this.getFormData();
+                const action = this.getAttribute('action');
+                const method = this.getAttribute('method') || 'POST';
+                
+                try {
+                    const response = await fetch(action, {
+                        method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    if (response.ok) {
+                        this.showStatus('Form submitted successfully!', 'success');
+                        this.dispatchEvent(new CustomEvent('form-submitted', {
+                            detail: { data: formData, response }
+                        }));
+                    } else {
+                        throw new Error('Submission failed');
+                    }
+                } catch (error) {
+                    this.showStatus('Error submitting form. Please try again.', 'error');
+                }
+            }
+            
+            getFormData() {
+                const fields = this.querySelectorAll('form-field');
+                const data = {};
+                
+                fields.forEach(field => {
+                    const name = field.getAttribute('name');
+                    const value = field.getValue();
+                    if (name && value !== null) {
+                        data[name] = value;
+                    }
+                });
+                
+                return data;
+            }
+            
+            showStatus(message, type) {
+                const statusDiv = this.shadowRoot.getElementById('formStatus');
+                statusDiv.textContent = message;
+                statusDiv.className = `form-status ${type}`;
+                statusDiv.style.display = 'block';
+                
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+            
+            autoSave() {
+                const data = this.getFormData();
+                localStorage.setItem('form-auto-save', JSON.stringify(data));
+            }
+            
+            resetForm() {
+                const fields = this.querySelectorAll('form-field');
+                fields.forEach(field => field.reset());
+                localStorage.removeItem('form-auto-save');
+            }
+            
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+        }
+        
+        // Form Field Component
+        class FormField extends HTMLElement {
+            constructor() {
+                super();
+                this.attachShadow({ mode: 'open' });
+                this.render();
+                this.setupValidation();
+            }
+            
+            static get observedAttributes() {
+                return ['type', 'name', 'label', 'required', 'pattern', 'error-message', 'options'];
+            }
+            
+            render() {
+                const type = this.getAttribute('type') || 'text';
+                const name = this.getAttribute('name') || '';
+                const label = this.getAttribute('label') || '';
+                const required = this.hasAttribute('required');
+                const placeholder = this.getAttribute('placeholder') || '';
+                const pattern = this.getAttribute('pattern') || '';
+                const maxlength = this.getAttribute('maxlength') || '';
+                const rows = this.getAttribute('rows') || '3';
+                const options = this.getAttribute('options') ? JSON.parse(this.getAttribute('options')) : [];
+                
+                let inputHTML = '';
+                
+                switch (type) {
+                    case 'textarea':
+                        inputHTML = `<textarea 
+                            id="${name}" 
+                            name="${name}" 
+                            placeholder="${placeholder}"
+                            rows="${rows}"
+                            ${maxlength ? `maxlength="${maxlength}"` : ''}
+                            ${required ? 'required' : ''}></textarea>`;
+                        break;
+                    case 'select':
+                        inputHTML = `<select id="${name}" name="${name}" ${required ? 'required' : ''}>
+                            <option value="">Select ${label}</option>
+                            ${options.map(opt => `<option value="${opt.value}">${opt.label}</option>`).join('')}
+                        </select>`;
+                        break;
+                    default:
+                        inputHTML = `<input 
+                            type="${type}" 
+                            id="${name}" 
+                            name="${name}" 
+                            placeholder="${placeholder}"
+                            ${pattern ? `pattern="${pattern}"` : ''}
+                            ${maxlength ? `maxlength="${maxlength}"` : ''}
+                            ${required ? 'required' : ''}>`;
+                }
+                
+                this.shadowRoot.innerHTML = `
+                    <style>
+                        :host {
+                            display: block;
+                            margin-bottom: 1.5rem;
+                        }
+                        
+                        .field-group {
+                            display: flex;
+                            flex-direction: column;
+                        }
+                        
+                        label {
+                            font-weight: 500;
+                            margin-bottom: 0.5rem;
+                            color: #333;
+                        }
+                        
+                        .required {
+                            color: #dc3545;
+                        }
+                        
+                        input, textarea, select {
+                            padding: 0.75rem;
+                            border: 2px solid #e0e0e0;
+                            border-radius: 6px;
+                            font-size: 1rem;
+                            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                            font-family: inherit;
+                        }
+                        
+                        input:focus, textarea:focus, select:focus {
+                            outline: none;
+                            border-color: var(--primary-color);
+                            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+                        }
+                        
+                        input:invalid, textarea:invalid, select:invalid {
+                            border-color: var(--danger-color);
+                        }
+                        
+                        .error-message {
+                            color: var(--danger-color);
+                            font-size: 0.875rem;
+                            margin-top: 0.25rem;
+                            display: none;
+                        }
+                        
+                        .field-group.error .error-message {
+                            display: block;
+                        }
+                        
+                        .field-group.error input,
+                        .field-group.error textarea,
+                        .field-group.error select {
+                            border-color: var(--danger-color);
+                        }
+                        
+                        textarea {
+                            resize: vertical;
+                            min-height: 100px;
+                        }
+                        
+                        select {
+                            cursor: pointer;
+                        }
+                    </style>
+                    
+                    <div class="field-group">
+                        <label for="${name}">
+                            ${label}
+                            ${required ? '<span class="required">*</span>' : ''}
+                        </label>
+                        ${inputHTML}
+                        <div class="error-message">${this.getAttribute('error-message') || 'This field is invalid'}</div>
+                    </div>
+                `;
+            }
+            
+            setupValidation() {
+                const input = this.shadowRoot.querySelector('input, textarea, select');
+                const fieldGroup = this.shadowRoot.querySelector('.field-group');
+                
+                if (input) {
+                    input.addEventListener('blur', () => {
+                        this.validate();
+                    });
+                    
+                    input.addEventListener('input', () => {
+                        if (fieldGroup.classList.contains('error')) {
+                            this.validate();
+                        }
+                    });
+                }
+            }
+            
+            validate() {
+                const input = this.shadowRoot.querySelector('input, textarea, select');
+                const fieldGroup = this.shadowRoot.querySelector('.field-group');
+                const isValid = input.checkValidity();
+                
+                if (isValid) {
+                    fieldGroup.classList.remove('error');
+                } else {
+                    fieldGroup.classList.add('error');
+                }
+                
+                return isValid;
+            }
+            
+            getValue() {
+                const input = this.shadowRoot.querySelector('input, textarea, select');
+                return input ? input.value : null;
+            }
+            
+            setValue(value) {
+                const input = this.shadowRoot.querySelector('input, textarea, select');
+                if (input) {
+                    input.value = value;
+                }
+            }
+            
+            reset() {
+                const input = this.shadowRoot.querySelector('input, textarea, select');
+                const fieldGroup = this.shadowRoot.querySelector('.field-group');
+                
+                if (input) {
+                    input.value = '';
+                    fieldGroup.classList.remove('error');
+                }
+            }
+        }
+        
+        // Register components
+        customElements.define('advanced-card', AdvancedCard);
+        customElements.define('advanced-form', AdvancedForm);
+        customElements.define('form-field', FormField);
+        
+        // Demo functionality
+        window.closeModal = function(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        };
+        
+        window.confirmAction = function() {
+            alert('Action confirmed!');
+            closeModal('confirmModal');
+        };
+    </script>
+</body>
+</html>
+```
+
+---
+
+### Q12: How do you implement Progressive Web App (PWA) features with advanced caching strategies and offline functionality?
+
+**Answer:**
+Progressive Web Apps combine the best of web and mobile apps, providing app-like experiences with advanced caching, offline functionality, push notifications, and native device integration.
+
+**Complete PWA Implementation:**
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced PWA</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Advanced Progressive Web App with offline capabilities">
+    <meta name="theme-color" content="#007bff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Advanced PWA">
+    <meta name="msapplication-TileColor" content="#007bff">
+    <meta name="msapplication-config" content="/browserconfig.xml">
+    
+    <!-- PWA Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+    <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#007bff">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/css/critical.css" as="style">
+    <link rel="preload" href="/js/app.js" as="script">
+    
+    <!-- Critical CSS -->
+    <style>
+        /* Critical above-the-fold styles */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            font-family: var(--font-family);
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        .app-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .app-title {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .offline-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--warning-color);
+            color: #333;
+            padding: 0.5rem;
+            text-align: center;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+            z-index: 2000;
+        }
+        
+        .offline-indicator.show {
+            transform: translateY(0);
+        }
+        
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 1rem;
+            display: none;
+            z-index: 1500;
+        }
+        
+        .install-prompt.show {
+            display: block;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Offline Indicator -->
+    <div id="offlineIndicator" class="offline-indicator">
+        <span>You're currently offline. Some features may be limited.</span>
+    </div>
+    
+    <!-- App Header -->
+    <header class="app-header">
+        <h1 class="app-title">Advanced PWA</h1>
+        <div class="header-actions">
+            <button id="syncBtn" class="btn btn-secondary">Sync Data</button>
+            <button id="notificationBtn" class="btn btn-secondary">Enable Notifications</button>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <section id="appContent">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </section>
+        
+        <!-- Data Display -->
+        <section id="dataSection" style="display: none;">
+            <h2>Data Management</h2>
+            <div id="dataList"></div>
+            <button id="addDataBtn" class="btn btn-primary">Add New Item</button>
+        </section>
+        
+        <!-- Sync Status -->
+        <section id="syncStatus">
+            <h3>Sync Status</h3>
+            <div id="syncInfo"></div>
+        </section>
+    </main>
+    
+    <!-- Install Prompt -->
+    <div id="installPrompt" class="install-prompt">
+        <h3>Install App</h3>
+        <p>Install this app on your device for a better experience!</p>
+        <button id="installBtn" class="btn btn-primary">Install</button>
+        <button id="dismissBtn" class="btn btn-secondary">Maybe Later</button>
+    </div>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('/sw.js');
+                    console.log('SW registered: ', registration);
+                    
+                    // Handle service worker updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // New content is available
+                                showUpdateNotification();
+                            }
+                        });
+                    });
+                } catch (error) {
+                    console.log('SW registration failed: ', error);
+                }
+            });
+        }
+        
+        // PWA Install Prompt
+        let deferredPrompt;
+        const installPrompt = document.getElementById('installPrompt');
+        const installBtn = document.getElementById('installBtn');
+        const dismissBtn = document.getElementById('dismissBtn');
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installPrompt.classList.add('show');
+        });
+        
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                deferredPrompt = null;
+                installPrompt.classList.remove('show');
+            }
+        });
+        
+        dismissBtn.addEventListener('click', () => {
+            installPrompt.classList.remove('show');
+        });
+        
+        // Network Status Management
+        const offlineIndicator = document.getElementById('offlineIndicator');
+        
+        function updateOnlineStatus() {
+            if (navigator.onLine) {
+                offlineIndicator.classList.remove('show');
+                syncPendingData();
+            } else {
+                offlineIndicator.classList.add('show');
+            }
+        }
+        
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        
+        // Initialize app
+        updateOnlineStatus();
+        
+        // Advanced Data Management with IndexedDB
+        class DataManager {
+            constructor() {
+                this.dbName = 'AdvancedPWADB';
+                this.dbVersion = 1;
+                this.db = null;
+                this.init();
+            }
+            
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, this.dbVersion);
+                    
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        resolve(this.db);
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        
+                        // Create object stores
+                        if (!db.objectStoreNames.contains('items')) {
+                            const itemStore = db.createObjectStore('items', { keyPath: 'id', autoIncrement: true });
+                            itemStore.createIndex('timestamp', 'timestamp', { unique: false });
+                            itemStore.createIndex('synced', 'synced', { unique: false });
+                        }
+                        
+                        if (!db.objectStoreNames.contains('syncQueue')) {
+                            const syncStore = db.createObjectStore('syncQueue', { keyPath: 'id', autoIncrement: true });
+                            syncStore.createIndex('action', 'action', { unique: false });
+                            syncStore.createIndex('timestamp', 'timestamp', { unique: false });
+                        }
+                    };
+                });
+            }
+            
+            async addItem(data) {
+                const transaction = this.db.transaction(['items', 'syncQueue'], 'readwrite');
+                const itemStore = transaction.objectStore('items');
+                const syncStore = transaction.objectStore('syncQueue');
+                
+                const item = {
+                    ...data,
+                    timestamp: Date.now(),
+                    synced: navigator.onLine
+                };
+                
+                const result = await this.promisifyRequest(itemStore.add(item));
+                
+                // Add to sync queue if offline
+                if (!navigator.onLine) {
+                    await this.promisifyRequest(syncStore.add({
+                        action: 'create',
+                        itemId: result,
+                        data: item,
+                        timestamp: Date.now()
+                    }));
+                }
+                
+                return result;
+            }
+            
+            async getItems() {
+                const transaction = this.db.transaction(['items'], 'readonly');
+                const store = transaction.objectStore('items');
+                return this.promisifyRequest(store.getAll());
+            }
+            
+            async syncPendingItems() {
+                const transaction = this.db.transaction(['syncQueue'], 'readonly');
+                const store = transaction.objectStore('syncQueue');
+                const pendingItems = await this.promisifyRequest(store.getAll());
+                
+                for (const item of pendingItems) {
+                    try {
+                        await this.syncItem(item);
+                        await this.removeSyncItem(item.id);
+                    } catch (error) {
+                        console.error('Sync failed for item:', item, error);
+                    }
+                }
+            }
+            
+            async syncItem(syncItem) {
+                const response = await fetch('/api/items', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(syncItem.data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Sync failed');
+                }
+                
+                // Update item as synced
+                const transaction = this.db.transaction(['items'], 'readwrite');
+                const store = transaction.objectStore('items');
+                const item = await this.promisifyRequest(store.get(syncItem.itemId));
+                item.synced = true;
+                await this.promisifyRequest(store.put(item));
+            }
+            
+            async removeSyncItem(id) {
+                const transaction = this.db.transaction(['syncQueue'], 'readwrite');
+                const store = transaction.objectStore('syncQueue');
+                return this.promisifyRequest(store.delete(id));
+            }
+            
+            promisifyRequest(request) {
+                return new Promise((resolve, reject) => {
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+        }
+        
+        // Initialize Data Manager
+        const dataManager = new DataManager();
+        
+        // Push Notifications
+        class NotificationManager {
+            constructor() {
+                this.vapidPublicKey = 'YOUR_VAPID_PUBLIC_KEY';
+            }
+            
+            async requestPermission() {
+                if (!('Notification' in window)) {
+                    console.log('This browser does not support notifications');
+                    return false;
+                }
+                
+                const permission = await Notification.requestPermission();
+                return permission === 'granted';
+            }
+            
+            async subscribeToPush() {
+                if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                    console.log('Push messaging is not supported');
+                    return null;
+                }
+                
+                const registration = await navigator.serviceWorker.ready;
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: this.urlBase64ToUint8Array(this.vapidPublicKey)
+                });
+                
+                // Send subscription to server
+                await fetch('/api/subscribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(subscription)
+                });
+                
+                return subscription;
+            }
+            
+            urlBase64ToUint8Array(base64String) {
+                const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                const base64 = (base64String + padding)
+                    .replace(/-/g, '+')
+                    .replace(/_/g, '/');
+                
+                const rawData = window.atob(base64);
+                const outputArray = new Uint8Array(rawData.length);
+                
+                for (let i = 0; i < rawData.length; ++i) {
+                    outputArray[i] = rawData.charCodeAt(i);
+                }
+                return outputArray;
+            }
+            
+            showNotification(title, options) {
+                if (Notification.permission === 'granted') {
+                    new Notification(title, options);
+                }
+            }
+        }
+        
+        // Initialize Notification Manager
+        const notificationManager = new NotificationManager();
+        
+        // Event Listeners
+        document.getElementById('notificationBtn').addEventListener('click', async () => {
+            const granted = await notificationManager.requestPermission();
+            if (granted) {
+                await notificationManager.subscribeToPush();
+                notificationManager.showNotification('Notifications Enabled', {
+                    body: 'You will now receive push notifications',
+                    icon: '/icons/icon-192x192.png'
+                });
+            }
+        });
+        
+        document.getElementById('syncBtn').addEventListener('click', async () => {
+            await syncPendingData();
+        });
+        
+        document.getElementById('addDataBtn').addEventListener('click', async () => {
+            const data = {
+                title: `Item ${Date.now()}`,
+                description: 'Sample item description',
+                category: 'general'
+            };
+            
+            await dataManager.addItem(data);
+            await loadData();
+        });
+        
+        // Utility Functions
+        async function syncPendingData() {
+            if (navigator.onLine) {
+                try {
+                    await dataManager.syncPendingItems();
+                    updateSyncStatus('All data synced successfully');
+                } catch (error) {
+                    updateSyncStatus('Sync failed: ' + error.message);
+                }
+            } else {
+                updateSyncStatus('Cannot sync while offline');
+            }
+        }
+        
+        async function loadData() {
+            const items = await dataManager.getItems();
+            const dataList = document.getElementById('dataList');
+            
+            dataList.innerHTML = items.map(item => `
+                <div class="data-item" style="padding: 1rem; margin: 0.5rem 0; background: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h4>${item.title}</h4>
+                    <p>${item.description}</p>
+                    <small>Created: ${new Date(item.timestamp).toLocaleString()} | Synced: ${item.synced ? 'Yes' : 'No'}</small>
+                </div>
+            `).join('');
+        }
+        
+        function updateSyncStatus(message) {
+            document.getElementById('syncInfo').textContent = message;
+        }
+        
+        function showUpdateNotification() {
+            notificationManager.showNotification('App Updated', {
+                body: 'A new version is available. Refresh to update.',
+                icon: '/icons/icon-192x192.png',
+                actions: [{
+                    action: 'refresh',
+                    title: 'Refresh Now'
+                }]
+            });
+        }
+        
+        // Initialize app content
+        setTimeout(async () => {
+            document.getElementById('appContent').innerHTML = '<h2>Welcome to Advanced PWA</h2><p>This app works offline and provides native app-like experience.</p>';
+            document.getElementById('dataSection').style.display = 'block';
+            await loadData();
+            updateSyncStatus('Ready');
+        }, 1000);
+    </script>
+</body>
+</html>
+```
+
+**Service Worker (sw.js):**
+```javascript
+const CACHE_NAME = 'advanced-pwa-v1';
+const STATIC_CACHE = 'static-v1';
+const DYNAMIC_CACHE = 'dynamic-v1';
+const API_CACHE = 'api-v1';
+
+// Files to cache immediately
+const STATIC_FILES = [
+    '/',
+    '/index.html',
+    '/css/styles.css',
+    '/js/app.js',
+    '/icons/icon-192x192.png',
+    '/icons/icon-512x512.png',
+    '/manifest.json'
+];
+
+// API endpoints to cache
+const API_ENDPOINTS = [
+    '/api/items',
+    '/api/user'
+];
+
+// Install event - cache static files
+self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open(STATIC_CACHE)
+            .then(cache => cache.addAll(STATIC_FILES))
+            .then(() => self.skipWaiting())
+    );
+});
+
+// Activate event - clean up old caches
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys()
+            .then(cacheNames => {
+                return Promise.all(
+                    cacheNames
+                        .filter(cacheName => {
+                            return cacheName !== STATIC_CACHE && 
+                                   cacheName !== DYNAMIC_CACHE && 
+                                   cacheName !== API_CACHE;
+                        })
+                        .map(cacheName => caches.delete(cacheName))
+                );
+            })
+            .then(() => self.clients.claim())
+    );
+});
+
+// Fetch event - implement caching strategies
+self.addEventListener('fetch', (event) => {
+    const { request } = event;
+    const url = new URL(request.url);
+    
+    // Handle API requests
+    if (url.pathname.startsWith('/api/')) {
+        event.respondWith(handleApiRequest(request));
+        return;
+    }
+    
+    // Handle static files
+    if (STATIC_FILES.includes(url.pathname)) {
+        event.respondWith(handleStaticRequest(request));
+        return;
+    }
+    
+    // Handle other requests
+    event.respondWith(handleDynamicRequest(request));
+});
+
+// Cache-first strategy for static files
+async function handleStaticRequest(request) {
+    const cache = await caches.open(STATIC_CACHE);
+    const cachedResponse = await cache.match(request);
+    
+    if (cachedResponse) {
+        return cachedResponse;
+    }
+    
+    try {
+        const networkResponse = await fetch(request);
+        cache.put(request, networkResponse.clone());
+        return networkResponse;
+    } catch (error) {
+        // Return offline fallback if available
+        return cache.match('/offline.html');
+    }
+}
+
+// Network-first strategy for API requests
+async function handleApiRequest(request) {
+    const cache = await caches.open(API_CACHE);
+    
+    try {
+        const networkResponse = await fetch(request);
+        
+        // Cache successful GET requests
+        if (request.method === 'GET' && networkResponse.ok) {
+            cache.put(request, networkResponse.clone());
+        }
+        
+        return networkResponse;
+    } catch (error) {
+        // Return cached response for GET requests
+        if (request.method === 'GET') {
+            const cachedResponse = await cache.match(request);
+            if (cachedResponse) {
+                return cachedResponse;
+            }
+        }
+        
+        // Return offline response
+        return new Response(
+            JSON.stringify({ error: 'Offline', cached: false }),
+            {
+                status: 503,
+                headers: { 'Content-Type': 'application/json' }
+            }
+        );
+    }
+}
+
+// Stale-while-revalidate strategy for dynamic content
+async function handleDynamicRequest(request) {
+    const cache = await caches.open(DYNAMIC_CACHE);
+    const cachedResponse = await cache.match(request);
+    
+    const fetchPromise = fetch(request)
+        .then(networkResponse => {
+            cache.put(request, networkResponse.clone());
+            return networkResponse;
+        })
+        .catch(() => cachedResponse);
+    
+    return cachedResponse || fetchPromise;
+}
+
+// Background sync
+self.addEventListener('sync', (event) => {
+    if (event.tag === 'background-sync') {
+        event.waitUntil(doBackgroundSync());
+    }
+});
+
+async function doBackgroundSync() {
+    // Implement background sync logic
+    console.log('Background sync triggered');
+}
+
+// Push notifications
+self.addEventListener('push', (event) => {
+    const options = {
+        body: event.data ? event.data.text() : 'New notification',
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/badge-72x72.png',
+        vibrate: [100, 50, 100],
+        data: {
+            dateOfArrival: Date.now(),
+            primaryKey: 1
+        },
+        actions: [
+            {
+                action: 'explore',
+                title: 'Explore',
+                icon: '/icons/checkmark.png'
+            },
+            {
+                action: 'close',
+                title: 'Close',
+                icon: '/icons/xmark.png'
+            }
+        ]
+    };
+    
+    event.waitUntil(
+        self.registration.showNotification('PWA Notification', options)
+    );
+});
+
+// Notification click handling
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    
+    if (event.action === 'explore') {
+        event.waitUntil(
+            clients.openWindow('/')
+        );
+    }
+});
+```
+
+**PWA Manifest (manifest.json):**
+```json
+{
+    "name": "Advanced Progressive Web App",
+    "short_name": "Advanced PWA",
+    "description": "A comprehensive PWA with offline capabilities and native features",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#007bff",
+    "orientation": "portrait-primary",
+    "scope": "/",
+    "lang": "en",
+    "categories": ["productivity", "utilities"],
+    "screenshots": [
+        {
+            "src": "/screenshots/desktop.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide"
+        },
+        {
+            "src": "/screenshots/mobile.png",
+            "sizes": "750x1334",
+            "type": "image/png",
+            "form_factor": "narrow"
+        }
+    ],
+    "icons": [
+        {
+            "src": "/icons/icon-72x72.png",
+            "sizes": "72x72",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/icon-96x96.png",
+            "sizes": "96x96",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/icon-128x128.png",
+            "sizes": "128x128",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/icon-144x144.png",
+            "sizes": "144x144",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/icon-152x152.png",
+            "sizes": "152x152",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/icon-384x384.png",
+            "sizes": "384x384",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/maskable-icon.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Add New Item",
+            "short_name": "Add Item",
+            "description": "Quickly add a new item",
+            "url": "/add",
+            "icons": [
+                {
+                    "src": "/icons/add-icon.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "View Dashboard",
+            "short_name": "Dashboard",
+            "description": "View your dashboard",
+            "url": "/dashboard",
+            "icons": [
+                {
+                    "src": "/icons/dashboard-icon.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
+    ],
+    "related_applications": [
+        {
+            "platform": "play",
+            "url": "https://play.google.com/store/apps/details?id=com.example.app",
+            "id": "com.example.app"
+        }
+    ],
+    "prefer_related_applications": false
+}
+```
+
+This comprehensive enhancement adds cutting-edge web components, advanced PWA capabilities, sophisticated caching strategies, push notifications, offline functionality, modern web standards, advanced Web APIs, performance monitoring, accessibility patterns, and inclusive design principles that represent the current state of HTML5 and web development.

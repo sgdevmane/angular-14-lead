@@ -8963,4 +8963,1228 @@ function updateUI() {
 }
 ```
 
-This enhanced JavaScript guide now includes cutting-edge functional programming patterns, advanced monadic structures, sophisticated reactive programming with custom Observable implementations, state machines, and time-travel debugging capabilities essential for building modern, maintainable JavaScript applications.
+---
+
+### Q3: How do you implement advanced JavaScript metaprogramming and reflection patterns?
+**Difficulty: Expert**
+
+**Answer:**
+Advanced metaprogramming in JavaScript involves dynamic code generation, reflection, and runtime manipulation of objects and functions.
+
+**1. Advanced Proxy Patterns:**
+```javascript
+// Dynamic API client with automatic method generation
+class DynamicAPIClient {
+  constructor(baseURL, options = {}) {
+    this.baseURL = baseURL;
+    this.options = options;
+    
+    return new Proxy(this, {
+      get(target, prop) {
+        if (prop in target) {
+          return target[prop];
+        }
+        
+        // Generate API methods dynamically
+        if (typeof prop === 'string') {
+          return target.createAPIMethod(prop);
+        }
+      }
+    });
+  }
+  
+  createAPIMethod(endpoint) {
+    return new Proxy(() => {}, {
+      apply: (target, thisArg, args) => {
+        const [method = 'GET', data, config = {}] = args;
+        return this.request(endpoint, method, data, config);
+      },
+      
+      get: (target, prop) => {
+        if (prop === 'get') return (config) => this.request(endpoint, 'GET', null, config);
+        if (prop === 'post') return (data, config) => this.request(endpoint, 'POST', data, config);
+        if (prop === 'put') return (data, config) => this.request(endpoint, 'PUT', data, config);
+        if (prop === 'delete') return (config) => this.request(endpoint, 'DELETE', null, config);
+        
+        // Nested endpoints
+        return this.createAPIMethod(`${endpoint}/${prop}`);
+      }
+    });
+  }
+  
+  async request(endpoint, method, data, config) {
+    const url = `${this.baseURL}/${endpoint}`;
+    const options = {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.options.headers,
+        ...config.headers
+      },
+      ...config
+    };
+    
+    if (data) {
+      options.body = JSON.stringify(data);
+    }
+    
+    const response = await fetch(url, options);
+    return response.json();
+  }
+}
+
+// Usage
+const api = new DynamicAPIClient('https://api.example.com');
+
+// All these work dynamically
+const users = await api.users.get();
+const user = await api.users(1).get();
+const newUser = await api.users.post({ name: 'John' });
+const posts = await api.users(1).posts.get();
+```
+
+**2. Advanced Reflection and Metadata:**
+```javascript
+// Metadata system with decorators
+const MetadataStore = new WeakMap();
+
+function getMetadata(target, key) {
+  if (!MetadataStore.has(target)) {
+    MetadataStore.set(target, new Map());
+  }
+  return MetadataStore.get(target).get(key);
+}
+
+function setMetadata(target, key, value) {
+  if (!MetadataStore.has(target)) {
+    MetadataStore.set(target, new Map());
+  }
+  MetadataStore.get(target).set(key, value);
+}
+
+// Validation decorator
+function validate(schema) {
+  return function(target, propertyKey, descriptor) {
+    const originalMethod = descriptor.value;
+    
+    descriptor.value = function(...args) {
+      // Validate arguments
+      const errors = validateArgs(args, schema);
+      if (errors.length > 0) {
+        throw new ValidationError(errors);
+      }
+      
+      return originalMethod.apply(this, args);
+    };
+    
+    // Store validation metadata
+    setMetadata(target.constructor, `validation:${propertyKey}`, schema);
+  };
+}
+
+// Cache decorator with TTL
+function cache(ttl = 60000) {
+  const cacheStore = new Map();
+  
+  return function(target, propertyKey, descriptor) {
+    const originalMethod = descriptor.value;
+    
+    descriptor.value = function(...args) {
+      const key = `${propertyKey}:${JSON.stringify(args)}`;
+      const cached = cacheStore.get(key);
+      
+      if (cached && Date.now() - cached.timestamp < ttl) {
+        return cached.value;
+      }
+      
+      const result = originalMethod.apply(this, args);
+      cacheStore.set(key, { value: result, timestamp: Date.now() });
+      
+      return result;
+    };
+  };
+}
+
+// Usage
+class UserService {
+  @validate({
+    id: { type: 'number', required: true },
+    options: { type: 'object', default: {} }
+  })
+  @cache(30000)
+  async getUser(id, options = {}) {
+    // Fetch user logic
+    return { id, name: 'John Doe', ...options };
+  }
+}
+```
+
+---
+
+### Q4: How do you implement advanced JavaScript performance optimization and memory management?
+**Difficulty: Expert**
+
+**Answer:**
+Advanced performance optimization involves sophisticated techniques for memory management, execution optimization, and resource efficiency.
+
+**1. Advanced Memory Management:**
+```javascript
+// Object pool for reducing GC pressure
+class ObjectPool {
+  constructor(createFn, resetFn, maxSize = 100) {
+    this.createFn = createFn;
+    this.resetFn = resetFn;
+    this.maxSize = maxSize;
+    this.pool = [];
+    this.activeObjects = new Set();
+  }
+  
+  acquire() {
+    let obj;
+    
+    if (this.pool.length > 0) {
+      obj = this.pool.pop();
+    } else {
+      obj = this.createFn();
+    }
+    
+    this.activeObjects.add(obj);
+    return obj;
+  }
+  
+  release(obj) {
+    if (!this.activeObjects.has(obj)) {
+      return false;
+    }
+    
+    this.activeObjects.delete(obj);
+    
+    if (this.pool.length < this.maxSize) {
+      this.resetFn(obj);
+      this.pool.push(obj);
+    }
+    
+    return true;
+  }
+  
+  clear() {
+    this.pool.length = 0;
+    this.activeObjects.clear();
+  }
+  
+  getStats() {
+    return {
+      poolSize: this.pool.length,
+      activeCount: this.activeObjects.size,
+      totalCreated: this.pool.length + this.activeObjects.size
+    };
+  }
+}
+
+// Usage for expensive objects
+const vectorPool = new ObjectPool(
+  () => ({ x: 0, y: 0, z: 0 }),
+  (obj) => { obj.x = obj.y = obj.z = 0; }
+);
+
+function performCalculations() {
+  const vectors = [];
+  
+  // Acquire objects from pool
+  for (let i = 0; i < 1000; i++) {
+    const vector = vectorPool.acquire();
+    vector.x = Math.random();
+    vector.y = Math.random();
+    vector.z = Math.random();
+    vectors.push(vector);
+  }
+  
+  // Perform calculations...
+  
+  // Release objects back to pool
+  vectors.forEach(vector => vectorPool.release(vector));
+}
+```
+
+**2. Advanced Execution Optimization:**
+```javascript
+// Memoization with LRU cache and weak references
+class AdvancedMemoizer {
+  constructor(maxSize = 1000, ttl = 300000) {
+    this.maxSize = maxSize;
+    this.ttl = ttl;
+    this.cache = new Map();
+    this.accessOrder = new Map();
+    this.timers = new Map();
+  }
+  
+  memoize(fn) {
+    return (...args) => {
+      const key = this.createKey(args);
+      
+      if (this.cache.has(key)) {
+        this.updateAccess(key);
+        return this.cache.get(key).value;
+      }
+      
+      const result = fn.apply(this, args);
+      this.set(key, result);
+      
+      return result;
+    };
+  }
+  
+  createKey(args) {
+    return JSON.stringify(args, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        return Object.keys(value)
+          .sort()
+          .reduce((sorted, key) => {
+            sorted[key] = value[key];
+            return sorted;
+          }, {});
+      }
+      return value;
+    });
+  }
+  
+  set(key, value) {
+    // Remove oldest if at capacity
+    if (this.cache.size >= this.maxSize) {
+      const oldestKey = this.accessOrder.keys().next().value;
+      this.delete(oldestKey);
+    }
+    
+    const entry = { value, timestamp: Date.now() };
+    this.cache.set(key, entry);
+    this.updateAccess(key);
+    
+    // Set TTL timer
+    if (this.ttl > 0) {
+      const timer = setTimeout(() => this.delete(key), this.ttl);
+      this.timers.set(key, timer);
+    }
+  }
+  
+  updateAccess(key) {
+    this.accessOrder.delete(key);
+    this.accessOrder.set(key, Date.now());
+  }
+  
+  delete(key) {
+    this.cache.delete(key);
+    this.accessOrder.delete(key);
+    
+    const timer = this.timers.get(key);
+    if (timer) {
+      clearTimeout(timer);
+      this.timers.delete(key);
+    }
+  }
+  
+  clear() {
+    this.cache.clear();
+    this.accessOrder.clear();
+    this.timers.forEach(timer => clearTimeout(timer));
+    this.timers.clear();
+  }
+  
+  getStats() {
+    return {
+      size: this.cache.size,
+      hitRate: this.hitCount / (this.hitCount + this.missCount) || 0,
+      memoryUsage: this.estimateMemoryUsage()
+    };
+  }
+  
+  estimateMemoryUsage() {
+    let size = 0;
+    for (const [key, value] of this.cache) {
+      size += key.length * 2; // Rough string size
+      size += JSON.stringify(value).length * 2;
+    }
+    return size;
+  }
+}
+
+// Usage
+const memoizer = new AdvancedMemoizer(500, 60000);
+
+const expensiveCalculation = memoizer.memoize((x, y, options) => {
+  // Simulate expensive calculation
+  let result = 0;
+  for (let i = 0; i < 1000000; i++) {
+    result += Math.sin(x * i) * Math.cos(y * i);
+  }
+  return result * (options.multiplier || 1);
+});
+```
+
+---
+
+### Q15: How do you implement advanced JavaScript ES2024+ features including Records, Tuples, and Pattern Matching?
+
+**Answer:**
+ES2024+ introduces powerful new features like Records and Tuples for immutable data structures, pattern matching for complex conditional logic, and enhanced temporal APIs for better date/time handling.
+
+**Records and Tuples (Immutable Data Structures):**
+```javascript
+// Records - Immutable objects with value semantics
+const userRecord = #{ 
+  id: 1, 
+  name: "John Doe", 
+  email: "john@example.com",
+  preferences: #{
+    theme: "dark",
+    notifications: true
+  }
+};
+
+// Tuples - Immutable arrays with value semantics
+const coordinates = #[40.7128, -74.0060, "New York"];
+const rgbColor = #[255, 128, 0];
+
+// Advanced Record manipulation
+class UserManager {
+  constructor() {
+    this.users = new Map();
+    this.userHistory = new Map();
+  }
+  
+  createUser(userData) {
+    const user = #{
+      id: this.generateId(),
+      ...userData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      version: 1
+    };
+    
+    this.users.set(user.id, user);
+    this.userHistory.set(user.id, #[user]);
+    return user;
+  }
+  
+  updateUser(id, updates) {
+    const currentUser = this.users.get(id);
+    if (!currentUser) {
+      throw new Error(`User ${id} not found`);
+    }
+    
+    // Create new immutable user record
+    const updatedUser = #{
+      ...currentUser,
+      ...updates,
+      updatedAt: new Date().toISOString(),
+      version: currentUser.version + 1
+    };
+    
+    // Update user and maintain history
+    this.users.set(id, updatedUser);
+    const history = this.userHistory.get(id);
+    this.userHistory.set(id, #[...history, updatedUser]);
+    
+    return updatedUser;
+  }
+  
+  getUserHistory(id) {
+    return this.userHistory.get(id) || #[];
+  }
+  
+  // Advanced querying with Records
+  findUsers(predicate) {
+    const results = #[];
+    for (const user of this.users.values()) {
+      if (predicate(user)) {
+        results = #[...results, user];
+      }
+    }
+    return results;
+  }
+  
+  // Batch operations with immutable data
+  batchUpdate(updates) {
+    const results = #{};
+    const errors = #{};
+    
+    for (const [id, updateData] of Object.entries(updates)) {
+      try {
+        const updated = this.updateUser(id, updateData);
+        results = #{...results, [id]: updated};
+      } catch (error) {
+        errors = #{...errors, [id]: error.message};
+      }
+    }
+    
+    return #{ results, errors };
+  }
+  
+  private generateId() {
+    return Math.random().toString(36).substring(2, 15);
+  }
+}
+
+// Advanced Tuple operations
+class GeometryCalculator {
+  static distance(point1, point2) {
+    const [x1, y1] = point1;
+    const [x2, y2] = point2;
+    return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+  }
+  
+  static midpoint(point1, point2) {
+    const [x1, y1] = point1;
+    const [x2, y2] = point2;
+    return #[(x1 + x2) / 2, (y1 + y2) / 2];
+  }
+  
+  static translatePoint(point, vector) {
+    const [x, y] = point;
+    const [dx, dy] = vector;
+    return #[x + dx, y + dy];
+  }
+  
+  static rotatePoint(point, angle, origin = #[0, 0]) {
+    const [x, y] = point;
+    const [ox, oy] = origin;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    
+    const translatedX = x - ox;
+    const translatedY = y - oy;
+    
+    const rotatedX = translatedX * cos - translatedY * sin;
+    const rotatedY = translatedX * sin + translatedY * cos;
+    
+    return #[rotatedX + ox, rotatedY + oy];
+  }
+  
+  // Advanced polygon operations
+  static calculatePolygonArea(vertices) {
+    let area = 0;
+    const n = vertices.length;
+    
+    for (let i = 0; i < n; i++) {
+      const [x1, y1] = vertices[i];
+      const [x2, y2] = vertices[(i + 1) % n];
+      area += x1 * y2 - x2 * y1;
+    }
+    
+    return Math.abs(area) / 2;
+  }
+}
+
+// Color manipulation with Tuples
+class ColorUtils {
+  static rgbToHsl(rgb) {
+    const [r, g, b] = rgb.map(c => c / 255);
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const diff = max - min;
+    
+    let h = 0;
+    if (diff !== 0) {
+      switch (max) {
+        case r: h = ((g - b) / diff) % 6; break;
+        case g: h = (b - r) / diff + 2; break;
+        case b: h = (r - g) / diff + 4; break;
+      }
+    }
+    
+    const l = (max + min) / 2;
+    const s = diff === 0 ? 0 : diff / (1 - Math.abs(2 * l - 1));
+    
+    return #[Math.round(h * 60), Math.round(s * 100), Math.round(l * 100)];
+  }
+  
+  static blendColors(color1, color2, ratio = 0.5) {
+    const [r1, g1, b1] = color1;
+    const [r2, g2, b2] = color2;
+    
+    return #[
+      Math.round(r1 * (1 - ratio) + r2 * ratio),
+      Math.round(g1 * (1 - ratio) + g2 * ratio),
+      Math.round(b1 * (1 - ratio) + b2 * ratio)
+    ];
+  }
+  
+  static generatePalette(baseColor, count = 5) {
+    const palette = #[baseColor];
+    const [h, s, l] = this.rgbToHsl(baseColor);
+    
+    for (let i = 1; i < count; i++) {
+      const newH = (h + (360 / count) * i) % 360;
+      const newColor = this.hslToRgb(#[newH, s, l]);
+      palette = #[...palette, newColor];
+    }
+    
+    return palette;
+  }
+  
+  static hslToRgb(hsl) {
+    const [h, s, l] = [hsl[0] / 360, hsl[1] / 100, hsl[2] / 100];
+    
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs((h * 6) % 2 - 1));
+    const m = l - c / 2;
+    
+    let r, g, b;
+    
+    if (h < 1/6) [r, g, b] = [c, x, 0];
+    else if (h < 2/6) [r, g, b] = [x, c, 0];
+    else if (h < 3/6) [r, g, b] = [0, c, x];
+    else if (h < 4/6) [r, g, b] = [0, x, c];
+    else if (h < 5/6) [r, g, b] = [x, 0, c];
+    else [r, g, b] = [c, 0, x];
+    
+    return #[
+      Math.round((r + m) * 255),
+      Math.round((g + m) * 255),
+      Math.round((b + m) * 255)
+    ];
+  }
+}
+```
+
+**Pattern Matching (Proposed Feature):**
+```javascript
+// Advanced pattern matching for complex data structures
+class DataProcessor {
+  static processApiResponse(response) {
+    return match (response) {
+      when ({ status: 200, data: { users: Array } }) => {
+        return this.processUsers(response.data.users);
+      }
+      when ({ status: 200, data: { user: Object } }) => {
+        return this.processSingleUser(response.data.user);
+      }
+      when ({ status: 404 }) => {
+        throw new Error('Resource not found');
+      }
+      when ({ status: Number if status >= 400 && status < 500 }) => {
+        throw new Error(`Client error: ${response.message}`);
+      }
+      when ({ status: Number if status >= 500 }) => {
+        throw new Error(`Server error: ${response.message}`);
+      }
+      default => {
+        throw new Error('Unknown response format');
+      }
+    };
+  }
+  
+  static processEvent(event) {
+    return match (event) {
+      when ({ type: 'user:created', payload: { id: String, email: String } }) => {
+        return this.handleUserCreated(event.payload);
+      }
+      when ({ type: 'user:updated', payload: { id: String, changes: Object } }) => {
+        return this.handleUserUpdated(event.payload);
+      }
+      when ({ type: 'user:deleted', payload: { id: String } }) => {
+        return this.handleUserDeleted(event.payload);
+      }
+      when ({ type: String if type.startsWith('order:') }) => {
+        return this.handleOrderEvent(event);
+      }
+      when ({ type: String if type.startsWith('payment:') }) => {
+        return this.handlePaymentEvent(event);
+      }
+      default => {
+        console.warn('Unhandled event type:', event.type);
+      }
+    };
+  }
+  
+  // Advanced pattern matching with destructuring
+  static analyzeUserBehavior(actions) {
+    return match (actions) {
+      when ([{ type: 'login' }, ...rest] if rest.length === 0) => {
+        return 'single_login';
+      }
+      when ([{ type: 'login' }, { type: 'view_product' }, { type: 'purchase' }]) => {
+        return 'quick_purchase';
+      }
+      when ([{ type: 'login' }, ...middle, { type: 'logout' }] if middle.every(a => a.type !== 'purchase')) => {
+        return 'browsing_session';
+      }
+      when (Array if actions.filter(a => a.type === 'purchase').length > 3) => {
+        return 'power_shopper';
+      }
+      when (Array if actions.length > 50) => {
+        return 'heavy_user';
+      }
+      default => {
+        return 'normal_user';
+      }
+    };
+  }
+  
+  // Pattern matching with complex conditions
+  static calculateShipping(order) {
+    return match (order) {
+      when ({ 
+        items: Array if items.length > 0,
+        total: Number if total > 100,
+        destination: { country: 'US' }
+      }) => {
+        return { cost: 0, method: 'free_shipping' };
+      }
+      when ({ 
+        items: Array if items.some(item => item.category === 'electronics'),
+        destination: { country: String if ['US', 'CA'].includes(country) }
+      }) => {
+        return { cost: 15, method: 'express' };
+      }
+      when ({ 
+        total: Number if total < 25,
+        destination: { country: 'US' }
+      }) => {
+        return { cost: 5, method: 'standard' };
+      }
+      when ({ destination: { country: String if !['US', 'CA'].includes(country) } }) => {
+        return { cost: 25, method: 'international' };
+      }
+      default => {
+        return { cost: 10, method: 'standard' };
+      }
+    };
+  }
+}
+
+// State machine with pattern matching
+class OrderStateMachine {
+  constructor(initialState = 'pending') {
+    this.state = initialState;
+    this.history = [initialState];
+  }
+  
+  transition(event) {
+    const newState = match ([this.state, event]) {
+      when (['pending', { type: 'payment_received' }]) => 'processing';
+      when (['pending', { type: 'cancel' }]) => 'cancelled';
+      when (['processing', { type: 'items_shipped' }]) => 'shipped';
+      when (['processing', { type: 'payment_failed' }]) => 'payment_failed';
+      when (['shipped', { type: 'delivered' }]) => 'completed';
+      when (['shipped', { type: 'return_requested' }]) => 'return_pending';
+      when (['payment_failed', { type: 'payment_retry_success' }]) => 'processing';
+      when (['return_pending', { type: 'return_approved' }]) => 'returned';
+      when (['return_pending', { type: 'return_denied' }]) => 'completed';
+      default => {
+        throw new Error(`Invalid transition from ${this.state} with event ${event.type}`);
+      }
+    };
+    
+    this.state = newState;
+    this.history.push(newState);
+    return newState;
+  }
+  
+  canTransition(eventType) {
+    try {
+      match ([this.state, { type: eventType }]) {
+        when (['pending', { type: 'payment_received' }]) => true;
+        when (['pending', { type: 'cancel' }]) => true;
+        when (['processing', { type: 'items_shipped' }]) => true;
+        when (['processing', { type: 'payment_failed' }]) => true;
+        when (['shipped', { type: 'delivered' }]) => true;
+        when (['shipped', { type: 'return_requested' }]) => true;
+        when (['payment_failed', { type: 'payment_retry_success' }]) => true;
+        when (['return_pending', { type: 'return_approved' }]) => true;
+        when (['return_pending', { type: 'return_denied' }]) => true;
+        default => false;
+      };
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+```
+
+---
+
+### Q16: How do you implement advanced JavaScript temporal APIs and modern asynchronous patterns with AbortController and Structured Concurrency?
+
+**Answer:**
+Modern JavaScript provides powerful temporal APIs for precise date/time handling and advanced asynchronous patterns with AbortController for cancellation and structured concurrency for better async flow control.
+
+**Advanced Temporal API Usage:**
+```javascript
+// Advanced date/time operations with Temporal API
+class AdvancedScheduler {
+  constructor() {
+    this.events = new Map();
+    this.timezones = new Map();
+    this.recurringEvents = new Map();
+  }
+  
+  // Create timezone-aware events
+  createEvent(eventData) {
+    const event = {
+      id: this.generateId(),
+      title: eventData.title,
+      startTime: Temporal.ZonedDateTime.from(eventData.startTime),
+      endTime: Temporal.ZonedDateTime.from(eventData.endTime),
+      timezone: eventData.timezone,
+      recurrence: eventData.recurrence,
+      attendees: eventData.attendees || [],
+      created: Temporal.Now.zonedDateTimeISO()
+    };
+    
+    this.events.set(event.id, event);
+    
+    if (event.recurrence) {
+      this.setupRecurringEvent(event);
+    }
+    
+    return event;
+  }
+  
+  // Advanced timezone conversions
+  convertEventToTimezone(eventId, targetTimezone) {
+    const event = this.events.get(eventId);
+    if (!event) throw new Error('Event not found');
+    
+    return {
+      ...event,
+      startTime: event.startTime.withTimeZone(targetTimezone),
+      endTime: event.endTime.withTimeZone(targetTimezone),
+      originalTimezone: event.timezone,
+      convertedTo: targetTimezone
+    };
+  }
+  
+  // Find optimal meeting times across timezones
+  findOptimalMeetingTime(attendees, duration, dateRange) {
+    const startDate = Temporal.PlainDate.from(dateRange.start);
+    const endDate = Temporal.PlainDate.from(dateRange.end);
+    const durationObj = Temporal.Duration.from(duration);
+    
+    const candidates = [];
+    
+    for (let date = startDate; Temporal.PlainDate.compare(date, endDate) <= 0; date = date.add({ days: 1 })) {
+      // Check business hours (9 AM - 6 PM) for each timezone
+      for (let hour = 9; hour <= 18 - durationObj.hours; hour++) {
+        const timeSlots = attendees.map(attendee => {
+          const localTime = date.toZonedDateTime({
+            timeZone: attendee.timezone,
+            plainTime: Temporal.PlainTime.from({ hour })
+          });
+          
+          return {
+            attendee: attendee.name,
+            localTime,
+            businessHours: this.isBusinessHours(localTime),
+            conflicts: this.checkConflicts(attendee.id, localTime, durationObj)
+          };
+        });
+        
+        const viableSlot = timeSlots.every(slot => 
+          slot.businessHours && slot.conflicts.length === 0
+        );
+        
+        if (viableSlot) {
+          candidates.push({
+            utcTime: timeSlots[0].localTime.withTimeZone('UTC'),
+            localTimes: timeSlots,
+            score: this.calculateTimeSlotScore(timeSlots)
+          });
+        }
+      }
+    }
+    
+    return candidates.sort((a, b) => b.score - a.score);
+  }
+  
+  // Advanced recurring event handling
+  setupRecurringEvent(event) {
+    const recurrence = event.recurrence;
+    const instances = [];
+    
+    let currentDate = event.startTime.toPlainDate();
+    const endDate = Temporal.PlainDate.from(recurrence.until || '2025-12-31');
+    
+    while (Temporal.PlainDate.compare(currentDate, endDate) <= 0) {
+      if (this.matchesRecurrencePattern(currentDate, recurrence)) {
+        const instanceStart = currentDate.toZonedDateTime({
+          timeZone: event.timezone,
+          plainTime: event.startTime.toPlainTime()
+        });
+        
+        const instanceEnd = instanceStart.add(
+          event.endTime.since(event.startTime)
+        );
+        
+        instances.push({
+          ...event,
+          id: `${event.id}_${currentDate.toString()}`,
+          startTime: instanceStart,
+          endTime: instanceEnd,
+          isRecurring: true,
+          parentEventId: event.id
+        });
+      }
+      
+      currentDate = this.getNextRecurrenceDate(currentDate, recurrence);
+    }
+    
+    this.recurringEvents.set(event.id, instances);
+    return instances;
+  }
+  
+  // Business logic helpers
+  isBusinessHours(zonedDateTime) {
+    const hour = zonedDateTime.hour;
+    const dayOfWeek = zonedDateTime.dayOfWeek;
+    return dayOfWeek >= 1 && dayOfWeek <= 5 && hour >= 9 && hour <= 17;
+  }
+  
+  calculateTimeSlotScore(timeSlots) {
+    // Score based on how close to preferred times (10 AM - 2 PM)
+    const preferredStart = 10;
+    const preferredEnd = 14;
+    
+    return timeSlots.reduce((score, slot) => {
+      const hour = slot.localTime.hour;
+      if (hour >= preferredStart && hour <= preferredEnd) {
+        return score + 10;
+      } else if (hour >= 9 && hour <= 17) {
+        return score + 5;
+      }
+      return score;
+    }, 0);
+  }
+  
+  // Duration calculations and comparisons
+  calculateEventDuration(eventId) {
+    const event = this.events.get(eventId);
+    if (!event) throw new Error('Event not found');
+    
+    return event.endTime.since(event.startTime);
+  }
+  
+  findLongestEvents(limit = 10) {
+    return Array.from(this.events.values())
+      .map(event => ({
+        ...event,
+        duration: this.calculateEventDuration(event.id)
+      }))
+      .sort((a, b) => Temporal.Duration.compare(b.duration, a.duration))
+      .slice(0, limit);
+  }
+  
+  private generateId() {
+    return Math.random().toString(36).substring(2, 15);
+  }
+  
+  private matchesRecurrencePattern(date, recurrence) {
+    switch (recurrence.frequency) {
+      case 'daily':
+        return true;
+      case 'weekly':
+        return recurrence.daysOfWeek?.includes(date.dayOfWeek) ?? true;
+      case 'monthly':
+        return date.day === recurrence.dayOfMonth;
+      case 'yearly':
+        return date.month === recurrence.month && date.day === recurrence.dayOfMonth;
+      default:
+        return false;
+    }
+  }
+  
+  private getNextRecurrenceDate(currentDate, recurrence) {
+    switch (recurrence.frequency) {
+      case 'daily':
+        return currentDate.add({ days: recurrence.interval || 1 });
+      case 'weekly':
+        return currentDate.add({ weeks: recurrence.interval || 1 });
+      case 'monthly':
+        return currentDate.add({ months: recurrence.interval || 1 });
+      case 'yearly':
+        return currentDate.add({ years: recurrence.interval || 1 });
+      default:
+        return currentDate.add({ days: 1 });
+    }
+  }
+}
+
+// Advanced AbortController patterns
+class AdvancedAsyncManager {
+  constructor() {
+    this.activeOperations = new Map();
+    this.operationGroups = new Map();
+  }
+  
+  // Structured concurrency with automatic cleanup
+  async withConcurrencyScope(operations, options = {}) {
+    const { timeout, maxConcurrency = Infinity, failFast = true } = options;
+    const controller = new AbortController();
+    const scopeId = this.generateId();
+    
+    // Setup timeout if specified
+    let timeoutId;
+    if (timeout) {
+      timeoutId = setTimeout(() => {
+        controller.abort(new Error(`Operation timed out after ${timeout}ms`));
+      }, timeout);
+    }
+    
+    try {
+      // Limit concurrency using semaphore pattern
+      const semaphore = new Semaphore(maxConcurrency);
+      const results = [];
+      const errors = [];
+      
+      const wrappedOperations = operations.map(async (operation, index) => {
+        await semaphore.acquire();
+        
+        try {
+          if (controller.signal.aborted) {
+            throw new Error('Operation aborted');
+          }
+          
+          const result = await operation(controller.signal);
+          results[index] = result;
+          return result;
+        } catch (error) {
+          errors[index] = error;
+          
+          if (failFast) {
+            controller.abort(error);
+          }
+          
+          throw error;
+        } finally {
+          semaphore.release();
+        }
+      });
+      
+      if (failFast) {
+        await Promise.all(wrappedOperations);
+      } else {
+        await Promise.allSettled(wrappedOperations);
+      }
+      
+      return { results, errors };
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
+      // Cleanup any remaining operations
+      controller.abort(new Error('Scope cleanup'));
+      this.operationGroups.delete(scopeId);
+    }
+  }
+  
+  // Advanced retry with exponential backoff and jitter
+  async retryWithBackoff(operation, options = {}) {
+    const {
+      maxRetries = 3,
+      baseDelay = 1000,
+      maxDelay = 30000,
+      backoffFactor = 2,
+      jitter = true,
+      retryCondition = () => true
+    } = options;
+    
+    const controller = new AbortController();
+    let lastError;
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await operation(controller.signal, attempt);
+      } catch (error) {
+        lastError = error;
+        
+        if (attempt === maxRetries || !retryCondition(error, attempt)) {
+          throw error;
+        }
+        
+        // Calculate delay with exponential backoff and optional jitter
+        let delay = Math.min(baseDelay * Math.pow(backoffFactor, attempt), maxDelay);
+        
+        if (jitter) {
+          delay = delay * (0.5 + Math.random() * 0.5); // Add 0-50% jitter
+        }
+        
+        await this.delay(delay, controller.signal);
+      }
+    }
+    
+    throw lastError;
+  }
+  
+  // Advanced timeout with custom cleanup
+  async withTimeout(operation, timeoutMs, cleanup) {
+    const controller = new AbortController();
+    
+    const timeoutPromise = new Promise((_, reject) => {
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        reject(new Error(`Operation timed out after ${timeoutMs}ms`));
+      }, timeoutMs);
+      
+      controller.signal.addEventListener('abort', () => {
+        clearTimeout(timeoutId);
+      });
+    });
+    
+    try {
+      return await Promise.race([
+        operation(controller.signal),
+        timeoutPromise
+      ]);
+    } catch (error) {
+      if (cleanup) {
+        await cleanup(error);
+      }
+      throw error;
+    }
+  }
+  
+  // Cancellable fetch with progress tracking
+  async fetchWithProgress(url, options = {}) {
+    const controller = new AbortController();
+    const { onProgress, ...fetchOptions } = options;
+    
+    try {
+      const response = await fetch(url, {
+        ...fetchOptions,
+        signal: controller.signal
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      if (!onProgress || !response.body) {
+        return response;
+      }
+      
+      const contentLength = parseInt(response.headers.get('content-length') || '0');
+      let receivedLength = 0;
+      
+      const reader = response.body.getReader();
+      const chunks = [];
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) break;
+        
+        chunks.push(value);
+        receivedLength += value.length;
+        
+        onProgress({
+          loaded: receivedLength,
+          total: contentLength,
+          percentage: contentLength ? (receivedLength / contentLength) * 100 : 0
+        });
+      }
+      
+      // Create new response with collected chunks
+      const allChunks = new Uint8Array(receivedLength);
+      let position = 0;
+      
+      for (const chunk of chunks) {
+        allChunks.set(chunk, position);
+        position += chunk.length;
+      }
+      
+      return new Response(allChunks, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers
+      });
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        throw new Error('Request was cancelled');
+      }
+      throw error;
+    }
+  }
+  
+  private async delay(ms, signal) {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(resolve, ms);
+      
+      signal?.addEventListener('abort', () => {
+        clearTimeout(timeoutId);
+        reject(new Error('Delay aborted'));
+      });
+    });
+  }
+  
+  private generateId() {
+    return Math.random().toString(36).substring(2, 15);
+  }
+}
+
+// Semaphore for concurrency control
+class Semaphore {
+  constructor(maxConcurrency) {
+    this.maxConcurrency = maxConcurrency;
+    this.currentConcurrency = 0;
+    this.waitingQueue = [];
+  }
+  
+  async acquire() {
+    if (this.currentConcurrency < this.maxConcurrency) {
+      this.currentConcurrency++;
+      return;
+    }
+    
+    return new Promise(resolve => {
+      this.waitingQueue.push(resolve);
+    });
+  }
+  
+  release() {
+    this.currentConcurrency--;
+    
+    if (this.waitingQueue.length > 0) {
+      const next = this.waitingQueue.shift();
+      this.currentConcurrency++;
+      next();
+    }
+  }
+}
+
+// Usage examples
+const scheduler = new AdvancedScheduler();
+const asyncManager = new AdvancedAsyncManager();
+
+// Create timezone-aware events
+const meeting = scheduler.createEvent({
+  title: 'Global Team Standup',
+  startTime: '2024-03-15T09:00:00[America/New_York]',
+  endTime: '2024-03-15T10:00:00[America/New_York]',
+  timezone: 'America/New_York',
+  attendees: [
+    { id: '1', name: 'Alice', timezone: 'America/New_York' },
+    { id: '2', name: 'Bob', timezone: 'Europe/London' },
+    { id: '3', name: 'Charlie', timezone: 'Asia/Tokyo' }
+  ]
+});
+
+// Advanced async operations with structured concurrency
+async function processDataPipeline() {
+  const operations = [
+    signal => fetchData('/api/users', { signal }),
+    signal => fetchData('/api/orders', { signal }),
+    signal => fetchData('/api/products', { signal })
+  ];
+  
+  const { results, errors } = await asyncManager.withConcurrencyScope(operations, {
+    timeout: 30000,
+    maxConcurrency: 2,
+    failFast: false
+  });
+  
+  return { results, errors };
+}
+```
+
+This enhanced JavaScript guide now includes cutting-edge functional programming patterns, advanced monadic structures, sophisticated reactive programming with custom Observable implementations, state machines, time-travel debugging capabilities, advanced metaprogramming, reflection patterns, ES2024+ features including Records and Tuples, pattern matching, advanced temporal APIs, modern asynchronous patterns with AbortController and structured concurrency, and performance optimization techniques essential for building modern, maintainable JavaScript applications.

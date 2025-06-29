@@ -2761,4 +2761,1269 @@ interface StateSync {
 }
 ```
 
-This advanced NgRx guide now includes complex state composition patterns, optimistic updates with rollback capabilities, real-time state synchronization with conflict resolution strategies, enterprise-level patterns for scalability, and comprehensive micro-frontend integration strategies.
+---
+
+### Q13: How do you implement NgRx with Angular 15+ Standalone Components and modern architecture?
+
+**Answer:**
+Implementing NgRx with Angular 15+ standalone components requires adapting state management patterns to work without NgModules while maintaining type safety and performance.
+
+**Standalone Component Store Setup:**
+```typescript
+// standalone-store.config.ts
+import { provideStore, provideState } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import { provideStoreDevtools } from '@ngrx/store-devtools';
+import { provideRouterStore } from '@ngrx/router-store';
+import { isDevMode } from '@angular/core';
+
+// Feature state interfaces
+interface UserState {
+  users: User[];
+  selectedUser: User | null;
+  loading: boolean;
+  error: string | null;
+}
+
+interface ProductState {
+  products: Product[];
+  filters: ProductFilters;
+  pagination: PaginationState;
+  cache: Map<string, Product[]>;
+}
+
+// Root state
+interface AppState {
+  users: UserState;
+  products: ProductState;
+  router: RouterReducerState;
+}
+
+// Store providers for standalone bootstrap
+export const storeProviders = [
+  provideStore({
+    users: userReducer,
+    products: productReducer
+  }),
+  provideEffects([UserEffects, ProductEffects, RouterEffects]),
+  provideRouterStore(),
+  provideStoreDevtools({
+    maxAge: 25,
+    logOnly: !isDevMode(),
+    autoPause: true,
+    trace: false,
+    traceLimit: 75
+  })
+];
+
+// Feature store providers
+export const featureStoreProviders = [
+  provideState('analytics', analyticsReducer),
+  provideEffects([AnalyticsEffects])
+];
+```
+
+**Standalone Component Integration:**
+```typescript
+// user-management.component.ts
+import { Component, inject, OnInit } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
+
+@Component({
+  selector: 'app-user-management',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  template: `
+    <div class="user-management">
+      <div class="user-list">
+        <div *ngFor="let user of users$ | async; trackBy: trackByUserId" 
+             class="user-card"
+             [class.selected]="(selectedUser$ | async)?.id === user.id"
+             (click)="selectUser(user)">
+          <h3>{{ user.name }}</h3>
+          <p>{{ user.email }}</p>
+          <div class="user-actions">
+            <button (click)="editUser(user); $event.stopPropagation()">
+              Edit
+            </button>
+            <button (click)="deleteUser(user.id); $event.stopPropagation()" 
+                    class="danger">
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="user-details" *ngIf="selectedUser$ | async as user">
+        <h2>User Details</h2>
+        <form [formGroup]="userForm" (ngSubmit)="updateUser()">
+          <input formControlName="name" placeholder="Name">
+          <input formControlName="email" placeholder="Email">
+          <button type="submit" [disabled]="userForm.invalid || (loading$ | async)">
+            {{ (loading$ | async) ? 'Updating...' : 'Update User' }}
+          </button>
+        </form>
+      </div>
+      
+      <div class="loading-overlay" *ngIf="loading$ | async">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .user-management {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      padding: 1rem;
+    }
+    
+    .user-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .user-card:hover {
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .user-card.selected {
+      border-color: #007bff;
+      background-color: #f8f9fa;
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  `]
+})
+export class UserManagementComponent implements OnInit {
+  private store = inject(Store<AppState>);
+  
+  // Selectors with type safety
+  users$ = this.store.select(selectAllUsers);
+  selectedUser$ = this.store.select(selectSelectedUser);
+  loading$ = this.store.select(selectUsersLoading);
+  error$ = this.store.select(selectUsersError);
+  
+  userForm = this.fb.group({
+    name: ['', [Validators.required, Validators.minLength(2)]],
+    email: ['', [Validators.required, Validators.email]]
+  });
+  
+  constructor(private fb: FormBuilder) {}
+  
+  ngOnInit(): void {
+    this.store.dispatch(UserActions.loadUsers());
+    
+    // Subscribe to selected user changes
+    this.selectedUser$.pipe(
+      filter(user => !!user),
+      takeUntilDestroyed()
+    ).subscribe(user => {
+      this.userForm.patchValue({
+        name: user!.name,
+        email: user!.email
+      });
+    });
+  }
+  
+  selectUser(user: User): void {
+    this.store.dispatch(UserActions.selectUser({ userId: user.id }));
+  }
+  
+  editUser(user: User): void {
+    this.store.dispatch(UserActions.editUser({ user }));
+  }
+  
+  deleteUser(userId: string): void {
+    if (confirm('Are you sure you want to delete this user?')) {
+      this.store.dispatch(UserActions.deleteUser({ userId }));
+    }
+  }
+  
+  updateUser(): void {
+    if (this.userForm.valid) {
+      const formValue = this.userForm.value;
+      this.store.dispatch(UserActions.updateUser({ 
+        user: { 
+          ...formValue,
+          id: this.selectedUser$.pipe(take(1)).subscribe(user => user?.id)
+        } as User 
+      }));
+    }
+  }
+  
+  trackByUserId(index: number, user: User): string {
+    return user.id;
+  }
+}
+```
+
+**Advanced Selectors with Memoization:**
+```typescript
+// user.selectors.ts
+import { createSelector, createFeatureSelector } from '@ngrx/store';
+import { UserState } from './user.reducer';
+
+// Feature selector
+export const selectUserState = createFeatureSelector<UserState>('users');
+
+// Basic selectors
+export const selectAllUsers = createSelector(
+  selectUserState,
+  (state: UserState) => state.users
+);
+
+export const selectUsersLoading = createSelector(
+  selectUserState,
+  (state: UserState) => state.loading
+);
+
+export const selectUsersError = createSelector(
+  selectUserState,
+  (state: UserState) => state.error
+);
+
+export const selectSelectedUser = createSelector(
+  selectUserState,
+  (state: UserState) => state.selectedUser
+);
+
+// Advanced computed selectors
+export const selectUserById = (userId: string) => createSelector(
+  selectAllUsers,
+  (users: User[]) => users.find(user => user.id === userId)
+);
+
+export const selectActiveUsers = createSelector(
+  selectAllUsers,
+  (users: User[]) => users.filter(user => user.isActive)
+);
+
+export const selectUsersByRole = (role: UserRole) => createSelector(
+  selectAllUsers,
+  (users: User[]) => users.filter(user => user.role === role)
+);
+
+export const selectUsersWithPagination = createSelector(
+  selectAllUsers,
+  selectUserState,
+  (users: User[], state: UserState) => {
+    const { page, pageSize } = state.pagination;
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    
+    return {
+      users: users.slice(startIndex, endIndex),
+      totalUsers: users.length,
+      currentPage: page,
+      totalPages: Math.ceil(users.length / pageSize),
+      hasNextPage: endIndex < users.length,
+      hasPreviousPage: page > 1
+    };
+  }
+);
+
+// Complex business logic selectors
+export const selectUserStatistics = createSelector(
+  selectAllUsers,
+  (users: User[]) => {
+    const totalUsers = users.length;
+    const activeUsers = users.filter(u => u.isActive).length;
+    const usersByRole = users.reduce((acc, user) => {
+      acc[user.role] = (acc[user.role] || 0) + 1;
+      return acc;
+    }, {} as Record<UserRole, number>);
+    
+    return {
+      totalUsers,
+      activeUsers,
+      inactiveUsers: totalUsers - activeUsers,
+      usersByRole,
+      averageAge: users.reduce((sum, u) => sum + u.age, 0) / totalUsers
+    };
+  }
+);
+```
+
+**Component Store for Local State:**
+```typescript
+// user-form.component-store.ts
+import { Injectable } from '@angular/core';
+import { ComponentStore } from '@ngrx/component-store';
+import { Observable, switchMap, tap, catchError, EMPTY } from 'rxjs';
+
+interface UserFormState {
+  user: Partial<User>;
+  isEditing: boolean;
+  isDirty: boolean;
+  validationErrors: Record<string, string[]>;
+  isSubmitting: boolean;
+}
+
+const initialState: UserFormState = {
+  user: {},
+  isEditing: false,
+  isDirty: false,
+  validationErrors: {},
+  isSubmitting: false
+};
+
+@Injectable()
+export class UserFormComponentStore extends ComponentStore<UserFormState> {
+  constructor(private userService: UserService) {
+    super(initialState);
+  }
+  
+  // Selectors
+  readonly user$ = this.select(state => state.user);
+  readonly isEditing$ = this.select(state => state.isEditing);
+  readonly isDirty$ = this.select(state => state.isDirty);
+  readonly validationErrors$ = this.select(state => state.validationErrors);
+  readonly isSubmitting$ = this.select(state => state.isSubmitting);
+  
+  readonly canSave$ = this.select(
+    this.isDirty$,
+    this.validationErrors$,
+    this.isSubmitting$,
+    (isDirty, errors, isSubmitting) => 
+      isDirty && Object.keys(errors).length === 0 && !isSubmitting
+  );
+  
+  // Updaters
+  readonly setUser = this.updater((state, user: Partial<User>) => ({
+    ...state,
+    user: { ...state.user, ...user },
+    isDirty: true
+  }));
+  
+  readonly setEditing = this.updater((state, isEditing: boolean) => ({
+    ...state,
+    isEditing
+  }));
+  
+  readonly setValidationErrors = this.updater(
+    (state, errors: Record<string, string[]>) => ({
+      ...state,
+      validationErrors: errors
+    })
+  );
+  
+  readonly resetForm = this.updater((state) => ({
+    ...initialState,
+    user: state.user
+  }));
+  
+  // Effects
+  readonly saveUser = this.effect((user$: Observable<User>) => {
+    return user$.pipe(
+      tap(() => this.patchState({ isSubmitting: true })),
+      switchMap((user) => 
+        this.userService.saveUser(user).pipe(
+          tap((savedUser) => {
+            this.patchState({ 
+              user: savedUser, 
+              isDirty: false, 
+              isSubmitting: false,
+              isEditing: false
+            });
+          }),
+          catchError((error) => {
+            this.patchState({ 
+              isSubmitting: false,
+              validationErrors: this.parseValidationErrors(error)
+            });
+            return EMPTY;
+          })
+        )
+      )
+    );
+  });
+  
+  private parseValidationErrors(error: any): Record<string, string[]> {
+    // Parse server validation errors
+    return error.validationErrors || {};
+  }
+}
+```
+
+---
+
+### Q14: How do you implement advanced NgRx testing strategies with modern Angular testing utilities?
+
+**Answer:**
+Advanced NgRx testing requires comprehensive strategies for testing actions, reducers, effects, selectors, and component integration with modern Angular testing utilities.
+
+**Testing Actions:**
+```typescript
+// user.actions.spec.ts
+import * as UserActions from './user.actions';
+import { User } from '../models/user.model';
+
+describe('User Actions', () => {
+  const mockUser: User = {
+    id: '1',
+    name: 'John Doe',
+    email: 'john@example.com',
+    role: 'admin',
+    isActive: true,
+    age: 30
+  };
+  
+  describe('loadUsers', () => {
+    it('should create an action', () => {
+      const action = UserActions.loadUsers();
+      expect(action.type).toBe('[User] Load Users');
+    });
+  });
+  
+  describe('loadUsersSuccess', () => {
+    it('should create an action with users payload', () => {
+      const users = [mockUser];
+      const action = UserActions.loadUsersSuccess({ users });
+      
+      expect(action.type).toBe('[User] Load Users Success');
+      expect(action.users).toEqual(users);
+    });
+  });
+  
+  describe('updateUser', () => {
+    it('should create an action with user payload', () => {
+      const action = UserActions.updateUser({ user: mockUser });
+      
+      expect(action.type).toBe('[User] Update User');
+      expect(action.user).toEqual(mockUser);
+    });
+  });
+});
+```
+
+**Testing Reducers:**
+```typescript
+// user.reducer.spec.ts
+import { userReducer, initialState, UserState } from './user.reducer';
+import * as UserActions from './user.actions';
+import { User } from '../models/user.model';
+
+describe('User Reducer', () => {
+  const mockUsers: User[] = [
+    { id: '1', name: 'John', email: 'john@test.com', role: 'admin', isActive: true, age: 30 },
+    { id: '2', name: 'Jane', email: 'jane@test.com', role: 'user', isActive: true, age: 25 }
+  ];
+  
+  describe('unknown action', () => {
+    it('should return the previous state', () => {
+      const action = {} as any;
+      const result = userReducer(initialState, action);
+      
+      expect(result).toBe(initialState);
+    });
+  });
+  
+  describe('loadUsers action', () => {
+    it('should set loading to true', () => {
+      const action = UserActions.loadUsers();
+      const result = userReducer(initialState, action);
+      
+      expect(result.loading).toBe(true);
+      expect(result.error).toBe(null);
+    });
+  });
+  
+  describe('loadUsersSuccess action', () => {
+    it('should populate users and set loading to false', () => {
+      const action = UserActions.loadUsersSuccess({ users: mockUsers });
+      const result = userReducer(initialState, action);
+      
+      expect(result.users).toEqual(mockUsers);
+      expect(result.loading).toBe(false);
+      expect(result.error).toBe(null);
+    });
+  });
+  
+  describe('updateUserSuccess action', () => {
+    it('should update existing user', () => {
+      const stateWithUsers: UserState = {
+        ...initialState,
+        users: mockUsers
+      };
+      
+      const updatedUser = { ...mockUsers[0], name: 'John Updated' };
+      const action = UserActions.updateUserSuccess({ user: updatedUser });
+      const result = userReducer(stateWithUsers, action);
+      
+      expect(result.users[0]).toEqual(updatedUser);
+      expect(result.users[1]).toEqual(mockUsers[1]);
+    });
+  });
+  
+  describe('deleteUserSuccess action', () => {
+    it('should remove user from state', () => {
+      const stateWithUsers: UserState = {
+        ...initialState,
+        users: mockUsers
+      };
+      
+      const action = UserActions.deleteUserSuccess({ userId: '1' });
+      const result = userReducer(stateWithUsers, action);
+      
+      expect(result.users).toHaveLength(1);
+      expect(result.users[0].id).toBe('2');
+    });
+  });
+});
+```
+
+**Testing Effects:**
+```typescript
+// user.effects.spec.ts
+import { TestBed } from '@angular/core/testing';
+import { provideMockActions } from '@ngrx/effects/testing';
+import { Observable, of, throwError } from 'rxjs';
+import { Action } from '@ngrx/store';
+import { UserEffects } from './user.effects';
+import { UserService } from '../services/user.service';
+import * as UserActions from './user.actions';
+import { hot, cold } from 'jasmine-marbles';
+
+describe('UserEffects', () => {
+  let actions$: Observable<Action>;
+  let effects: UserEffects;
+  let userService: jasmine.SpyObj<UserService>;
+  
+  const mockUsers = [
+    { id: '1', name: 'John', email: 'john@test.com', role: 'admin', isActive: true, age: 30 }
+  ];
+  
+  beforeEach(() => {
+    const spy = jasmine.createSpyObj('UserService', [
+      'getUsers', 'createUser', 'updateUser', 'deleteUser'
+    ]);
+    
+    TestBed.configureTestingModule({
+      providers: [
+        UserEffects,
+        provideMockActions(() => actions$),
+        { provide: UserService, useValue: spy }
+      ]
+    });
+    
+    effects = TestBed.inject(UserEffects);
+    userService = TestBed.inject(UserService) as jasmine.SpyObj<UserService>;
+  });
+  
+  describe('loadUsers$', () => {
+    it('should return loadUsersSuccess action on successful API call', () => {
+      const action = UserActions.loadUsers();
+      const completion = UserActions.loadUsersSuccess({ users: mockUsers });
+      
+      actions$ = hot('-a', { a: action });
+      const response = cold('-a|', { a: mockUsers });
+      userService.getUsers.and.returnValue(response);
+      
+      const expected = cold('--b', { b: completion });
+      expect(effects.loadUsers$).toBeObservable(expected);
+    });
+    
+    it('should return loadUsersFailure action on API error', () => {
+      const action = UserActions.loadUsers();
+      const error = new Error('API Error');
+      const completion = UserActions.loadUsersFailure({ error: error.message });
+      
+      actions$ = hot('-a', { a: action });
+      const response = cold('-#|', {}, error);
+      userService.getUsers.and.returnValue(response);
+      
+      const expected = cold('--b', { b: completion });
+      expect(effects.loadUsers$).toBeObservable(expected);
+    });
+  });
+  
+  describe('createUser$', () => {
+    it('should return createUserSuccess and show success message', () => {
+      const user = mockUsers[0];
+      const action = UserActions.createUser({ user });
+      const completion = UserActions.createUserSuccess({ user });
+      
+      actions$ = hot('-a', { a: action });
+      const response = cold('-a|', { a: user });
+      userService.createUser.and.returnValue(response);
+      
+      const expected = cold('--b', { b: completion });
+      expect(effects.createUser$).toBeObservable(expected);
+    });
+  });
+});
+```
+
+**Testing Selectors:**
+```typescript
+// user.selectors.spec.ts
+import * as UserSelectors from './user.selectors';
+import { UserState } from './user.reducer';
+import { AppState } from '../app.state';
+
+describe('User Selectors', () => {
+  const mockUsers = [
+    { id: '1', name: 'John', email: 'john@test.com', role: 'admin', isActive: true, age: 30 },
+    { id: '2', name: 'Jane', email: 'jane@test.com', role: 'user', isActive: false, age: 25 },
+    { id: '3', name: 'Bob', email: 'bob@test.com', role: 'user', isActive: true, age: 35 }
+  ];
+  
+  const userState: UserState = {
+    users: mockUsers,
+    selectedUser: mockUsers[0],
+    loading: false,
+    error: null,
+    pagination: { page: 1, pageSize: 10 }
+  };
+  
+  const appState: AppState = {
+    users: userState,
+    products: {} as any,
+    router: {} as any
+  };
+  
+  describe('selectAllUsers', () => {
+    it('should select all users', () => {
+      const result = UserSelectors.selectAllUsers(appState);
+      expect(result).toEqual(mockUsers);
+    });
+  });
+  
+  describe('selectActiveUsers', () => {
+    it('should select only active users', () => {
+      const result = UserSelectors.selectActiveUsers(appState);
+      expect(result).toHaveLength(2);
+      expect(result.every(user => user.isActive)).toBe(true);
+    });
+  });
+  
+  describe('selectUserById', () => {
+    it('should select user by id', () => {
+      const result = UserSelectors.selectUserById('1')(appState);
+      expect(result).toEqual(mockUsers[0]);
+    });
+    
+    it('should return undefined for non-existent user', () => {
+      const result = UserSelectors.selectUserById('999')(appState);
+      expect(result).toBeUndefined();
+    });
+  });
+  
+  describe('selectUserStatistics', () => {
+    it('should calculate user statistics correctly', () => {
+      const result = UserSelectors.selectUserStatistics(appState);
+      
+      expect(result.totalUsers).toBe(3);
+      expect(result.activeUsers).toBe(2);
+      expect(result.inactiveUsers).toBe(1);
+      expect(result.usersByRole.admin).toBe(1);
+      expect(result.usersByRole.user).toBe(2);
+      expect(result.averageAge).toBe(30);
+    });
+  });
+});
+```
+
+**Integration Testing with Components:**
+```typescript
+// user-management.component.spec.ts
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MockStore, provideMockStore } from '@ngrx/store/testing';
+import { UserManagementComponent } from './user-management.component';
+import * as UserActions from '../store/user.actions';
+import * as UserSelectors from '../store/user.selectors';
+import { AppState } from '../store/app.state';
+import { DebugElement } from '@angular/core';
+import { By } from '@angular/platform-browser';
+
+describe('UserManagementComponent', () => {
+  let component: UserManagementComponent;
+  let fixture: ComponentFixture<UserManagementComponent>;
+  let store: MockStore;
+  let dispatchSpy: jasmine.Spy;
+  
+  const mockUsers = [
+    { id: '1', name: 'John', email: 'john@test.com', role: 'admin', isActive: true, age: 30 },
+    { id: '2', name: 'Jane', email: 'jane@test.com', role: 'user', isActive: true, age: 25 }
+  ];
+  
+  const initialState: Partial<AppState> = {
+    users: {
+      users: mockUsers,
+      selectedUser: null,
+      loading: false,
+      error: null,
+      pagination: { page: 1, pageSize: 10 }
+    }
+  };
+  
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [UserManagementComponent],
+      providers: [
+        provideMockStore({ initialState })
+      ]
+    }).compileComponents();
+    
+    fixture = TestBed.createComponent(UserManagementComponent);
+    component = fixture.componentInstance;
+    store = TestBed.inject(MockStore);
+    dispatchSpy = spyOn(store, 'dispatch');
+    
+    // Override selectors
+    store.overrideSelector(UserSelectors.selectAllUsers, mockUsers);
+    store.overrideSelector(UserSelectors.selectUsersLoading, false);
+    store.overrideSelector(UserSelectors.selectSelectedUser, null);
+  });
+  
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+  
+  it('should dispatch loadUsers on init', () => {
+    component.ngOnInit();
+    
+    expect(dispatchSpy).toHaveBeenCalledWith(UserActions.loadUsers());
+  });
+  
+  it('should display users in template', () => {
+    fixture.detectChanges();
+    
+    const userCards = fixture.debugElement.queryAll(By.css('.user-card'));
+    expect(userCards).toHaveLength(2);
+    
+    const firstCard = userCards[0];
+    expect(firstCard.nativeElement.textContent).toContain('John');
+    expect(firstCard.nativeElement.textContent).toContain('john@test.com');
+  });
+  
+  it('should dispatch selectUser when user card is clicked', () => {
+    fixture.detectChanges();
+    
+    const firstUserCard = fixture.debugElement.query(By.css('.user-card'));
+    firstUserCard.nativeElement.click();
+    
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      UserActions.selectUser({ userId: '1' })
+    );
+  });
+  
+  it('should show loading state', () => {
+    store.overrideSelector(UserSelectors.selectUsersLoading, true);
+    store.refreshState();
+    fixture.detectChanges();
+    
+    const loadingOverlay = fixture.debugElement.query(By.css('.loading-overlay'));
+    expect(loadingOverlay).toBeTruthy();
+  });
+  
+  it('should handle user deletion with confirmation', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    fixture.detectChanges();
+    
+    const deleteButton = fixture.debugElement.query(
+      By.css('.user-card .danger')
+    );
+    deleteButton.nativeElement.click();
+    
+    expect(window.confirm).toHaveBeenCalled();
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      UserActions.deleteUser({ userId: '1' })
+    );
+  });
+});
+```
+
+## Advanced NgRx Patterns
+
+### Q11: How would you implement NgRx Signal Store for modern Angular applications?
+
+**Answer:**
+NgRx Signal Store is a modern state management solution that leverages Angular's Signals API for reactive state management with reduced boilerplate compared to traditional NgRx.
+
+**Key Concepts:**
+
+1. **Signal-Based State Management:**
+```typescript
+// Setting up a Signal Store
+import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
+import { computed, inject } from '@angular/core';
+import { rxMethod } from '@ngrx/signals/rxjs-interop';
+import { pipe, switchMap, map, tap } from 'rxjs';
+
+// Define state interface
+interface ProductsState {
+  products: Product[];
+  selectedProductId: string | null;
+  status: 'idle' | 'loading' | 'loaded' | 'error';
+  error: string | null;
+}
+
+// Create the store
+export const ProductsStore = signalStore(
+  // Initial state
+  withState<ProductsState>({
+    products: [],
+    selectedProductId: null,
+    status: 'idle',
+    error: null
+  }),
+  
+  // Computed values
+  withComputed((state) => ({
+    selectedProduct: computed(() => {
+      const selectedId = state.selectedProductId();
+      return selectedId ? state.products().find(p => p.id === selectedId) : null;
+    }),
+    productCount: computed(() => state.products().length),
+    isLoading: computed(() => state.status() === 'loading')
+  })),
+  
+  // Methods
+  withMethods((state, productsService = inject(ProductsService)) => ({
+    // Synchronous method
+    selectProduct(productId: string) {
+      patchState(state, { selectedProductId: productId });
+    },
+    
+    // Asynchronous method using rxMethod
+    loadProducts: rxMethod<void>(pipe(
+      tap(() => patchState(state, { status: 'loading' })),
+      switchMap(() => productsService.getProducts().pipe(
+        map(products => {
+          patchState(state, { 
+            products, 
+            status: 'loaded',
+            error: null 
+          });
+        }),
+        tap({
+          error: (err) => patchState(state, { 
+            status: 'error', 
+            error: err.message 
+          })
+        })
+      ))
+    ))
+  }))
+);
+```
+
+2. **Using Signal Store in Components:**
+```typescript
+@Component({
+  selector: 'app-products',
+  template: `
+    <div *ngIf="store.isLoading()" class="loading">Loading...</div>
+    
+    <div *ngIf="store.status() === 'error'" class="error">
+      Error: {{ store.error() }}
+    </div>
+    
+    <div *ngIf="store.status() === 'loaded'">
+      <h2>Products ({{ store.productCount() }})</h2>
+      
+      <div class="product-list">
+        <div 
+          *ngFor="let product of store.products()"
+          class="product-card"
+          [class.selected]="product.id === store.selectedProductId()"
+          (click)="store.selectProduct(product.id)">
+          {{ product.name }} - ${{ product.price }}
+        </div>
+      </div>
+      
+      <div *ngIf="store.selectedProduct()" class="product-details">
+        <h3>{{ store.selectedProduct()?.name }}</h3>
+        <p>{{ store.selectedProduct()?.description }}</p>
+        <p class="price">${{ store.selectedProduct()?.price }}</p>
+      </div>
+    </div>
+  `,
+  standalone: true,
+  imports: [CommonModule],
+  providers: [ProductsStore]
+})
+export class ProductsComponent implements OnInit {
+  store = inject(ProductsStore);
+  
+  ngOnInit() {
+    this.store.loadProducts();
+  }
+}
+```
+
+3. **Benefits of Signal Store:**
+   - Reduced boilerplate compared to traditional NgRx
+   - Leverages Angular's built-in Signals API
+   - Improved performance with fine-grained reactivity
+   - Better TypeScript support and type inference
+   - Simpler testing with fewer abstractions
+   - Seamless integration with standalone components
+
+4. **Migration Strategy from Traditional NgRx:**
+```typescript
+// Step 1: Identify a feature module using traditional NgRx
+// Step 2: Create equivalent Signal Store
+// Step 3: Replace selectors with computed signals
+// Step 4: Replace effects with rxMethods
+// Step 5: Replace action dispatching with direct method calls
+
+// Example migration of a selector
+// Before: Traditional NgRx
+const selectProducts = createSelector(
+  selectProductState,
+  (state) => state.products
+);
+
+// After: Signal Store
+const products = computed(() => state.products());
+
+// Example migration of an effect
+// Before: Traditional NgRx
+loadProducts$ = createEffect(() => 
+  this.actions$.pipe(
+    ofType(ProductActions.load),
+    switchMap(() => this.productService.getAll().pipe(
+      map(products => ProductActions.loadSuccess({ products })),
+      catchError(error => of(ProductActions.loadFailure({ error })))
+    ))
+  )
+);
+
+// After: Signal Store
+loadProducts: rxMethod<void>(pipe(
+  tap(() => patchState(state, { status: 'loading' })),
+  switchMap(() => this.productService.getAll().pipe(
+    map(products => patchState(state, { products, status: 'loaded' })),
+    catchError(error => of(patchState(state, { error, status: 'error' })))
+  ))
+))
+```
+
+### Q12: How would you implement advanced NgRx patterns for enterprise applications?
+
+**Answer:**
+Enterprise applications require sophisticated state management patterns to handle complex domains, scale effectively, and maintain performance.
+
+**Advanced NgRx Patterns:**
+
+1. **Domain-Driven State Composition:**
+```typescript
+// Core state interfaces organized by domain
+export interface AppState {
+  auth: AuthState;
+  products: ProductsState;
+  orders: OrdersState;
+  customers: CustomersState;
+  ui: UiState;
+}
+
+// Feature state with normalized entities
+export interface ProductsState {
+  entities: Record<string, Product>;
+  ids: string[];
+  selectedId: string | null;
+  filters: ProductFilters;
+  pagination: PaginationState;
+  loadingStatus: LoadingStatus;
+  error: ErrorState | null;
+}
+
+// Root store module with lazy-loaded feature states
+@NgModule({
+  imports: [
+    StoreModule.forRoot(reducers, {
+      metaReducers,
+      runtimeChecks: {
+        strictStateImmutability: true,
+        strictActionImmutability: true,
+        strictStateSerializability: true,
+        strictActionSerializability: true,
+        strictActionWithinNgZone: true,
+        strictActionTypeUniqueness: true,
+      },
+    }),
+    EffectsModule.forRoot([CoreEffects]),
+    StoreRouterConnectingModule.forRoot(),
+    StoreDevtoolsModule.instrument({
+      maxAge: 25,
+      logOnly: environment.production,
+      autoPause: true,
+    }),
+  ],
+})
+export class AppStoreModule {}
+```
+
+2. **Advanced Optimistic Updates with Conflict Resolution:**
+```typescript
+// Action creators for optimistic updates
+const updateProductOptimistic = createAction(
+  '[Product] Update Optimistic',
+  props<{ product: Product; originalProduct: Product }>()
+);
+
+const updateProductSuccess = createAction(
+  '[Product] Update Success',
+  props<{ product: Product }>()
+);
+
+const updateProductFailure = createAction(
+  '[Product] Update Failure',
+  props<{ error: any; originalProduct: Product }>()
+);
+
+// Reducer handling optimistic updates
+const productReducer = createReducer(
+  initialState,
+  on(updateProductOptimistic, (state, { product }) => {
+    return adapter.updateOne(
+      { id: product.id, changes: product },
+      { ...state, pendingUpdates: [...state.pendingUpdates, product.id] }
+    );
+  }),
+  on(updateProductSuccess, (state, { product }) => {
+    return {
+      ...adapter.updateOne({ id: product.id, changes: product }, state),
+      pendingUpdates: state.pendingUpdates.filter(id => id !== product.id),
+      lastSyncedAt: new Date().toISOString()
+    };
+  }),
+  on(updateProductFailure, (state, { originalProduct, error }) => {
+    return {
+      ...adapter.updateOne(
+        { id: originalProduct.id, changes: originalProduct },
+        state
+      ),
+      pendingUpdates: state.pendingUpdates.filter(id => id !== originalProduct.id),
+      errors: [...state.errors, { entityId: originalProduct.id, error }]
+    };
+  })
+);
+
+// Effect for handling optimistic updates with conflict resolution
+@Injectable()
+export class ProductEffects {
+  updateProduct$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(updateProductOptimistic),
+      concatMap(({ product, originalProduct }) =>
+        this.productService.update(product).pipe(
+          map(updatedProduct => {
+            // Check for conflicts (server might have newer version)
+            if (updatedProduct.version !== product.version) {
+              // Handle conflict - could show UI for conflict resolution
+              this.conflictService.handleConflict({
+                clientVersion: product,
+                serverVersion: updatedProduct
+              });
+            }
+            return updateProductSuccess({ product: updatedProduct });
+          }),
+          catchError(error => of(updateProductFailure({ 
+            error, 
+            originalProduct 
+          })))
+        )
+      )
+    )
+  );
+}
+```
+
+3. **Real-time State Synchronization:**
+```typescript
+@Injectable()
+export class RealTimeEffects {
+  private readonly websocket$ = this.websocketService.connect();
+
+  // Listen for real-time updates and dispatch actions
+  syncState$ = createEffect(() =>
+    this.websocket$.pipe(
+      filter(event => event.type === 'ENTITY_UPDATED'),
+      map(event => {
+        // Determine which entity was updated
+        switch (event.entityType) {
+          case 'product':
+            return ProductActions.externalUpdate({ product: event.data });
+          case 'order':
+            return OrderActions.externalUpdate({ order: event.data });
+          default:
+            return { type: 'UNKNOWN_ENTITY_TYPE' };
+        }
+      })
+    )
+  );
+
+  // Handle offline/online synchronization
+  syncOfflineChanges$ = createEffect(() =>
+    this.networkService.online$.pipe(
+      filter(online => online), // Only when coming back online
+      withLatestFrom(this.store.select(selectOfflineChanges)),
+      switchMap(([_, offlineChanges]) =>
+        this.syncService.batchSync(offlineChanges).pipe(
+          map(results => SyncActions.syncComplete({ results })),
+          catchError(error => of(SyncActions.syncError({ error })))
+        )
+      )
+    )
+  );
+}
+```
+
+4. **Advanced Micro-frontend State Composition:**
+```typescript
+// Shell application state
+export interface ShellState {
+  auth: AuthState;
+  navigation: NavigationState;
+  sharedContext: SharedContextState;
+}
+
+// Micro-frontend state registration service
+@Injectable({ providedIn: 'root' })
+export class MicroFrontendStateRegistry {
+  private registry = new Map<string, ActionReducerMap<any>>();
+
+  constructor(private store: Store) {}
+
+  // Register a micro-frontend's state
+  registerState(microFrontendId: string, reducers: ActionReducerMap<any>) {
+    if (!this.registry.has(microFrontendId)) {
+      // Dynamically add feature state
+      this.store.dispatch({
+        type: '[Store] Register Dynamic Feature',
+        feature: microFrontendId,
+        reducers
+      });
+      this.registry.set(microFrontendId, reducers);
+    }
+    return this.registry.get(microFrontendId);
+  }
+
+  // Unregister when micro-frontend is unmounted
+  unregisterState(microFrontendId: string) {
+    if (this.registry.has(microFrontendId)) {
+      this.store.dispatch({
+        type: '[Store] Unregister Dynamic Feature',
+        feature: microFrontendId
+      });
+      this.registry.delete(microFrontendId);
+    }
+  }
+}
+
+// Custom meta-reducer for handling dynamic features
+export function dynamicFeaturesMetaReducer(
+  reducer: ActionReducer<any>
+): ActionReducer<any> {
+  const featureReducers = {};
+  
+  return (state, action) => {
+    // Handle dynamic feature registration
+    if (action.type === '[Store] Register Dynamic Feature') {
+      featureReducers[action.feature] = action.reducers;
+    }
+    
+    // Handle dynamic feature unregistration
+    if (action.type === '[Store] Unregister Dynamic Feature') {
+      const { [action.feature]: removed, ...remaining } = featureReducers;
+      Object.assign(featureReducers, remaining);
+    }
+    
+    // Apply the main reducer
+    let newState = reducer(state, action);
+    
+    // Apply any dynamic feature reducers
+    Object.keys(featureReducers).forEach(feature => {
+      const featureReducer = combineReducers(featureReducers[feature]);
+      newState = {
+        ...newState,
+        [feature]: featureReducer(newState[feature], action)
+      };
+    });
+    
+    return newState;
+  };
+}
+```
+
+5. **Performance Optimization Patterns:**
+```typescript
+// Memoized selectors with custom equality functions
+export const selectFilteredProducts = createSelector(
+  selectAllProducts,
+  selectProductFilters,
+  (products, filters) => {
+    // Return same reference if filters haven't changed
+    return products.filter(product => {
+      return (!filters.category || product.category === filters.category) &&
+             (!filters.minPrice || product.price >= filters.minPrice) &&
+             (!filters.maxPrice || product.price <= filters.maxPrice) &&
+             (!filters.searchTerm || 
+               product.name.toLowerCase().includes(filters.searchTerm.toLowerCase()));
+    });
+  },
+  {
+    memoize: customMemoize,
+    resultEqualityCheck: (a, b) => {
+      if (a === b) return true;
+      if (!a || !b) return false;
+      if (a.length !== b.length) return false;
+      return a.every((item, i) => item.id === b[i].id);
+    }
+  }
+);
+
+// Custom projection function for minimizing state changes
+export const selectProductViewModel = createSelector(
+  selectSelectedProduct,
+  selectRelatedProducts,
+  selectProductReviews,
+  (product, relatedProducts, reviews) => {
+    if (!product) return null;
+    
+    // Only include necessary fields to minimize object size
+    return {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      imageUrl: product.imageUrl,
+      averageRating: calculateAverageRating(reviews),
+      relatedProductIds: relatedProducts.map(p => p.id)
+    };
+  }
+);
+
+// State hydration and rehydration for performance
+export function localStorageSyncReducer(
+  reducer: ActionReducer<any>
+): ActionReducer<any> {
+  return localStorageSync({
+    keys: ['auth', 'ui.preferences'],
+    rehydrate: true,
+    removeOnUndefined: true,
+    storageKeySerializer: (key) => `app_state_${key}`,
+    syncCondition: (state) => state.auth?.isAuthenticated
+  })(reducer);
+}
+```
+
+This advanced NgRx guide now includes complex state composition patterns, optimistic updates with rollback capabilities, real-time state synchronization with conflict resolution strategies, enterprise-level patterns for scalability, comprehensive micro-frontend integration strategies, modern standalone component integration with Signal Store, and comprehensive testing strategies with modern Angular testing utilities.

@@ -1,677 +1,758 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Angular 14 Lead Developer Interview Guide</title>
-    
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lead Developer Interview Guide</title>
+
     <!-- Prism.js for syntax highlighting -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/toolbar/prism-toolbar.min.css" rel="stylesheet">
-    
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/toolbar/prism-toolbar.min.css"
+      rel="stylesheet"
+    />
+
     <!-- Marked.js for markdown parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
-    
+
     <!-- Custom styles -->
     <style>
-        :root {
-            --primary-color: #dd0031;
-            --secondary-color: #c3002f;
-            --accent-color: #1976d2;
-            --background-color: #f5f5f5;
-            --surface-color: #ffffff;
-            --text-primary: #212529;
-            --text-secondary: #6c757d;
-            --border-color: #dee2e6;
-            --shadow: 0 2px 4px rgba(0,0,0,0.1);
-            --shadow-hover: 0 4px 8px rgba(0,0,0,0.15);
+      :root {
+        --primary-color: #dd0031;
+        --secondary-color: #c3002f;
+        --accent-color: #1976d2;
+        --background-color: #f5f5f5;
+        --surface-color: #ffffff;
+        --text-primary: #212529;
+        --text-secondary: #6c757d;
+        --border-color: #dee2e6;
+        --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        --shadow-hover: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: var(--text-primary);
+        background-color: var(--background-color);
+      }
+
+      .container {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        min-height: 100vh;
+        max-width: 1400px;
+        margin: 0 auto;
+        background-color: var(--surface-color);
+        box-shadow: var(--shadow);
+      }
+
+      /* Sidebar Navigation */
+      .sidebar {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        color: white;
+        padding: 20px;
+        overflow-y: auto;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+      }
+
+      .sidebar h1 {
+        font-size: 1.5rem;
+        margin-bottom: 30px;
+        text-align: center;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        padding-bottom: 15px;
+      }
+
+      .nav-section {
+        margin-bottom: 25px;
+      }
+
+      .nav-section h3 {
+        font-size: 1rem;
+        margin-bottom: 10px;
+        color: rgba(255, 255, 255, 0.9);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .nav-item {
+        display: block;
+        padding: 10px 15px;
+        margin-bottom: 5px;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+        font-size: 0.9rem;
+      }
+
+      .nav-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+        transform: translateX(5px);
+      }
+
+      .nav-item.active {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        font-weight: 600;
+      }
+
+      .nav-item .badge {
+        background-color: var(--accent-color);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        margin-left: auto;
+        display: inline-block;
+      }
+
+      /* Main Content */
+      .main-content {
+        padding: 30px;
+        overflow-y: auto;
+        background-color: var(--surface-color);
+      }
+
+      .content-header {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid var(--border-color);
+      }
+
+      .content-header h1 {
+        color: var(--primary-color);
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .content-header p {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+      }
+
+      .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+      }
+
+      .spinner {
+        border: 3px solid var(--border-color);
+        border-top: 3px solid var(--primary-color);
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin-right: 15px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        100% {
+          transform: rotate(360deg);
         }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: var(--text-primary);
-            background-color: var(--background-color);
-        }
-        
+      }
+
+      .error {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #f5c6cb;
+        margin: 20px 0;
+      }
+
+      /* Markdown Content Styles */
+      .markdown-content {
+        max-width: none;
+      }
+
+      .markdown-content h1 {
+        color: var(--primary-color);
+        font-size: 2.2rem;
+        margin: 30px 0 20px 0;
+        padding-bottom: 10px;
+        border-bottom: 3px solid var(--primary-color);
+      }
+
+      .markdown-content h2 {
+        color: var(--secondary-color);
+        font-size: 1.8rem;
+        margin: 25px 0 15px 0;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--border-color);
+      }
+
+      .markdown-content h3 {
+        color: var(--accent-color);
+        font-size: 1.4rem;
+        margin: 20px 0 10px 0;
+      }
+
+      .markdown-content h4 {
+        color: var(--text-primary);
+        font-size: 1.2rem;
+        margin: 15px 0 8px 0;
+        font-weight: 600;
+      }
+
+      .markdown-content p {
+        margin-bottom: 15px;
+        line-height: 1.7;
+      }
+
+      .markdown-content ul,
+      .markdown-content ol {
+        margin: 15px 0;
+        padding-left: 30px;
+      }
+
+      .markdown-content li {
+        margin-bottom: 8px;
+        line-height: 1.6;
+      }
+
+      .markdown-content blockquote {
+        border-left: 4px solid var(--primary-color);
+        padding: 15px 20px;
+        margin: 20px 0;
+        background-color: #f8f9fa;
+        font-style: italic;
+      }
+
+      .markdown-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        box-shadow: var(--shadow);
+      }
+
+      .markdown-content th,
+      .markdown-content td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .markdown-content th {
+        background-color: var(--primary-color);
+        color: white;
+        font-weight: 600;
+      }
+
+      .markdown-content tr:hover {
+        background-color: #f8f9fa;
+      }
+
+      /* Code Blocks */
+      .markdown-content pre {
+        background-color: #2d3748;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        overflow-x: auto;
+        box-shadow: var(--shadow);
+      }
+
+      .markdown-content code {
+        font-family: "Fira Code", "Consolas", "Monaco", monospace;
+        font-size: 0.9rem;
+      }
+
+      .markdown-content p code {
+        background-color: #f1f3f4;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: var(--primary-color);
+        font-weight: 600;
+      }
+
+      /* Prism.js customizations */
+      pre[class*="language-"] {
+        margin: 20px 0;
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+      }
+
+      .token.comment {
+        color: #6a737d;
+      }
+
+      .token.keyword {
+        color: #d73a49;
+        font-weight: 600;
+      }
+
+      .token.string {
+        color: #032f62;
+      }
+
+      .token.function {
+        color: #6f42c1;
+      }
+
+      .token.number {
+        color: #005cc5;
+      }
+
+      /* Search functionality */
+      .search-container {
+        margin-bottom: 20px;
+        position: relative;
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 12px 40px 12px 15px;
+        border: 2px solid var(--border-color);
+        border-radius: 25px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+      }
+
+      .search-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+      }
+
+      .search-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+      }
+
+      /* Table of Contents */
+      .toc {
+        background-color: #f8f9fa;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+
+      .toc h3 {
+        color: var(--primary-color);
+        margin-bottom: 15px;
+      }
+
+      .toc ul {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .toc li {
+        margin-bottom: 8px;
+      }
+
+      .toc a {
+        color: var(--accent-color);
+        text-decoration: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+      }
+
+      .toc a:hover {
+        background-color: var(--border-color);
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
         .container {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            min-height: 100vh;
-            max-width: 1400px;
-            margin: 0 auto;
-            background-color: var(--surface-color);
-            box-shadow: var(--shadow);
+          grid-template-columns: 1fr;
+          grid-template-rows: auto 1fr;
         }
-        
-        /* Sidebar Navigation */
+
         .sidebar {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 20px;
-            overflow-y: auto;
-            position: sticky;
-            top: 0;
-            height: 100vh;
+          position: static;
+          height: auto;
+          padding: 15px;
         }
-        
+
         .sidebar h1 {
-            font-size: 1.5rem;
-            margin-bottom: 30px;
-            text-align: center;
-            border-bottom: 2px solid rgba(255,255,255,0.2);
-            padding-bottom: 15px;
+          font-size: 1.3rem;
+          margin-bottom: 20px;
         }
-        
+
         .nav-section {
-            margin-bottom: 25px;
+          margin-bottom: 15px;
         }
-        
-        .nav-section h3 {
-            font-size: 1rem;
-            margin-bottom: 10px;
-            color: rgba(255,255,255,0.9);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .nav-item {
-            display: block;
-            padding: 10px 15px;
-            margin-bottom: 5px;
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: none;
-            background: none;
-            width: 100%;
-            text-align: left;
-            font-size: 0.9rem;
-        }
-        
-        .nav-item:hover {
-            background-color: rgba(255,255,255,0.1);
-            color: white;
-            transform: translateX(5px);
-        }
-        
-        .nav-item.active {
-            background-color: rgba(255,255,255,0.2);
-            color: white;
-            font-weight: 600;
-        }
-        
-        .nav-item .badge {
-            background-color: var(--accent-color);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            margin-left: auto;
-            display: inline-block;
-        }
-        
-        /* Main Content */
+
         .main-content {
-            padding: 30px;
-            overflow-y: auto;
-            background-color: var(--surface-color);
+          padding: 20px 15px;
         }
-        
-        .content-header {
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid var(--border-color);
-        }
-        
+
         .content-header h1 {
-            color: var(--primary-color);
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+          font-size: 2rem;
         }
-        
-        .content-header p {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
+      }
+
+      /* Print Styles */
+      @media print {
+        .sidebar {
+          display: none;
         }
-        
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 200px;
-            font-size: 1.2rem;
-            color: var(--text-secondary);
+
+        .container {
+          grid-template-columns: 1fr;
         }
-        
-        .spinner {
-            border: 3px solid var(--border-color);
-            border-top: 3px solid var(--primary-color);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin-right: 15px;
+
+        .main-content {
+          padding: 0;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #f5c6cb;
-            margin: 20px 0;
-        }
-        
-        /* Markdown Content Styles */
-        .markdown-content {
-            max-width: none;
-        }
-        
-        .markdown-content h1 {
-            color: var(--primary-color);
-            font-size: 2.2rem;
-            margin: 30px 0 20px 0;
-            padding-bottom: 10px;
-            border-bottom: 3px solid var(--primary-color);
-        }
-        
-        .markdown-content h2 {
-            color: var(--secondary-color);
-            font-size: 1.8rem;
-            margin: 25px 0 15px 0;
-            padding-bottom: 8px;
-            border-bottom: 2px solid var(--border-color);
-        }
-        
-        .markdown-content h3 {
-            color: var(--accent-color);
-            font-size: 1.4rem;
-            margin: 20px 0 10px 0;
-        }
-        
-        .markdown-content h4 {
-            color: var(--text-primary);
-            font-size: 1.2rem;
-            margin: 15px 0 8px 0;
-            font-weight: 600;
-        }
-        
-        .markdown-content p {
-            margin-bottom: 15px;
-            line-height: 1.7;
-        }
-        
-        .markdown-content ul, .markdown-content ol {
-            margin: 15px 0;
-            padding-left: 30px;
-        }
-        
-        .markdown-content li {
-            margin-bottom: 8px;
-            line-height: 1.6;
-        }
-        
-        .markdown-content blockquote {
-            border-left: 4px solid var(--primary-color);
-            padding: 15px 20px;
-            margin: 20px 0;
-            background-color: #f8f9fa;
-            font-style: italic;
-        }
-        
-        .markdown-content table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            box-shadow: var(--shadow);
-        }
-        
-        .markdown-content th,
-        .markdown-content td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .markdown-content th {
-            background-color: var(--primary-color);
-            color: white;
-            font-weight: 600;
-        }
-        
-        .markdown-content tr:hover {
-            background-color: #f8f9fa;
-        }
-        
-        /* Code Blocks */
-        .markdown-content pre {
-            background-color: #2d3748;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-            overflow-x: auto;
-            box-shadow: var(--shadow);
-        }
-        
-        .markdown-content code {
-            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
-            font-size: 0.9rem;
-        }
-        
-        .markdown-content p code {
-            background-color: #f1f3f4;
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: var(--primary-color);
-            font-weight: 600;
-        }
-        
-        /* Prism.js customizations */
+
         pre[class*="language-"] {
-            margin: 20px 0;
-            border-radius: 8px;
-            box-shadow: var(--shadow);
+          background-color: #f8f9fa !important;
+          color: #000 !important;
+          border: 1px solid #ccc;
         }
-        
-        .token.comment {
-            color: #6a737d;
-        }
-        
-        .token.keyword {
-            color: #d73a49;
-            font-weight: 600;
-        }
-        
-        .token.string {
-            color: #032f62;
-        }
-        
-        .token.function {
-            color: #6f42c1;
-        }
-        
-        .token.number {
-            color: #005cc5;
-        }
-        
-        /* Search functionality */
-        .search-container {
-            margin-bottom: 20px;
-            position: relative;
-        }
-        
-        .search-input {
-            width: 100%;
-            padding: 12px 40px 12px 15px;
-            border: 2px solid var(--border-color);
-            border-radius: 25px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
-        }
-        
-        .search-input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-        
-        .search-icon {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-        }
-        
-        /* Table of Contents */
-        .toc {
-            background-color: #f8f9fa;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        
-        .toc h3 {
-            color: var(--primary-color);
-            margin-bottom: 15px;
-        }
-        
-        .toc ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .toc li {
-            margin-bottom: 8px;
-        }
-        
-        .toc a {
-            color: var(--accent-color);
-            text-decoration: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            transition: background-color 0.3s ease;
-        }
-        
-        .toc a:hover {
-            background-color: var(--border-color);
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto 1fr;
-            }
-            
-            .sidebar {
-                position: static;
-                height: auto;
-                padding: 15px;
-            }
-            
-            .sidebar h1 {
-                font-size: 1.3rem;
-                margin-bottom: 20px;
-            }
-            
-            .nav-section {
-                margin-bottom: 15px;
-            }
-            
-            .main-content {
-                padding: 20px 15px;
-            }
-            
-            .content-header h1 {
-                font-size: 2rem;
-            }
-        }
-        
-        /* Print Styles */
-        @media print {
-            .sidebar {
-                display: none;
-            }
-            
-            .container {
-                grid-template-columns: 1fr;
-            }
-            
-            .main-content {
-                padding: 0;
-            }
-            
-            pre[class*="language-"] {
-                background-color: #f8f9fa !important;
-                color: #000 !important;
-                border: 1px solid #ccc;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <!-- Sidebar Navigation -->
-        <nav class="sidebar">
-            <h1>📚 Interview Guide</h1>
-            
-            <div class="search-container">
-                <input type="text" class="search-input" placeholder="Search topics..." id="searchInput">
-                <span class="search-icon">🔍</span>
+      <!-- Sidebar Navigation -->
+      <nav class="sidebar">
+        <h1>📚 Interview Guide</h1>
+
+        <div class="search-container">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search topics..."
+            id="searchInput"
+          />
+          <span class="search-icon">🔍</span>
+        </div>
+
+        <div class="nav-section">
+          <h3>Frontend Technologies</h3>
+          <button class="nav-item" data-file="angular/angular-questions.md">
+            Angular 14 <span class="badge">100+</span>
+          </button>
+          <button
+            class="nav-item"
+            data-file="javascript/javascript-questions.md"
+          >
+            JavaScript <span class="badge">80+</span>
+          </button>
+          <button class="nav-item" data-file="html/html-questions.md">
+            HTML5 <span class="badge">50+</span>
+          </button>
+          <button class="nav-item" data-file="css/css-questions.md">
+            CSS3 <span class="badge">60+</span>
+          </button>
+        </div>
+
+        <div class="nav-section">
+          <h3>State Management</h3>
+          <button class="nav-item" data-file="ngrx/ngrx-questions.md">
+            NgRx <span class="badge">40+</span>
+          </button>
+        </div>
+
+        <div class="nav-section">
+          <h3>Performance & Security</h3>
+          <button
+            class="nav-item"
+            data-file="performance/performance-questions.md"
+          >
+            Performance <span class="badge">35+</span>
+          </button>
+          <button class="nav-item" data-file="security/security-questions.md">
+            Security <span class="badge">45+</span>
+          </button>
+        </div>
+
+        <div class="nav-section">
+          <h3>Integration & Advanced</h3>
+          <button
+            class="nav-item"
+            data-file="integration/angular14-integration-questions.md"
+          >
+            Angular 14 Integration <span class="badge">25+</span>
+          </button>
+        </div>
+
+        <div class="nav-section">
+          <h3>Quick Actions</h3>
+          <button class="nav-item" onclick="printContent()">
+            🖨️ Print Current
+          </button>
+          <button class="nav-item" onclick="exportToPDF()">
+            📄 Export PDF
+          </button>
+          <button class="nav-item" onclick="toggleTheme()">
+            🌙 Toggle Theme
+          </button>
+        </div>
+      </nav>
+
+      <!-- Main Content Area -->
+      <main class="main-content">
+        <div class="content-header">
+          <h1>Lead Developer Interview Guide</h1>
+          <p>
+            Comprehensive collection of interview questions covering Angular 14,
+            JavaScript, HTML5, CSS3, NgRx, Performance, Security, and
+            Integration patterns.
+          </p>
+        </div>
+
+        <div id="contentArea">
+          <div class="welcome-content">
+            <h2>Welcome to the Interview Guide</h2>
+            <p>
+              Select a topic from the sidebar to begin exploring interview
+              questions and answers.
+            </p>
+
+            <div class="toc">
+              <h3>📋 Available Topics</h3>
+              <ul>
+                <li>
+                  <strong>Angular 14:</strong> Components, Services, Routing,
+                  Forms, and new features
+                </li>
+                <li>
+                  <strong>JavaScript:</strong> ES6+, Async/Await, Closures,
+                  Prototypes, and modern patterns
+                </li>
+                <li>
+                  <strong>HTML5:</strong> Semantic elements, APIs, Forms, and
+                  accessibility
+                </li>
+                <li>
+                  <strong>CSS3:</strong> Flexbox, Grid, Animations, and
+                  responsive design
+                </li>
+                <li>
+                  <strong>NgRx:</strong> State management, Actions, Reducers,
+                  Effects, and Selectors
+                </li>
+                <li>
+                  <strong>Performance:</strong> Optimization techniques, Core
+                  Web Vitals, and best practices
+                </li>
+                <li>
+                  <strong>Security:</strong> OWASP Top 10, Authentication,
+                  Authorization, and secure coding
+                </li>
+                <li>
+                  <strong>Integration:</strong> Angular 14 features, Standalone
+                  components, and advanced patterns
+                </li>
+              </ul>
             </div>
-            
-            <div class="nav-section">
-                <h3>Frontend Technologies</h3>
-                <button class="nav-item" data-file="angular/angular-questions.md">
-                    Angular 14 <span class="badge">100+</span>
-                </button>
-                <button class="nav-item" data-file="javascript/javascript-questions.md">
-                    JavaScript <span class="badge">80+</span>
-                </button>
-                <button class="nav-item" data-file="html/html-questions.md">
-                    HTML5 <span class="badge">50+</span>
-                </button>
-                <button class="nav-item" data-file="css/css-questions.md">
-                    CSS3 <span class="badge">60+</span>
-                </button>
-            </div>
-            
-            <div class="nav-section">
-                <h3>State Management</h3>
-                <button class="nav-item" data-file="ngrx/ngrx-questions.md">
-                    NgRx <span class="badge">40+</span>
-                </button>
-            </div>
-            
-            <div class="nav-section">
-                <h3>Performance & Security</h3>
-                <button class="nav-item" data-file="performance/performance-questions.md">
-                    Performance <span class="badge">35+</span>
-                </button>
-                <button class="nav-item" data-file="security/security-questions.md">
-                    Security <span class="badge">45+</span>
-                </button>
-            </div>
-            
-            <div class="nav-section">
-                <h3>Integration & Advanced</h3>
-                <button class="nav-item" data-file="integration/angular14-integration-questions.md">
-                    Angular 14 Integration <span class="badge">25+</span>
-                </button>
-            </div>
-            
-            <div class="nav-section">
-                <h3>Quick Actions</h3>
-                <button class="nav-item" onclick="printContent()">
-                    🖨️ Print Current
-                </button>
-                <button class="nav-item" onclick="exportToPDF()">
-                    📄 Export PDF
-                </button>
-                <button class="nav-item" onclick="toggleTheme()">
-                    🌙 Toggle Theme
-                </button>
-            </div>
-        </nav>
-        
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <div class="content-header">
-                <h1>Angular 14 Lead Developer Interview Guide</h1>
-                <p>Comprehensive collection of interview questions covering Angular 14, JavaScript, HTML5, CSS3, NgRx, Performance, Security, and Integration patterns.</p>
-            </div>
-            
-            <div id="contentArea">
-                <div class="welcome-content">
-                    <h2>Welcome to the Interview Guide</h2>
-                    <p>Select a topic from the sidebar to begin exploring interview questions and answers.</p>
-                    
-                    <div class="toc">
-                        <h3>📋 Available Topics</h3>
-                        <ul>
-                            <li><strong>Angular 14:</strong> Components, Services, Routing, Forms, and new features</li>
-                            <li><strong>JavaScript:</strong> ES6+, Async/Await, Closures, Prototypes, and modern patterns</li>
-                            <li><strong>HTML5:</strong> Semantic elements, APIs, Forms, and accessibility</li>
-                            <li><strong>CSS3:</strong> Flexbox, Grid, Animations, and responsive design</li>
-                            <li><strong>NgRx:</strong> State management, Actions, Reducers, Effects, and Selectors</li>
-                            <li><strong>Performance:</strong> Optimization techniques, Core Web Vitals, and best practices</li>
-                            <li><strong>Security:</strong> OWASP Top 10, Authentication, Authorization, and secure coding</li>
-                            <li><strong>Integration:</strong> Angular 14 features, Standalone components, and advanced patterns</li>
-                        </ul>
-                    </div>
-                    
-                    <h3>🚀 Features</h3>
-                    <ul>
-                        <li>✅ <strong>Syntax Highlighting:</strong> Code examples with proper highlighting</li>
-                        <li>✅ <strong>Responsive Design:</strong> Works on desktop, tablet, and mobile</li>
-                        <li>✅ <strong>Search Functionality:</strong> Find topics quickly</li>
-                        <li>✅ <strong>Print Support:</strong> Print-friendly layouts</li>
-                        <li>✅ <strong>Modular Structure:</strong> Easy to add new topics</li>
-                        <li>✅ <strong>Progressive Loading:</strong> Fast initial load, content loaded on demand</li>
-                    </ul>
-                    
-                    <h3>💡 How to Use</h3>
-                    <ol>
-                        <li>Click on any topic in the sidebar to load questions</li>
-                        <li>Use the search box to find specific topics</li>
-                        <li>Print individual sections using the print button</li>
-                        <li>Toggle between light and dark themes</li>
-                        <li>Export content to PDF for offline reading</li>
-                    </ol>
-                </div>
-            </div>
-        </main>
+
+            <h3>🚀 Features</h3>
+            <ul>
+              <li>
+                ✅ <strong>Syntax Highlighting:</strong> Code examples with
+                proper highlighting
+              </li>
+              <li>
+                ✅ <strong>Responsive Design:</strong> Works on desktop, tablet,
+                and mobile
+              </li>
+              <li>
+                ✅ <strong>Search Functionality:</strong> Find topics quickly
+              </li>
+              <li>✅ <strong>Print Support:</strong> Print-friendly layouts</li>
+              <li>
+                ✅ <strong>Modular Structure:</strong> Easy to add new topics
+              </li>
+              <li>
+                ✅ <strong>Progressive Loading:</strong> Fast initial load,
+                content loaded on demand
+              </li>
+            </ul>
+
+            <h3>💡 How to Use</h3>
+            <ol>
+              <li>Click on any topic in the sidebar to load questions</li>
+              <li>Use the search box to find specific topics</li>
+              <li>Print individual sections using the print button</li>
+              <li>Toggle between light and dark themes</li>
+              <li>Export content to PDF for offline reading</li>
+            </ol>
+          </div>
+        </div>
+      </main>
     </div>
-    
+
     <!-- Prism.js Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/toolbar/prism-toolbar.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script>
-    
+
     <!-- Main Application Script -->
     <script>
-        class InterviewGuideApp {
-            constructor() {
-                this.currentFile = null;
-                this.cache = new Map();
-                this.searchIndex = new Map();
-                this.isDarkTheme = false;
-                
-                this.init();
+      class InterviewGuideApp {
+        constructor() {
+          this.currentFile = null;
+          this.cache = new Map();
+          this.searchIndex = new Map();
+          this.isDarkTheme = false;
+
+          this.init();
+        }
+
+        init() {
+          this.setupEventListeners();
+          this.setupSearch();
+          this.loadInitialContent();
+        }
+
+        setupEventListeners() {
+          // Navigation items
+          document.querySelectorAll(".nav-item[data-file]").forEach((item) => {
+            item.addEventListener("click", (e) => {
+              const file = e.target.closest(".nav-item").dataset.file;
+              this.loadContent(file);
+            });
+          });
+
+          // Keyboard shortcuts
+          document.addEventListener("keydown", (e) => {
+            if (e.ctrlKey || e.metaKey) {
+              switch (e.key) {
+                case "p":
+                  e.preventDefault();
+                  this.printContent();
+                  break;
+                case "f":
+                  e.preventDefault();
+                  document.getElementById("searchInput").focus();
+                  break;
+              }
             }
-            
-            init() {
-                this.setupEventListeners();
-                this.setupSearch();
-                this.loadInitialContent();
+          });
+        }
+
+        setupSearch() {
+          const searchInput = document.getElementById("searchInput");
+          let searchTimeout;
+
+          searchInput.addEventListener("input", (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+              this.performSearch(e.target.value);
+            }, 300);
+          });
+        }
+
+        async loadContent(filePath) {
+          try {
+            this.showLoading();
+            this.setActiveNavItem(filePath);
+
+            let content;
+            if (this.cache.has(filePath)) {
+              content = this.cache.get(filePath);
+            } else {
+              const response = await fetch(filePath);
+              if (!response.ok) {
+                throw new Error(
+                  `Failed to load ${filePath}: ${response.statusText}`
+                );
+              }
+              content = await response.text();
+              this.cache.set(filePath, content);
             }
-            
-            setupEventListeners() {
-                // Navigation items
-                document.querySelectorAll('.nav-item[data-file]').forEach(item => {
-                    item.addEventListener('click', (e) => {
-                        const file = e.target.closest('.nav-item').dataset.file;
-                        this.loadContent(file);
-                    });
-                });
-                
-                // Keyboard shortcuts
-                document.addEventListener('keydown', (e) => {
-                    if (e.ctrlKey || e.metaKey) {
-                        switch(e.key) {
-                            case 'p':
-                                e.preventDefault();
-                                this.printContent();
-                                break;
-                            case 'f':
-                                e.preventDefault();
-                                document.getElementById('searchInput').focus();
-                                break;
-                        }
-                    }
-                });
-            }
-            
-            setupSearch() {
-                const searchInput = document.getElementById('searchInput');
-                let searchTimeout;
-                
-                searchInput.addEventListener('input', (e) => {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        this.performSearch(e.target.value);
-                    }, 300);
-                });
-            }
-            
-            async loadContent(filePath) {
-                try {
-                    this.showLoading();
-                    this.setActiveNavItem(filePath);
-                    
-                    let content;
-                    if (this.cache.has(filePath)) {
-                        content = this.cache.get(filePath);
-                    } else {
-                        const response = await fetch(filePath);
-                        if (!response.ok) {
-                            throw new Error(`Failed to load ${filePath}: ${response.statusText}`);
-                        }
-                        content = await response.text();
-                        this.cache.set(filePath, content);
-                    }
-                    
-                    this.renderMarkdown(content);
-                    this.currentFile = filePath;
-                    this.buildSearchIndex(content, filePath);
-                    
-                } catch (error) {
-                    this.showError(`Error loading content: ${error.message}`);
-                }
-            }
-            
-            renderMarkdown(content) {
-                const contentArea = document.getElementById('contentArea');
-                
-                // Configure marked options
-                marked.setOptions({
-                    highlight: function(code, lang) {
-                        if (Prism.languages[lang]) {
-                            return Prism.highlight(code, Prism.languages[lang], lang);
-                        }
-                        return code;
-                    },
-                    breaks: true,
-                    gfm: true
-                });
-                
-                // Parse markdown
-                const html = marked.parse(content);
-                contentArea.innerHTML = `<div class="markdown-content">${html}</div>`;
-                
-                // Re-run Prism highlighting
-                Prism.highlightAll();
-                
-                // Add line numbers to code blocks
-                document.querySelectorAll('pre[class*="language-"]').forEach(pre => {
-                    pre.classList.add('line-numbers');
-                });
-                
-                // Smooth scroll to top
-                contentArea.scrollTop = 0;
-                
-                // Add copy buttons to code blocks
-                this.addCopyButtons();
-                
-                // Generate table of contents
-                this.generateTOC();
-            }
-            
-            addCopyButtons() {
-                document.querySelectorAll('pre[class*="language-"]').forEach(pre => {
-                    if (!pre.querySelector('.copy-button')) {
-                        const button = document.createElement('button');
-                        button.className = 'copy-button';
-                        button.textContent = 'Copy';
-                        button.style.cssText = `
+
+            this.renderMarkdown(content);
+            this.currentFile = filePath;
+            this.buildSearchIndex(content, filePath);
+          } catch (error) {
+            this.showError(`Error loading content: ${error.message}`);
+          }
+        }
+
+        renderMarkdown(content) {
+          const contentArea = document.getElementById("contentArea");
+
+          // Configure marked options
+          marked.setOptions({
+            highlight: function (code, lang) {
+              if (Prism.languages[lang]) {
+                return Prism.highlight(code, Prism.languages[lang], lang);
+              }
+              return code;
+            },
+            breaks: true,
+            gfm: true,
+          });
+
+          // Parse markdown
+          const html = marked.parse(content);
+          contentArea.innerHTML = `<div class="markdown-content">${html}</div>`;
+
+          // Re-run Prism highlighting
+          Prism.highlightAll();
+
+          // Add line numbers to code blocks
+          document
+            .querySelectorAll('pre[class*="language-"]')
+            .forEach((pre) => {
+              pre.classList.add("line-numbers");
+            });
+
+          // Smooth scroll to top
+          contentArea.scrollTop = 0;
+
+          // Add copy buttons to code blocks
+          this.addCopyButtons();
+
+          // Generate table of contents
+          this.generateTOC();
+        }
+
+        addCopyButtons() {
+          document
+            .querySelectorAll('pre[class*="language-"]')
+            .forEach((pre) => {
+              if (!pre.querySelector(".copy-button")) {
+                const button = document.createElement("button");
+                button.className = "copy-button";
+                button.textContent = "Copy";
+                button.style.cssText = `
                             position: absolute;
                             top: 10px;
                             right: 10px;
@@ -683,208 +764,223 @@
                             cursor: pointer;
                             font-size: 0.8rem;
                         `;
-                        
-                        button.addEventListener('click', () => {
-                            const code = pre.querySelector('code').textContent;
-                            navigator.clipboard.writeText(code).then(() => {
-                                button.textContent = 'Copied!';
-                                setTimeout(() => {
-                                    button.textContent = 'Copy';
-                                }, 2000);
-                            });
-                        });
-                        
-                        pre.style.position = 'relative';
-                        pre.appendChild(button);
-                    }
+
+                button.addEventListener("click", () => {
+                  const code = pre.querySelector("code").textContent;
+                  navigator.clipboard.writeText(code).then(() => {
+                    button.textContent = "Copied!";
+                    setTimeout(() => {
+                      button.textContent = "Copy";
+                    }, 2000);
+                  });
                 });
+
+                pre.style.position = "relative";
+                pre.appendChild(button);
+              }
+            });
+        }
+
+        generateTOC() {
+          const headings = document.querySelectorAll(
+            ".markdown-content h2, .markdown-content h3"
+          );
+          if (headings.length === 0) return;
+
+          const toc = document.createElement("div");
+          toc.className = "toc";
+          toc.innerHTML = "<h3>📑 Table of Contents</h3><ul></ul>";
+
+          const ul = toc.querySelector("ul");
+
+          headings.forEach((heading, index) => {
+            const id = `heading-${index}`;
+            heading.id = id;
+
+            const li = document.createElement("li");
+            const a = document.createElement("a");
+            a.href = `#${id}`;
+            a.textContent = heading.textContent;
+            a.style.paddingLeft = heading.tagName === "H3" ? "20px" : "0";
+
+            a.addEventListener("click", (e) => {
+              e.preventDefault();
+              heading.scrollIntoView({ behavior: "smooth" });
+            });
+
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+
+          const firstHeading = document.querySelector(
+            ".markdown-content h1, .markdown-content h2"
+          );
+          if (firstHeading) {
+            firstHeading.parentNode.insertBefore(toc, firstHeading.nextSibling);
+          }
+        }
+
+        buildSearchIndex(content, filePath) {
+          const words = content.toLowerCase().match(/\b\w+\b/g) || [];
+          words.forEach((word) => {
+            if (!this.searchIndex.has(word)) {
+              this.searchIndex.set(word, new Set());
             }
-            
-            generateTOC() {
-                const headings = document.querySelectorAll('.markdown-content h2, .markdown-content h3');
-                if (headings.length === 0) return;
-                
-                const toc = document.createElement('div');
-                toc.className = 'toc';
-                toc.innerHTML = '<h3>📑 Table of Contents</h3><ul></ul>';
-                
-                const ul = toc.querySelector('ul');
-                
-                headings.forEach((heading, index) => {
-                    const id = `heading-${index}`;
-                    heading.id = id;
-                    
-                    const li = document.createElement('li');
-                    const a = document.createElement('a');
-                    a.href = `#${id}`;
-                    a.textContent = heading.textContent;
-                    a.style.paddingLeft = heading.tagName === 'H3' ? '20px' : '0';
-                    
-                    a.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        heading.scrollIntoView({ behavior: 'smooth' });
-                    });
-                    
-                    li.appendChild(a);
-                    ul.appendChild(li);
-                });
-                
-                const firstHeading = document.querySelector('.markdown-content h1, .markdown-content h2');
-                if (firstHeading) {
-                    firstHeading.parentNode.insertBefore(toc, firstHeading.nextSibling);
-                }
+            this.searchIndex.get(word).add(filePath);
+          });
+        }
+
+        performSearch(query) {
+          if (!query.trim()) {
+            this.clearSearchHighlight();
+            return;
+          }
+
+          const searchTerms = query.toLowerCase().split(/\s+/);
+          const navItems = document.querySelectorAll(".nav-item[data-file]");
+
+          navItems.forEach((item) => {
+            const file = item.dataset.file;
+            const content = this.cache.get(file) || "";
+            const matches = searchTerms.every((term) =>
+              content.toLowerCase().includes(term)
+            );
+
+            item.style.display = matches ? "block" : "none";
+          });
+
+          // Highlight search terms in current content
+          this.highlightSearchTerms(searchTerms);
+        }
+
+        highlightSearchTerms(terms) {
+          const contentArea = document.querySelector(".markdown-content");
+          if (!contentArea) return;
+
+          this.clearSearchHighlight();
+
+          terms.forEach((term) => {
+            if (term.length < 2) return;
+
+            const regex = new RegExp(`(${term})`, "gi");
+            this.highlightText(contentArea, regex);
+          });
+        }
+
+        highlightText(element, regex) {
+          const walker = document.createTreeWalker(
+            element,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+          );
+
+          const textNodes = [];
+          let node;
+          while ((node = walker.nextNode())) {
+            textNodes.push(node);
+          }
+
+          textNodes.forEach((textNode) => {
+            const parent = textNode.parentNode;
+            if (parent.tagName === "SCRIPT" || parent.tagName === "STYLE")
+              return;
+
+            const text = textNode.textContent;
+            if (regex.test(text)) {
+              const highlightedHTML = text.replace(
+                regex,
+                '<mark class="search-highlight">$1</mark>'
+              );
+              const wrapper = document.createElement("span");
+              wrapper.innerHTML = highlightedHTML;
+              parent.replaceChild(wrapper, textNode);
             }
-            
-            buildSearchIndex(content, filePath) {
-                const words = content.toLowerCase().match(/\b\w+\b/g) || [];
-                words.forEach(word => {
-                    if (!this.searchIndex.has(word)) {
-                        this.searchIndex.set(word, new Set());
-                    }
-                    this.searchIndex.get(word).add(filePath);
-                });
-            }
-            
-            performSearch(query) {
-                if (!query.trim()) {
-                    this.clearSearchHighlight();
-                    return;
-                }
-                
-                const searchTerms = query.toLowerCase().split(/\s+/);
-                const navItems = document.querySelectorAll('.nav-item[data-file]');
-                
-                navItems.forEach(item => {
-                    const file = item.dataset.file;
-                    const content = this.cache.get(file) || '';
-                    const matches = searchTerms.every(term => 
-                        content.toLowerCase().includes(term)
-                    );
-                    
-                    item.style.display = matches ? 'block' : 'none';
-                });
-                
-                // Highlight search terms in current content
-                this.highlightSearchTerms(searchTerms);
-            }
-            
-            highlightSearchTerms(terms) {
-                const contentArea = document.querySelector('.markdown-content');
-                if (!contentArea) return;
-                
-                this.clearSearchHighlight();
-                
-                terms.forEach(term => {
-                    if (term.length < 2) return;
-                    
-                    const regex = new RegExp(`(${term})`, 'gi');
-                    this.highlightText(contentArea, regex);
-                });
-            }
-            
-            highlightText(element, regex) {
-                const walker = document.createTreeWalker(
-                    element,
-                    NodeFilter.SHOW_TEXT,
-                    null,
-                    false
-                );
-                
-                const textNodes = [];
-                let node;
-                while (node = walker.nextNode()) {
-                    textNodes.push(node);
-                }
-                
-                textNodes.forEach(textNode => {
-                    const parent = textNode.parentNode;
-                    if (parent.tagName === 'SCRIPT' || parent.tagName === 'STYLE') return;
-                    
-                    const text = textNode.textContent;
-                    if (regex.test(text)) {
-                        const highlightedHTML = text.replace(regex, '<mark class="search-highlight">$1</mark>');
-                        const wrapper = document.createElement('span');
-                        wrapper.innerHTML = highlightedHTML;
-                        parent.replaceChild(wrapper, textNode);
-                    }
-                });
-            }
-            
-            clearSearchHighlight() {
-                document.querySelectorAll('.search-highlight').forEach(mark => {
-                    const parent = mark.parentNode;
-                    parent.replaceChild(document.createTextNode(mark.textContent), mark);
-                    parent.normalize();
-                });
-            }
-            
-            setActiveNavItem(filePath) {
-                document.querySelectorAll('.nav-item').forEach(item => {
-                    item.classList.remove('active');
-                });
-                
-                const activeItem = document.querySelector(`[data-file="${filePath}"]`);
-                if (activeItem) {
-                    activeItem.classList.add('active');
-                }
-            }
-            
-            showLoading() {
-                const contentArea = document.getElementById('contentArea');
-                contentArea.innerHTML = `
+          });
+        }
+
+        clearSearchHighlight() {
+          document.querySelectorAll(".search-highlight").forEach((mark) => {
+            const parent = mark.parentNode;
+            parent.replaceChild(
+              document.createTextNode(mark.textContent),
+              mark
+            );
+            parent.normalize();
+          });
+        }
+
+        setActiveNavItem(filePath) {
+          document.querySelectorAll(".nav-item").forEach((item) => {
+            item.classList.remove("active");
+          });
+
+          const activeItem = document.querySelector(
+            `[data-file="${filePath}"]`
+          );
+          if (activeItem) {
+            activeItem.classList.add("active");
+          }
+        }
+
+        showLoading() {
+          const contentArea = document.getElementById("contentArea");
+          contentArea.innerHTML = `
                     <div class="loading">
                         <div class="spinner"></div>
                         Loading content...
                     </div>
                 `;
-            }
-            
-            showError(message) {
-                const contentArea = document.getElementById('contentArea');
-                contentArea.innerHTML = `
+        }
+
+        showError(message) {
+          const contentArea = document.getElementById("contentArea");
+          contentArea.innerHTML = `
                     <div class="error">
                         <h3>❌ Error</h3>
                         <p>${message}</p>
                         <p>Please check that the file exists and try again.</p>
                     </div>
                 `;
-            }
-            
-            loadInitialContent() {
-                // Load Angular questions by default
-                this.loadContent('angular/angular-questions.md');
-            }
         }
-        
-        // Utility functions
-        function printContent() {
-            window.print();
+
+        loadInitialContent() {
+          // Load Angular questions by default
+          this.loadContent("angular/angular-questions.md");
         }
-        
-        function exportToPDF() {
-            // This would require a PDF library like jsPDF
-            alert('PDF export feature would require additional library integration.');
+      }
+
+      // Utility functions
+      function printContent() {
+        window.print();
+      }
+
+      function exportToPDF() {
+        // This would require a PDF library like jsPDF
+        alert(
+          "PDF export feature would require additional library integration."
+        );
+      }
+
+      function toggleTheme() {
+        document.body.classList.toggle("dark-theme");
+        const isDark = document.body.classList.contains("dark-theme");
+        localStorage.setItem("darkTheme", isDark);
+      }
+
+      // Initialize app when DOM is loaded
+      document.addEventListener("DOMContentLoaded", () => {
+        // Load theme preference
+        if (localStorage.getItem("darkTheme") === "true") {
+          document.body.classList.add("dark-theme");
         }
-        
-        function toggleTheme() {
-            document.body.classList.toggle('dark-theme');
-            const isDark = document.body.classList.contains('dark-theme');
-            localStorage.setItem('darkTheme', isDark);
-        }
-        
-        // Initialize app when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            // Load theme preference
-            if (localStorage.getItem('darkTheme') === 'true') {
-                document.body.classList.add('dark-theme');
-            }
-            
-            // Initialize the app
-            window.app = new InterviewGuideApp();
-        });
-        
-        // Add dark theme styles
-        const darkThemeStyles = `
+
+        // Initialize the app
+        window.app = new InterviewGuideApp();
+      });
+
+      // Add dark theme styles
+      const darkThemeStyles = `
             .dark-theme {
                 --background-color: #1a1a1a;
                 --surface-color: #2d2d2d;
@@ -912,10 +1008,10 @@
                 color: #ff6b6b;
             }
         `;
-        
-        const styleSheet = document.createElement('style');
-        styleSheet.textContent = darkThemeStyles;
-        document.head.appendChild(styleSheet);
+
+      const styleSheet = document.createElement("style");
+      styleSheet.textContent = darkThemeStyles;
+      document.head.appendChild(styleSheet);
     </script>
-</body>
+  </body>
 </html>

@@ -5583,4 +5583,1477 @@ const cssMonitor = new CSSPerformanceMonitor();
 cssMonitor.monitorLayoutShifts();
 ```
 
-This comprehensive CSS guide now covers the complete spectrum of modern CSS development, from basic concepts to cutting-edge features like CSS Houdini, advanced selectors, framework integration, and performance optimization strategies essential for building scalable, maintainable, and performant web applications.
+---
+
+### Q15: How do you implement advanced CSS architecture patterns and design systems?
+**Difficulty: Expert**
+
+**Answer:**
+Advanced CSS architecture involves sophisticated patterns for scalability, maintainability, and design system integration.
+
+**1. Advanced CSS Architecture with ITCSS and BEM:**
+```scss
+// ITCSS (Inverted Triangle CSS) Architecture
+// 1. Settings - Global variables and config
+:root {
+  // Design tokens
+  --space-unit: 0.25rem;
+  --space-xs: calc(var(--space-unit) * 1); // 4px
+  --space-sm: calc(var(--space-unit) * 2); // 8px
+  --space-md: calc(var(--space-unit) * 4); // 16px
+  --space-lg: calc(var(--space-unit) * 6); // 24px
+  --space-xl: calc(var(--space-unit) * 8); // 32px
+  
+  // Typography scale
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  
+  // Color system with semantic naming
+  --color-primary-50: 240 249 255;
+  --color-primary-500: 59 130 246;
+  --color-primary-900: 30 58 138;
+  
+  --color-semantic-success: 34 197 94;
+  --color-semantic-warning: 251 191 36;
+  --color-semantic-error: 239 68 68;
+  --color-semantic-info: 59 130 246;
+}
+
+// 2. Tools - Mixins and functions
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == 'small' {
+    @media (min-width: 640px) { @content; }
+  }
+  @if $breakpoint == 'medium' {
+    @media (min-width: 768px) { @content; }
+  }
+  @if $breakpoint == 'large' {
+    @media (min-width: 1024px) { @content; }
+  }
+}
+
+@mixin visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+// 3. Generic - Reset and normalize
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+}
+
+// 4. Elements - Bare HTML elements
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  color: hsl(var(--color-gray-900));
+  background-color: hsl(var(--color-gray-50));
+}
+
+// 5. Objects - Design patterns (OOCSS)
+.o-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+  
+  &--fluid {
+    max-width: none;
+  }
+  
+  &--narrow {
+    max-width: 800px;
+  }
+}
+
+.o-grid {
+  display: grid;
+  gap: var(--space-md);
+  
+  &--auto-fit {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  
+  &--auto-fill {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+// 6. Components - UI components (BEM)
+.c-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  line-height: 1.5;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  
+  &:focus {
+    outline: 2px solid hsl(var(--color-primary-500));
+    outline-offset: 2px;
+  }
+  
+  &--primary {
+    color: white;
+    background-color: hsl(var(--color-primary-500));
+    border-color: hsl(var(--color-primary-500));
+    
+    &:hover {
+      background-color: hsl(var(--color-primary-600));
+      border-color: hsl(var(--color-primary-600));
+    }
+  }
+  
+  &--secondary {
+    color: hsl(var(--color-primary-700));
+    background-color: transparent;
+    border-color: hsl(var(--color-primary-300));
+    
+    &:hover {
+      background-color: hsl(var(--color-primary-50));
+    }
+  }
+  
+  &--size-sm {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--font-size-xs);
+  }
+  
+  &--size-lg {
+    padding: var(--space-md) var(--space-lg);
+    font-size: var(--font-size-lg);
+  }
+  
+  &__icon {
+    margin-right: var(--space-xs);
+    
+    &--only {
+      margin: 0;
+    }
+  }
+}
+
+// 7. Utilities - Helper classes
+.u-sr-only {
+  @include visually-hidden;
+}
+
+.u-text-center { text-align: center; }
+.u-text-left { text-align: left; }
+.u-text-right { text-align: right; }
+
+.u-mb-0 { margin-bottom: 0; }
+.u-mb-xs { margin-bottom: var(--space-xs); }
+.u-mb-sm { margin-bottom: var(--space-sm); }
+.u-mb-md { margin-bottom: var(--space-md); }
+.u-mb-lg { margin-bottom: var(--space-lg); }
+.u-mb-xl { margin-bottom: var(--space-xl); }
+```
+
+**2. Design System Integration with CSS-in-JS:**
+```typescript
+// Design system tokens
+export const tokens = {
+  space: {
+    xs: '0.25rem',
+    sm: '0.5rem',
+    md: '1rem',
+    lg: '1.5rem',
+    xl: '2rem',
+    '2xl': '3rem',
+  },
+  colors: {
+    primary: {
+      50: '#eff6ff',
+      500: '#3b82f6',
+      900: '#1e3a8a',
+    },
+    semantic: {
+      success: '#10b981',
+      warning: '#f59e0b',
+      error: '#ef4444',
+      info: '#3b82f6',
+    },
+  },
+  typography: {
+    fontFamily: {
+      sans: ['Inter', 'system-ui', 'sans-serif'],
+      mono: ['JetBrains Mono', 'monospace'],
+    },
+    fontSize: {
+      xs: '0.75rem',
+      sm: '0.875rem',
+      base: '1rem',
+      lg: '1.125rem',
+      xl: '1.25rem',
+    },
+  },
+  shadows: {
+    sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+    md: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+    lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+  },
+  borderRadius: {
+    sm: '0.125rem',
+    md: '0.375rem',
+    lg: '0.5rem',
+    full: '9999px',
+  },
+};
+
+// Styled component with design system
+import styled, { css } from 'styled-components';
+
+interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  fullWidth?: boolean;
+}
+
+const Button = styled.button<ButtonProps>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border-radius: ${tokens.borderRadius.md};
+  
+  &:focus {
+    outline: 2px solid ${tokens.colors.primary[500]};
+    outline-offset: 2px;
+  }
+  
+  ${({ size = 'md' }) => {
+    const sizeMap = {
+      sm: css`
+        padding: ${tokens.space.xs} ${tokens.space.sm};
+        font-size: ${tokens.typography.fontSize.xs};
+      `,
+      md: css`
+        padding: ${tokens.space.sm} ${tokens.space.md};
+        font-size: ${tokens.typography.fontSize.sm};
+      `,
+      lg: css`
+        padding: ${tokens.space.md} ${tokens.space.lg};
+        font-size: ${tokens.typography.fontSize.lg};
+      `,
+    };
+    return sizeMap[size];
+  }}
+  
+  ${({ variant = 'primary' }) => {
+    const variantMap = {
+      primary: css`
+        color: white;
+        background-color: ${tokens.colors.primary[500]};
+        border-color: ${tokens.colors.primary[500]};
+        
+        &:hover {
+          background-color: ${tokens.colors.primary[600]};
+          border-color: ${tokens.colors.primary[600]};
+        }
+      `,
+      secondary: css`
+        color: ${tokens.colors.primary[700]};
+        background-color: transparent;
+        border-color: ${tokens.colors.primary[300]};
+        
+        &:hover {
+          background-color: ${tokens.colors.primary[50]};
+        }
+      `,
+      ghost: css`
+        color: ${tokens.colors.primary[600]};
+        background-color: transparent;
+        border-color: transparent;
+        
+        &:hover {
+          background-color: ${tokens.colors.primary[50]};
+        }
+      `,
+    };
+    return variantMap[variant];
+  }}
+  
+  ${({ fullWidth }) => fullWidth && css`
+    width: 100%;
+  `}
+`;
+```
+
+---
+
+### Q16: How do you implement advanced CSS performance optimization and critical rendering path?
+**Difficulty: Expert**
+
+**Answer:**
+Advanced CSS performance optimization involves sophisticated techniques for critical rendering path optimization, resource loading strategies, and runtime performance.
+
+**1. Critical CSS Extraction and Inlining:**
+```javascript
+// Critical CSS extraction tool
+const critical = require('critical');
+const path = require('path');
+
+class CriticalCSSExtractor {
+  constructor(options = {}) {
+    this.options = {
+      base: 'dist/',
+      width: 1300,
+      height: 900,
+      timeout: 30000,
+      penthouse: {
+        blockJSRequests: false,
+      },
+      ...options
+    };
+  }
+  
+  async extractCritical(pages) {
+    const results = [];
+    
+    for (const page of pages) {
+      try {
+        const result = await critical.generate({
+          ...this.options,
+          src: page.url,
+          dest: page.output,
+          css: page.css,
+          dimensions: [
+            { width: 320, height: 568 },   // Mobile
+            { width: 768, height: 1024 },  // Tablet
+            { width: 1300, height: 900 }   // Desktop
+          ],
+          ignore: {
+            atrule: ['@font-face'],
+            rule: [/\.sr-only/],
+            decl: (node, value) => {
+              // Ignore print styles
+              return /print/.test(value);
+            }
+          }
+        });
+        
+        results.push({
+          page: page.url,
+          criticalCSS: result.css,
+          size: Buffer.byteLength(result.css, 'utf8')
+        });
+        
+      } catch (error) {
+        console.error(`Failed to extract critical CSS for ${page.url}:`, error);
+      }
+    }
+    
+    return results;
+  }
+  
+  // Generate critical CSS for different viewport sizes
+  async generateResponsiveCritical(url, css) {
+    const viewports = [
+      { width: 320, height: 568, name: 'mobile' },
+      { width: 768, height: 1024, name: 'tablet' },
+      { width: 1200, height: 800, name: 'desktop' }
+    ];
+    
+    const criticalCSS = {};
+    
+    for (const viewport of viewports) {
+      const result = await critical.generate({
+        ...this.options,
+        src: url,
+        css: css,
+        width: viewport.width,
+        height: viewport.height
+      });
+      
+      criticalCSS[viewport.name] = result.css;
+    }
+    
+    return criticalCSS;
+  }
+}
+
+// Usage
+const extractor = new CriticalCSSExtractor();
+
+const pages = [
+  { url: 'index.html', css: ['styles/main.css'], output: 'critical/home.css' },
+  { url: 'about.html', css: ['styles/main.css'], output: 'critical/about.css' }
+];
+
+extractor.extractCritical(pages).then(results => {
+  console.log('Critical CSS extracted:', results);
+});
+```
+
+**2. Advanced CSS Loading Strategies:**
+```html
+<!-- Critical CSS inlined in head -->
+<style>
+  /* Critical above-the-fold styles */
+  body { font-family: system-ui; margin: 0; }
+  .header { background: #fff; padding: 1rem; }
+  .hero { min-height: 60vh; display: flex; align-items: center; }
+</style>
+
+<!-- Preload key resources -->
+<link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/styles/main.css" as="style">
+<link rel="preload" href="/images/hero.webp" as="image">
+
+<!-- Load non-critical CSS asynchronously -->
+<link rel="preload" href="/styles/non-critical.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="/styles/non-critical.css"></noscript>
+
+<!-- Progressive enhancement with CSS -->
+<script>
+  // Load CSS based on device capabilities
+  function loadConditionalCSS() {
+    const supportsGrid = CSS.supports('display', 'grid');
+    const supportsCustomProps = CSS.supports('color', 'var(--test)');
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    
+    if (supportsGrid) {
+      loadCSS('/styles/grid-layout.css');
+    } else {
+      loadCSS('/styles/flexbox-fallback.css');
+    }
+    
+    if (!prefersReducedMotion) {
+      loadCSS('/styles/animations.css');
+    }
+    
+    if (supportsCustomProps) {
+      loadCSS('/styles/custom-properties.css');
+    }
+  }
+  
+  function loadCSS(href) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    document.head.appendChild(link);
+  }
+  
+  // Load conditional CSS after critical rendering
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadConditionalCSS);
+  } else {
+    loadConditionalCSS();
+  }
+</script>
+```
+
+---
+
+### Q11: How do you implement advanced CSS Container Queries and modern layout techniques for responsive design?
+
+**Answer:**
+Container Queries represent a paradigm shift in responsive design, allowing components to respond to their container's size rather than the viewport. Combined with modern layout techniques, they enable truly modular and adaptive designs.
+
+**Container Queries Implementation:**
+```css
+/* Container query setup */
+.card-container {
+  container-type: inline-size;
+  container-name: card;
+}
+
+/* Advanced container queries with multiple breakpoints */
+@container card (min-width: 300px) {
+  .card {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1rem;
+  }
+  
+  .card__image {
+    aspect-ratio: 16/9;
+    object-fit: cover;
+  }
+  
+  .card__content {
+    padding: 1.5rem;
+  }
+}
+
+@container card (min-width: 500px) {
+  .card {
+    grid-template-columns: 1fr 3fr;
+    gap: 2rem;
+  }
+  
+  .card__title {
+    font-size: clamp(1.5rem, 4cqi, 2.5rem);
+    line-height: 1.2;
+  }
+  
+  .card__description {
+    font-size: clamp(1rem, 2.5cqi, 1.25rem);
+    line-height: 1.6;
+  }
+}
+
+@container card (min-width: 700px) {
+  .card {
+    grid-template-areas: 
+      "image title"
+      "image meta"
+      "image description"
+      "image actions";
+    grid-template-columns: 300px 1fr;
+    grid-template-rows: auto auto 1fr auto;
+  }
+  
+  .card__image { grid-area: image; }
+  .card__title { grid-area: title; }
+  .card__meta { grid-area: meta; }
+  .card__description { grid-area: description; }
+  .card__actions { grid-area: actions; }
+}
+
+/* Advanced container query units */
+.responsive-component {
+  container-type: size;
+  
+  /* Container query units:
+     cqw: 1% of container width
+     cqh: 1% of container height
+     cqi: 1% of container inline size
+     cqb: 1% of container block size
+     cqmin: smaller of cqi or cqb
+     cqmax: larger of cqi or cqb */
+}
+
+@container (min-width: 400px) {
+  .responsive-text {
+    font-size: clamp(1rem, 5cqi, 3rem);
+    padding: clamp(0.5rem, 3cqi, 2rem);
+    margin-block: clamp(0.25rem, 2cqb, 1rem);
+  }
+}
+
+/* Multi-dimensional container queries */
+@container (min-width: 300px) and (min-height: 200px) {
+  .complex-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+    gap: clamp(0.5rem, 2cqi, 2rem);
+  }
+}
+
+/* Container queries with logical properties */
+@container (min-inline-size: 400px) {
+  .logical-layout {
+    padding-inline: clamp(1rem, 5cqi, 3rem);
+    padding-block: clamp(0.5rem, 3cqb, 2rem);
+    margin-inline: auto;
+  }
+}
+```
+
+**Advanced Grid and Subgrid Techniques:**
+```css
+/* Advanced CSS Grid with subgrid */
+.main-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: auto 1fr auto;
+  gap: 2rem;
+  min-height: 100vh;
+}
+
+.content-area {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  gap: inherit;
+}
+
+.article-grid {
+  grid-column: 2 / 12;
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-template-areas:
+    "title title title title"
+    "meta meta meta meta"
+    "content content sidebar sidebar";
+}
+
+/* Advanced grid functions */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(
+      clamp(250px, 30vw, 400px),
+      1fr
+    )
+  );
+  gap: clamp(1rem, 3vw, 3rem);
+}
+
+/* Masonry-style layout with CSS Grid */
+.masonry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-rows: masonry; /* Future CSS feature */
+  gap: 1rem;
+}
+
+/* Fallback for masonry using CSS Grid */
+.masonry-fallback {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-auto-rows: 10px;
+  gap: 1rem;
+}
+
+.masonry-item {
+  grid-row-end: span var(--row-span, 10);
+}
+
+/* Dynamic grid with CSS custom properties */
+.dynamic-grid {
+  --min-column-width: 250px;
+  --gap: 2rem;
+  --columns: max(1, floor((100% + var(--gap)) / (var(--min-column-width) + var(--gap))));
+  
+  display: grid;
+  grid-template-columns: repeat(var(--columns), 1fr);
+  gap: var(--gap);
+}
+```
+
+**Advanced Flexbox Patterns:**
+```css
+/* Advanced flexbox with gap and logical properties */
+.flex-container {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 3vw, 2rem);
+  padding-inline: clamp(1rem, 5vw, 3rem);
+  padding-block: clamp(2rem, 5vh, 4rem);
+}
+
+/* Flexible sidebar layout */
+.sidebar-layout {
+  display: flex;
+  gap: 2rem;
+  align-items: stretch;
+}
+
+.sidebar {
+  flex: 0 0 clamp(200px, 25vw, 300px);
+  container-type: inline-size;
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0; /* Prevent flex item overflow */
+  container-type: inline-size;
+}
+
+/* Advanced flex item control */
+.flex-item {
+  flex: 1 1 auto;
+  min-width: min-content;
+  max-width: max-content;
+}
+
+.flex-item--grow {
+  flex-grow: 2;
+}
+
+.flex-item--shrink {
+  flex-shrink: 0;
+}
+
+/* Responsive flex direction with container queries */
+.responsive-flex {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  container-type: inline-size;
+}
+
+@container (min-width: 600px) {
+  .responsive-flex {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+```
+
+**Modern Layout Utilities:**
+```css
+/* Intrinsic web design patterns */
+.intrinsic-layout {
+  --min-width: 300px;
+  --max-width: 1200px;
+  --gap: 2rem;
+  
+  display: grid;
+  grid-template-columns: 
+    repeat(
+      auto-fit,
+      minmax(
+        min(var(--min-width), 100%),
+        1fr
+      )
+    );
+  gap: var(--gap);
+  padding-inline: var(--gap);
+  max-width: var(--max-width);
+  margin-inline: auto;
+}
+
+/* Advanced aspect ratio control */
+.aspect-ratio-container {
+  aspect-ratio: 16/9;
+  container-type: size;
+  overflow: hidden;
+}
+
+@container (max-aspect-ratio: 1/1) {
+  .aspect-ratio-content {
+    object-fit: cover;
+    object-position: center top;
+  }
+}
+
+@container (min-aspect-ratio: 2/1) {
+  .aspect-ratio-content {
+    object-fit: contain;
+  }
+}
+
+/* Advanced positioning with modern CSS */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+  background: rgb(255 255 255 / 0.8);
+  border-block-end: 1px solid rgb(0 0 0 / 0.1);
+}
+
+/* Advanced scroll-driven animations */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    hsl(200 100% 50%),
+    hsl(280 100% 50%)
+  );
+  transform-origin: left;
+  animation: scroll-progress linear;
+  animation-timeline: scroll();
+}
+
+@keyframes scroll-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+```
+
+**Component-Based Responsive Design:**
+```css
+/* Self-contained responsive component */
+.card-component {
+  container-type: inline-size;
+  container-name: card;
+  
+  /* Base styles */
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.card-component:hover {
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
+}
+
+/* Small container styles */
+@container card (max-width: 299px) {
+  .card-component {
+    text-align: center;
+  }
+  
+  .card__image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+  }
+  
+  .card__content {
+    padding: 1rem;
+  }
+  
+  .card__title {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .card__actions {
+    margin-top: 1rem;
+  }
+}
+
+/* Medium container styles */
+@container card (min-width: 300px) and (max-width: 499px) {
+  .card-component {
+    display: flex;
+    align-items: stretch;
+  }
+  
+  .card__image {
+    width: 120px;
+    height: auto;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  
+  .card__content {
+    padding: 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .card__actions {
+    margin-top: auto;
+  }
+}
+
+/* Large container styles */
+@container card (min-width: 500px) {
+  .card-component {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "image header"
+      "image content"
+      "image actions";
+  }
+  
+  .card__image {
+    grid-area: image;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .card__header {
+    grid-area: header;
+    padding: 1.5rem 1.5rem 0;
+  }
+  
+  .card__content {
+    grid-area: content;
+    padding: 0 1.5rem;
+  }
+  
+  .card__actions {
+    grid-area: actions;
+    padding: 0 1.5rem 1.5rem;
+  }
+}
+```
+
+---
+
+### Q12: How do you implement advanced CSS architecture with CSS Layers, Scope, and modern design systems?
+
+**Answer:**
+Modern CSS architecture leverages CSS Layers for cascade control, CSS Scope for component isolation, and systematic approaches to design tokens and component libraries for scalable, maintainable stylesheets.
+
+**CSS Layers Implementation:**
+```css
+/* Define layer order at the top of your stylesheet */
+@layer reset, base, tokens, components, utilities, overrides;
+
+/* Reset layer - lowest priority */
+@layer reset {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  html {
+    line-height: 1.15;
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+  }
+  
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
+  
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
+  }
+}
+
+/* Base layer - fundamental styles */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 2rem;
+  }
+  
+  body {
+    line-height: 1.6;
+    color: var(--color-text-primary);
+    background-color: var(--color-background);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    line-height: 1.2;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-heading);
+  }
+  
+  a {
+    color: var(--color-link);
+    text-decoration: none;
+  }
+  
+  a:hover {
+    color: var(--color-link-hover);
+    text-decoration: underline;
+  }
+}
+
+/* Design tokens layer */
+@layer tokens {
+  :root {
+    /* Color system */
+    --color-primary-50: hsl(210 100% 98%);
+    --color-primary-100: hsl(210 100% 95%);
+    --color-primary-200: hsl(210 100% 90%);
+    --color-primary-300: hsl(210 100% 80%);
+    --color-primary-400: hsl(210 100% 70%);
+    --color-primary-500: hsl(210 100% 60%);
+    --color-primary-600: hsl(210 100% 50%);
+    --color-primary-700: hsl(210 100% 40%);
+    --color-primary-800: hsl(210 100% 30%);
+    --color-primary-900: hsl(210 100% 20%);
+    --color-primary-950: hsl(210 100% 10%);
+    
+    /* Semantic color tokens */
+    --color-background: var(--color-primary-50);
+    --color-surface: white;
+    --color-text-primary: var(--color-primary-900);
+    --color-text-secondary: var(--color-primary-700);
+    --color-text-heading: var(--color-primary-950);
+    --color-link: var(--color-primary-600);
+    --color-link-hover: var(--color-primary-700);
+    --color-border: var(--color-primary-200);
+    
+    /* Typography system */
+    --font-family-sans: 'Inter', system-ui, sans-serif;
+    --font-family-serif: 'Crimson Pro', Georgia, serif;
+    --font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    
+    --font-size-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+    --font-size-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
+    --font-size-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
+    --font-size-lg: clamp(1.125rem, 1rem + 0.625vw, 1.25rem);
+    --font-size-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+    --font-size-2xl: clamp(1.5rem, 1.3rem + 1vw, 2rem);
+    --font-size-3xl: clamp(1.875rem, 1.6rem + 1.375vw, 2.5rem);
+    --font-size-4xl: clamp(2.25rem, 1.9rem + 1.75vw, 3rem);
+    
+    /* Spacing system */
+    --space-xs: clamp(0.25rem, 0.2rem + 0.25vw, 0.375rem);
+    --space-sm: clamp(0.5rem, 0.4rem + 0.5vw, 0.75rem);
+    --space-md: clamp(1rem, 0.8rem + 1vw, 1.5rem);
+    --space-lg: clamp(1.5rem, 1.2rem + 1.5vw, 2.25rem);
+    --space-xl: clamp(2rem, 1.6rem + 2vw, 3rem);
+    --space-2xl: clamp(3rem, 2.4rem + 3vw, 4.5rem);
+    --space-3xl: clamp(4rem, 3.2rem + 4vw, 6rem);
+    
+    /* Border radius system */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-full: 9999px;
+    
+    /* Shadow system */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    
+    /* Animation tokens */
+    --duration-fast: 150ms;
+    --duration-normal: 250ms;
+    --duration-slow: 350ms;
+    --easing-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --easing-ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --easing-ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  
+  /* Dark mode tokens */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background: var(--color-primary-950);
+      --color-surface: var(--color-primary-900);
+      --color-text-primary: var(--color-primary-100);
+      --color-text-secondary: var(--color-primary-300);
+      --color-text-heading: var(--color-primary-50);
+      --color-link: var(--color-primary-400);
+      --color-link-hover: var(--color-primary-300);
+      --color-border: var(--color-primary-800);
+    }
+  }
+}
+
+/* Components layer */
+@layer components {
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--easing-ease);
+    text-decoration: none;
+    
+    &:focus-visible {
+      outline: 2px solid var(--color-primary-500);
+      outline-offset: 2px;
+    }
+    
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+  
+  .button--primary {
+    background-color: var(--color-primary-600);
+    color: white;
+    
+    &:hover:not(:disabled) {
+      background-color: var(--color-primary-700);
+    }
+    
+    &:active {
+      background-color: var(--color-primary-800);
+    }
+  }
+  
+  .button--secondary {
+    background-color: transparent;
+    color: var(--color-primary-600);
+    border-color: var(--color-primary-600);
+    
+    &:hover:not(:disabled) {
+      background-color: var(--color-primary-50);
+    }
+    
+    &:active {
+      background-color: var(--color-primary-100);
+    }
+  }
+  
+  .card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: box-shadow var(--duration-normal) var(--easing-ease);
+    container-type: inline-size;
+    
+    &:hover {
+      box-shadow: var(--shadow-md);
+    }
+  }
+  
+  .card__header {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--color-border);
+  }
+  
+  .card__title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .card__content {
+    padding: var(--space-lg);
+  }
+  
+  .card__footer {
+    padding: var(--space-lg);
+    border-top: 1px solid var(--color-border);
+    background-color: var(--color-primary-25);
+  }
+}
+
+/* Utilities layer - highest priority */
+@layer utilities {
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin-inline: auto;
+    padding-inline: var(--space-md);
+  }
+  
+  .flow > * + * {
+    margin-top: var(--flow-space, var(--space-md));
+  }
+  
+  .cluster {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--cluster-space, var(--space-md));
+    align-items: var(--cluster-align, center);
+    justify-content: var(--cluster-justify, flex-start);
+  }
+  
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--stack-space, var(--space-md));
+  }
+  
+  .grid {
+    display: grid;
+    gap: var(--grid-gap, var(--space-md));
+    grid-template-columns: repeat(
+      var(--grid-columns, auto-fit),
+      minmax(
+        var(--grid-min-width, 250px),
+        1fr
+      )
+    );
+  }
+}
+
+/* Overrides layer - for exceptions and third-party overrides */
+@layer overrides {
+  .force-dark {
+    color-scheme: dark;
+    --color-background: var(--color-primary-950) !important;
+    --color-surface: var(--color-primary-900) !important;
+    --color-text-primary: var(--color-primary-100) !important;
+  }
+  
+  .force-light {
+    color-scheme: light;
+    --color-background: var(--color-primary-50) !important;
+    --color-surface: white !important;
+    --color-text-primary: var(--color-primary-900) !important;
+  }
+}
+```
+
+**CSS Scope Implementation:**
+```css
+/* CSS Scope for component isolation */
+@scope (.modal) {
+  /* Styles only apply within .modal */
+  .header {
+    background: var(--color-primary-600);
+    color: white;
+    padding: var(--space-md);
+  }
+  
+  .content {
+    padding: var(--space-lg);
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  
+  .footer {
+    padding: var(--space-md);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+  }
+}
+
+/* Scope with exclusions */
+@scope (.card) to (.nested-card) {
+  /* Styles apply to .card but not to .nested-card */
+  .title {
+    font-size: var(--font-size-xl);
+    color: var(--color-text-heading);
+  }
+  
+  .content {
+    color: var(--color-text-secondary);
+  }
+}
+
+/* Advanced scope patterns */
+@scope (.theme-provider) {
+  /* Component-specific design tokens */
+  :scope {
+    --component-bg: var(--color-surface);
+    --component-border: var(--color-border);
+    --component-text: var(--color-text-primary);
+  }
+  
+  .component {
+    background: var(--component-bg);
+    border: 1px solid var(--component-border);
+    color: var(--component-text);
+  }
+}
+
+/* Scope for state management */
+@scope (.form) {
+  .field {
+    margin-bottom: var(--space-md);
+  }
+  
+  .input {
+    width: 100%;
+    padding: var(--space-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    
+    &:focus {
+      outline: 2px solid var(--color-primary-500);
+      outline-offset: -1px;
+    }
+    
+    &:invalid {
+      border-color: var(--color-error);
+    }
+  }
+  
+  .error-message {
+    color: var(--color-error);
+    font-size: var(--font-size-sm);
+    margin-top: var(--space-xs);
+  }
+}
+```
+
+**Advanced Design System Architecture:**
+```css
+/* Design system foundation */
+@import url('tokens/colors.css') layer(tokens);
+@import url('tokens/typography.css') layer(tokens);
+@import url('tokens/spacing.css') layer(tokens);
+@import url('tokens/shadows.css') layer(tokens);
+
+@import url('base/reset.css') layer(reset);
+@import url('base/typography.css') layer(base);
+@import url('base/forms.css') layer(base);
+
+@import url('components/button.css') layer(components);
+@import url('components/card.css') layer(components);
+@import url('components/modal.css') layer(components);
+@import url('components/navigation.css') layer(components);
+
+@import url('utilities/layout.css') layer(utilities);
+@import url('utilities/spacing.css') layer(utilities);
+@import url('utilities/typography.css') layer(utilities);
+
+/* Component composition patterns */
+.design-system {
+  /* Logical property system */
+  --inline-start: left;
+  --inline-end: right;
+  --block-start: top;
+  --block-end: bottom;
+  
+  /* Responsive design tokens */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+  
+  /* Container query breakpoints */
+  --container-xs: 320px;
+  --container-sm: 480px;
+  --container-md: 640px;
+  --container-lg: 800px;
+  --container-xl: 1024px;
+}
+
+/* Advanced component patterns */
+.composite-component {
+  container-type: inline-size;
+  
+  /* Base component styles */
+  display: grid;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+@container (min-width: 400px) {
+  .composite-component {
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+  }
+}
+
+@container (min-width: 600px) {
+  .composite-component {
+    grid-template-columns: 1fr 2fr 1fr;
+    grid-template-areas:
+      "sidebar content actions";
+  }
+  
+  .composite-component__sidebar {
+    grid-area: sidebar;
+  }
+  
+  .composite-component__content {
+    grid-area: content;
+  }
+  
+  .composite-component__actions {
+    grid-area: actions;
+  }
+}
+
+/* Theme system with CSS custom properties */
+.theme-system {
+  /* Light theme (default) */
+  --theme-bg-primary: hsl(0 0% 100%);
+  --theme-bg-secondary: hsl(0 0% 98%);
+  --theme-text-primary: hsl(0 0% 9%);
+  --theme-text-secondary: hsl(0 0% 45%);
+  --theme-border: hsl(0 0% 89%);
+  
+  /* Component-specific tokens */
+  --button-bg: var(--theme-bg-primary);
+  --button-text: var(--theme-text-primary);
+  --button-border: var(--theme-border);
+  
+  --card-bg: var(--theme-bg-primary);
+  --card-border: var(--theme-border);
+  --card-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+}
+
+[data-theme="dark"] .theme-system {
+  /* Dark theme overrides */
+  --theme-bg-primary: hsl(0 0% 9%);
+  --theme-bg-secondary: hsl(0 0% 11%);
+  --theme-text-primary: hsl(0 0% 98%);
+  --theme-text-secondary: hsl(0 0% 65%);
+  --theme-border: hsl(0 0% 20%);
+  
+  --card-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
+
+/* High contrast theme */
+@media (prefers-contrast: high) {
+  .theme-system {
+    --theme-border: hsl(0 0% 0%);
+    --button-border: hsl(0 0% 0%);
+    --card-border: hsl(0 0% 0%);
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .theme-system {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
+  }
+  
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+This comprehensive CSS guide now covers the complete spectrum of modern CSS development, from basic concepts to cutting-edge features like CSS Houdini, advanced selectors, framework integration, performance optimization strategies, advanced architecture patterns with CSS Layers and Scope, container queries, modern layout techniques, design systems, and critical rendering path optimization essential for building scalable, maintainable, and performant web applications.

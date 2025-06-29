@@ -15,6 +15,15 @@
 10. [Performance & Optimization](#performance--optimization)
 11. [Testing](#testing)
 12. [Angular 14 New Features](#angular-14-new-features)
+13. [Angular 15+ Advanced Features](#angular-15-advanced-features-and-enterprise-patterns)
+14. [Angular 16+ Signals](#angular-16-signals-and-reactive-programming-patterns)
+15. [Angular 17+ SSR & Hydration](#angular-17-ssr-and-hydration-optimization)
+16. [Advanced Architecture Patterns](#advanced-angular-architecture-and-patterns)
+17. [Micro-frontends & Module Federation](#micro-frontends-with-angular-and-module-federation)
+18. [Performance Optimization](#advanced-performance-optimization-techniques)
+19. [Testing Strategies](#advanced-testing-strategies)
+20. [Standalone Components](#standalone-components-and-the-new-angular-architecture)
+21. [Enterprise Patterns](#advanced-angular-architecture-patterns)
 
 ---
 
@@ -8864,7 +8873,7 @@ export class ErrorService {
 
 ---
 
-### Q13: How do you implement advanced Angular architecture patterns?
+### Q17: How do you implement advanced Angular architecture patterns?
 
 **Answer:**
 Advanced Angular architecture involves implementing scalable patterns that promote maintainability, testability, and performance.
@@ -9244,7 +9253,7 @@ export const selectUsersPaginated = createSelector(
 );
 ```
 
-### Q14: How do you implement advanced performance optimization techniques?
+### Q18: How do you implement advanced performance optimization techniques?
 
 **Answer:**
 Advanced performance optimization in Angular involves multiple strategies from bundle optimization to runtime performance.
@@ -9533,7 +9542,7 @@ export class VirtualListComponent {
 }
 ```
 
-### Q15: How do you implement advanced testing strategies?
+### Q19: How do you implement advanced testing strategies?
 
 **Answer:**
 Advanced testing in Angular involves comprehensive strategies covering unit tests, integration tests, and end-to-end testing.
@@ -9854,7 +9863,7 @@ This comprehensive Angular guide now covers advanced architecture patterns, perf
 
 ## Angular 15+ Modern Features and Patterns
 
-### Q13: How do you implement standalone components and the new Angular architecture?
+### Q20: How do you implement standalone components and the new Angular architecture?
 **Difficulty: Advanced**
 
 **Answer:**
@@ -10442,7 +10451,7 @@ This enhanced Angular guide now includes the latest Angular 15+ features includi
 
 ## Advanced Angular Architecture and Patterns
 
-### Q14: How do you implement micro-frontends with Angular and Module Federation?
+### Q21: How do you implement micro-frontends with Angular and Module Federation?
 **Difficulty: Expert**
 
 **Answer:**
@@ -11103,4 +11112,1651 @@ export class AdvancedCacheService {
 }
 ```
 
-This comprehensive Angular guide now covers the most advanced topics including micro-frontends with Module Federation, cross-application state management, advanced performance monitoring, and sophisticated caching strategies essential for enterprise-level Angular applications.
+---
+
+## Angular 15+ Advanced Features and Enterprise Patterns
+
+### Q22: How do you implement Angular 15+ Image Optimization and new directives?
+**Difficulty: Advanced**
+
+**Answer:**
+Angular 15 introduced significant improvements in image optimization, new directives, and performance enhancements.
+
+**1. NgOptimizedImage Directive:**
+```typescript
+// app.module.ts
+import { NgOptimizedImage } from '@angular/common';
+
+@NgModule({
+  imports: [NgOptimizedImage],
+  // ...
+})
+export class AppModule {}
+
+// component.html
+<img ngSrc="/hero.jpg" 
+     width="400" 
+     height="300"
+     priority
+     alt="Hero image"
+     placeholder="blur"
+     [sizes]="(max-width: 768px) 100vw, 50vw">
+
+// Responsive images with srcset
+<img ngSrc="/hero.jpg"
+     width="400"
+     height="300"
+     [ngSrcset]="'hero-400.jpg 400w, hero-800.jpg 800w, hero-1200.jpg 1200w'"
+     sizes="(max-width: 768px) 100vw, 50vw"
+     alt="Responsive hero">
+```
+
+**2. New Control Flow Syntax (@if, @for, @switch):**
+```typescript
+// Modern control flow (Angular 17+)
+@Component({
+  template: `
+    @if (user.isLoggedIn) {
+      <div class="user-dashboard">
+        <h2>Welcome, {{ user.name }}!</h2>
+        
+        @for (item of user.items; track item.id) {
+          <div class="item-card">
+            <h3>{{ item.title }}</h3>
+            
+            @switch (item.status) {
+              @case ('active') {
+                <span class="badge success">Active</span>
+              }
+              @case ('pending') {
+                <span class="badge warning">Pending</span>
+              }
+              @default {
+                <span class="badge error">Inactive</span>
+              }
+            }
+          </div>
+        } @empty {
+          <p>No items found</p>
+        }
+      </div>
+    } @else {
+      <app-login></app-login>
+    }
+  `
+})
+export class DashboardComponent {}
+```
+
+**3. Advanced Image Loading Strategies:**
+```typescript
+@Injectable({
+  providedIn: 'root'
+})
+export class ImageOptimizationService {
+  private imageCache = new Map<string, HTMLImageElement>();
+  
+  preloadCriticalImages(urls: string[]): Promise<void[]> {
+    return Promise.all(
+      urls.map(url => this.preloadImage(url))
+    );
+  }
+  
+  private preloadImage(url: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.imageCache.has(url)) {
+        resolve();
+        return;
+      }
+      
+      const img = new Image();
+      img.onload = () => {
+        this.imageCache.set(url, img);
+        resolve();
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+  
+  // Intersection Observer for lazy loading
+  setupLazyLoading(): void {
+    const imageObserver = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target as HTMLImageElement;
+            img.src = img.dataset['src']!;
+            img.classList.remove('lazy');
+            observer.unobserve(img);
+          }
+        });
+      },
+      { rootMargin: '50px' }
+    );
+    
+    document.querySelectorAll('img[data-src]')
+      .forEach(img => imageObserver.observe(img));
+  }
+}
+```
+
+---
+
+### Q23: How do you implement Angular 15+ Standalone APIs and bootstrapping?
+**Difficulty: Advanced**
+
+**Answer:**
+Angular 15+ provides enhanced standalone APIs for bootstrapping applications without NgModules.
+
+**1. Standalone Application Bootstrap:**
+```typescript
+// main.ts
+import { bootstrapApplication } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { importProvidersFrom } from '@angular/core';
+
+import { AppComponent } from './app/app.component';
+import { routes } from './app/app.routes';
+import { authInterceptor } from './app/interceptors/auth.interceptor';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideRouter(routes),
+    provideHttpClient(
+      withInterceptors([authInterceptor])
+    ),
+    provideAnimations(),
+    importProvidersFrom(
+      // Import specific modules if needed
+    ),
+    // Custom providers
+    { provide: 'API_URL', useValue: 'https://api.example.com' },
+  ]
+}).catch(err => console.error(err));
+```
+
+**2. Standalone Component with Providers:**
+```typescript
+@Component({
+  selector: 'app-feature',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatInputModule
+  ],
+  providers: [
+    FeatureService,
+    { provide: FEATURE_CONFIG, useValue: { apiUrl: '/api/feature' } }
+  ],
+  template: `
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <mat-form-field>
+        <input matInput formControlName="name" placeholder="Name">
+      </mat-form-field>
+      <button mat-raised-button type="submit">Submit</button>
+    </form>
+  `
+})
+export class FeatureComponent {
+  form = this.fb.group({
+    name: ['', Validators.required]
+  });
+  
+  constructor(
+    private fb: FormBuilder,
+    private featureService: FeatureService,
+    @Inject(FEATURE_CONFIG) private config: FeatureConfig
+  ) {}
+  
+  onSubmit(): void {
+    if (this.form.valid) {
+      this.featureService.save(this.form.value).subscribe();
+    }
+  }
+}
+```
+
+**3. Advanced Standalone Routing:**
+```typescript
+// app.routes.ts
+import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { AuthGuard } from './guards/auth.guard';
+
+export const routes: Routes = [
+  {
+    path: '',
+    loadComponent: () => import('./home/home.component')
+      .then(m => m.HomeComponent)
+  },
+  {
+    path: 'dashboard',
+    loadComponent: () => import('./dashboard/dashboard.component')
+      .then(m => m.DashboardComponent),
+    canActivate: [() => inject(AuthGuard).canActivate()],
+    children: [
+      {
+        path: 'profile',
+        loadComponent: () => import('./profile/profile.component')
+          .then(m => m.ProfileComponent)
+      },
+      {
+        path: 'settings',
+        loadChildren: () => import('./settings/settings.routes')
+          .then(m => m.settingsRoutes)
+      }
+    ]
+  },
+  {
+    path: 'admin',
+    loadChildren: () => import('./admin/admin.routes')
+      .then(m => m.adminRoutes),
+    canMatch: [() => inject(AuthService).hasAdminRole()]
+  }
+];
+```
+
+---
+
+### Q24: How do you implement Angular 16+ Signals and reactive programming patterns?
+**Difficulty: Expert**
+
+**Answer:**
+Angular 16+ introduces Signals as a new reactive primitive for fine-grained reactivity and better performance.
+
+**1. Basic Signals Implementation:**
+```typescript
+import { Component, signal, computed, effect } from '@angular/core';
+
+@Component({
+  selector: 'app-counter',
+  standalone: true,
+  template: `
+    <div class="counter">
+      <h2>Count: {{ count() }}</h2>
+      <h3>Double: {{ doubleCount() }}</h3>
+      <h3>Status: {{ status() }}</h3>
+      
+      <button (click)="increment()">+</button>
+      <button (click)="decrement()">-</button>
+      <button (click)="reset()">Reset</button>
+    </div>
+  `
+})
+export class CounterComponent {
+  // Writable signal
+  count = signal(0);
+  
+  // Computed signal
+  doubleCount = computed(() => this.count() * 2);
+  
+  // Computed with complex logic
+  status = computed(() => {
+    const value = this.count();
+    if (value === 0) return 'Zero';
+    if (value > 0) return 'Positive';
+    return 'Negative';
+  });
+  
+  constructor() {
+    // Effect for side effects
+    effect(() => {
+      console.log(`Count changed to: ${this.count()}`);
+      
+      // Update document title
+      document.title = `Counter: ${this.count()}`;
+      
+      // Save to localStorage
+      localStorage.setItem('counter', this.count().toString());
+    });
+  }
+  
+  increment(): void {
+    this.count.update(value => value + 1);
+  }
+  
+  decrement(): void {
+    this.count.update(value => value - 1);
+  }
+  
+  reset(): void {
+    this.count.set(0);
+  }
+}
+```
+
+**2. Advanced Signals with Services:**
+```typescript
+@Injectable({
+  providedIn: 'root'
+})
+export class UserService {
+  private _users = signal<User[]>([]);
+  private _loading = signal(false);
+  private _error = signal<string | null>(null);
+  
+  // Read-only signals
+  users = this._users.asReadonly();
+  loading = this._loading.asReadonly();
+  error = this._error.asReadonly();
+  
+  // Computed signals
+  activeUsers = computed(() => 
+    this._users().filter(user => user.isActive)
+  );
+  
+  userCount = computed(() => this._users().length);
+  
+  hasUsers = computed(() => this._users().length > 0);
+  
+  constructor(private http: HttpClient) {}
+  
+  async loadUsers(): Promise<void> {
+    this._loading.set(true);
+    this._error.set(null);
+    
+    try {
+      const users = await firstValueFrom(
+        this.http.get<User[]>('/api/users')
+      );
+      this._users.set(users);
+    } catch (error) {
+      this._error.set('Failed to load users');
+    } finally {
+      this._loading.set(false);
+    }
+  }
+  
+  addUser(user: User): void {
+    this._users.update(users => [...users, user]);
+  }
+  
+  updateUser(id: string, updates: Partial<User>): void {
+    this._users.update(users => 
+      users.map(user => 
+        user.id === id ? { ...user, ...updates } : user
+      )
+    );
+  }
+  
+  removeUser(id: string): void {
+    this._users.update(users => 
+      users.filter(user => user.id !== id)
+    );
+  }
+}
+```
+
+**3. Signals with RxJS Integration:**
+```typescript
+@Component({
+  selector: 'app-search',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  template: `
+    <input 
+      [formControl]="searchControl" 
+      placeholder="Search users...">
+    
+    @if (loading()) {
+      <div class="loading">Searching...</div>
+    }
+    
+    @if (error()) {
+      <div class="error">{{ error() }}</div>
+    }
+    
+    @for (user of filteredUsers(); track user.id) {
+      <div class="user-card">
+        <h3>{{ user.name }}</h3>
+        <p>{{ user.email }}</p>
+      </div>
+    }
+  `
+})
+export class SearchComponent {
+  searchControl = new FormControl('');
+  
+  private _searchTerm = signal('');
+  private _users = signal<User[]>([]);
+  private _loading = signal(false);
+  private _error = signal<string | null>(null);
+  
+  // Expose read-only signals
+  loading = this._loading.asReadonly();
+  error = this._error.asReadonly();
+  
+  // Computed filtered users
+  filteredUsers = computed(() => {
+    const term = this._searchTerm().toLowerCase();
+    if (!term) return this._users();
+    
+    return this._users().filter(user => 
+      user.name.toLowerCase().includes(term) ||
+      user.email.toLowerCase().includes(term)
+    );
+  });
+  
+  constructor(private userService: UserService) {
+    // Convert FormControl to Signal
+    this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntilDestroyed()
+    ).subscribe(term => {
+      this._searchTerm.set(term || '');
+      if (term) {
+        this.searchUsers(term);
+      }
+    });
+    
+    // Effect to react to search term changes
+    effect(() => {
+      const term = this._searchTerm();
+      console.log(`Searching for: ${term}`);
+    });
+  }
+  
+  private async searchUsers(term: string): Promise<void> {
+    this._loading.set(true);
+    this._error.set(null);
+    
+    try {
+      const users = await firstValueFrom(
+        this.userService.searchUsers(term)
+      );
+      this._users.set(users);
+    } catch (error) {
+      this._error.set('Search failed');
+    } finally {
+      this._loading.set(false);
+    }
+  }
+}
+```
+
+---
+
+### Q25: How do you implement Angular 17+ SSR and hydration optimization?
+**Difficulty: Expert**
+
+**Answer:**
+Angular 17+ provides enhanced SSR capabilities with improved hydration, streaming, and performance optimizations.
+
+**1. Advanced SSR Configuration:**
+```typescript
+// app.config.server.ts
+import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+import { provideServerRendering } from '@angular/platform-server';
+import { provideServerRoutesConfig } from '@angular/ssr';
+import { appConfig } from './app.config';
+
+const serverConfig: ApplicationConfig = {
+  providers: [
+    provideServerRendering(),
+    provideServerRoutesConfig([
+      {
+        path: '/api/**',
+        renderMode: RenderMode.Server
+      },
+      {
+        path: '/dashboard/**',
+        renderMode: RenderMode.Prerender,
+        prerender: true
+      },
+      {
+        path: '**',
+        renderMode: RenderMode.ServerSideRendering
+      }
+    ])
+  ]
+};
+
+export const config = mergeApplicationConfig(appConfig, serverConfig);
+```
+
+**2. Optimized Hydration Strategies:**
+```typescript
+// main.ts
+import { bootstrapApplication } from '@angular/platform-browser';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideClientHydration(
+      withEventReplay() // Replay events during hydration
+    ),
+    // Other providers
+  ]
+});
+
+// Component with hydration optimization
+@Component({
+  selector: 'app-product-list',
+  standalone: true,
+  template: `
+    <div class="product-grid">
+      @for (product of products(); track product.id) {
+        <app-product-card 
+          [product]="product"
+          [loading]="loading()"
+          (addToCart)="addToCart($event)"
+          [attr.data-product-id]="product.id">
+        </app-product-card>
+      } @empty {
+        <div class="empty-state">No products found</div>
+      }
+    </div>
+  `
+})
+export class ProductListComponent {
+  products = signal<Product[]>([]);
+  loading = signal(false);
+  
+  constructor(
+    private productService: ProductService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    // Only run on browser
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadProducts();
+    }
+  }
+  
+  private async loadProducts(): Promise<void> {
+    this.loading.set(true);
+    
+    try {
+      const products = await firstValueFrom(
+        this.productService.getProducts()
+      );
+      this.products.set(products);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+  
+  addToCart(product: Product): void {
+    // Optimistic update
+    this.products.update(products => 
+      products.map(p => 
+        p.id === product.id 
+          ? { ...p, inCart: true }
+          : p
+      )
+    );
+    
+    this.productService.addToCart(product).subscribe({
+      error: () => {
+        // Revert on error
+        this.products.update(products => 
+          products.map(p => 
+            p.id === product.id 
+              ? { ...p, inCart: false }
+              : p
+          )
+        );
+      }
+    });
+  }
+}
+```
+
+**3. Streaming SSR with Suspense:**
+```typescript
+// Streaming component
+@Component({
+  selector: 'app-dashboard',
+  standalone: true,
+  template: `
+    <div class="dashboard">
+      <h1>Dashboard</h1>
+      
+      <!-- Critical content rendered immediately -->
+      <app-user-info [user]="user()"></app-user-info>
+      
+      <!-- Non-critical content with suspense -->
+      <Suspense fallback="<app-loading-skeleton></app-loading-skeleton>">
+        <app-analytics-widget></app-analytics-widget>
+      </Suspense>
+      
+      <Suspense fallback="<app-loading-skeleton></app-loading-skeleton>">
+        <app-recent-activity></app-recent-activity>
+      </Suspense>
+    </div>
+  `
+})
+export class DashboardComponent {
+  user = signal<User | null>(null);
+  
+  constructor(
+    private userService: UserService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    // Load critical data immediately
+    this.loadUser();
+  }
+  
+  private async loadUser(): Promise<void> {
+    try {
+      const user = await firstValueFrom(
+        this.userService.getCurrentUser()
+      );
+      this.user.set(user);
+    } catch (error) {
+      console.error('Failed to load user:', error);
+    }
+  }
+}
+
+// Lazy-loaded analytics widget
+@Component({
+  selector: 'app-analytics-widget',
+  standalone: true,
+  template: `
+    <div class="analytics-widget">
+      <h2>Analytics</h2>
+      @if (data(); as analytics) {
+        <div class="metrics">
+          <div class="metric">
+            <span class="value">{{ analytics.pageViews }}</span>
+            <span class="label">Page Views</span>
+          </div>
+          <div class="metric">
+            <span class="value">{{ analytics.uniqueVisitors }}</span>
+            <span class="label">Unique Visitors</span>
+          </div>
+        </div>
+      } @else {
+        <app-loading-spinner></app-loading-spinner>
+      }
+    </div>
+  `
+})
+export class AnalyticsWidgetComponent {
+  data = signal<AnalyticsData | null>(null);
+  
+  constructor(
+    private analyticsService: AnalyticsService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    // Only load on browser to avoid blocking SSR
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadAnalytics();
+    }
+  }
+  
+  private async loadAnalytics(): Promise<void> {
+    try {
+      const data = await firstValueFrom(
+        this.analyticsService.getAnalytics()
+      );
+      this.data.set(data);
+    } catch (error) {
+      console.error('Failed to load analytics:', error);
+    }
+  }
+}
+```
+
+---
+
+### Q15: How do you implement Angular 18+ Material 3 Design System and advanced theming?
+
+**Answer:**
+Angular 18+ introduces Material 3 (Material You) design system with dynamic theming, improved accessibility, and advanced customization capabilities.
+
+**Material 3 Implementation:**
+```typescript
+// app.config.ts
+import { ApplicationConfig, importProvidersFrom } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { MAT_COLOR_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
+import { provideMaterial3Theme } from '@angular/material/theming';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes),
+    provideAnimationsAsync(),
+    provideMaterial3Theme({
+      // Material 3 dynamic color system
+      colorSystem: 'material3',
+      // Enable dynamic theming based on user preferences
+      dynamicColors: true,
+      // Custom color tokens
+      customColors: {
+        brand: {
+          primary: '#6750A4',
+          secondary: '#625B71',
+          tertiary: '#7D5260'
+        },
+        semantic: {
+          success: '#198754',
+          warning: '#FFC107',
+          error: '#DC3545',
+          info: '#0DCAF0'
+        }
+      },
+      // Typography scale
+      typography: {
+        fontFamily: 'Roboto, sans-serif',
+        scale: 'material3'
+      },
+      // Density configuration
+      density: {
+        default: 0,
+        compact: -1,
+        comfortable: 1
+      }
+    }),
+    {
+      provide: MAT_COLOR_FORMATS,
+      useValue: {
+        parse: {
+          dateInput: 'YYYY-MM-DD'
+        },
+        display: {
+          dateInput: 'YYYY-MM-DD',
+          monthYearLabel: 'MMM YYYY',
+          dateA11yLabel: 'LL',
+          monthYearA11yLabel: 'MMMM YYYY'
+        }
+      }
+    }
+  ]
+};
+```
+
+**Advanced Theme Service:**
+```typescript
+// theme.service.ts
+import { Injectable, signal, computed, effect } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { inject } from '@angular/core';
+
+interface ThemeConfig {
+  mode: 'light' | 'dark' | 'auto';
+  colorScheme: 'material3' | 'custom';
+  density: 'compact' | 'default' | 'comfortable';
+  contrast: 'normal' | 'high';
+  reducedMotion: boolean;
+  customColors?: Record<string, string>;
+}
+
+interface ColorTokens {
+  primary: string;
+  onPrimary: string;
+  primaryContainer: string;
+  onPrimaryContainer: string;
+  secondary: string;
+  onSecondary: string;
+  secondaryContainer: string;
+  onSecondaryContainer: string;
+  tertiary: string;
+  onTertiary: string;
+  tertiaryContainer: string;
+  onTertiaryContainer: string;
+  error: string;
+  onError: string;
+  errorContainer: string;
+  onErrorContainer: string;
+  background: string;
+  onBackground: string;
+  surface: string;
+  onSurface: string;
+  surfaceVariant: string;
+  onSurfaceVariant: string;
+  outline: string;
+  outlineVariant: string;
+  shadow: string;
+  scrim: string;
+  inverseSurface: string;
+  inverseOnSurface: string;
+  inversePrimary: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ThemeService {
+  private document = inject(DOCUMENT);
+  private mediaQuery = this.document.defaultView?.matchMedia('(prefers-color-scheme: dark)');
+  private reducedMotionQuery = this.document.defaultView?.matchMedia('(prefers-reduced-motion: reduce)');
+  private contrastQuery = this.document.defaultView?.matchMedia('(prefers-contrast: high)');
+  
+  // Theme configuration signals
+  private themeConfig = signal<ThemeConfig>({
+    mode: 'auto',
+    colorScheme: 'material3',
+    density: 'default',
+    contrast: 'normal',
+    reducedMotion: false
+  });
+  
+  // System preferences signals
+  private systemDarkMode = signal(this.mediaQuery?.matches ?? false);
+  private systemReducedMotion = signal(this.reducedMotionQuery?.matches ?? false);
+  private systemHighContrast = signal(this.contrastQuery?.matches ?? false);
+  
+  // Computed theme state
+  readonly isDarkMode = computed(() => {
+    const config = this.themeConfig();
+    if (config.mode === 'auto') {
+      return this.systemDarkMode();
+    }
+    return config.mode === 'dark';
+  });
+  
+  readonly currentTheme = computed(() => {
+    const config = this.themeConfig();
+    const isDark = this.isDarkMode();
+    const isHighContrast = config.contrast === 'high' || this.systemHighContrast();
+    const isReducedMotion = config.reducedMotion || this.systemReducedMotion();
+    
+    return {
+      ...config,
+      isDark,
+      isHighContrast,
+      isReducedMotion,
+      colorTokens: this.generateColorTokens(isDark, isHighContrast)
+    };
+  });
+  
+  constructor() {
+    // Listen to system preference changes
+    this.setupSystemPreferenceListeners();
+    
+    // Apply theme changes to DOM
+    effect(() => {
+      this.applyThemeToDOM(this.currentTheme());
+    });
+    
+    // Load saved theme preferences
+    this.loadThemePreferences();
+  }
+  
+  private setupSystemPreferenceListeners(): void {
+    this.mediaQuery?.addEventListener('change', (e) => {
+      this.systemDarkMode.set(e.matches);
+    });
+    
+    this.reducedMotionQuery?.addEventListener('change', (e) => {
+      this.systemReducedMotion.set(e.matches);
+    });
+    
+    this.contrastQuery?.addEventListener('change', (e) => {
+      this.systemHighContrast.set(e.matches);
+    });
+  }
+  
+  private generateColorTokens(isDark: boolean, isHighContrast: boolean): ColorTokens {
+    // Material 3 color token generation
+    const baseTokens = isDark ? this.getDarkColorTokens() : this.getLightColorTokens();
+    
+    if (isHighContrast) {
+      return this.applyHighContrastAdjustments(baseTokens);
+    }
+    
+    return baseTokens;
+  }
+  
+  private getLightColorTokens(): ColorTokens {
+    return {
+      primary: '#6750A4',
+      onPrimary: '#FFFFFF',
+      primaryContainer: '#EADDFF',
+      onPrimaryContainer: '#21005D',
+      secondary: '#625B71',
+      onSecondary: '#FFFFFF',
+      secondaryContainer: '#E8DEF8',
+      onSecondaryContainer: '#1D192B',
+      tertiary: '#7D5260',
+      onTertiary: '#FFFFFF',
+      tertiaryContainer: '#FFD8E4',
+      onTertiaryContainer: '#31111D',
+      error: '#BA1A1A',
+      onError: '#FFFFFF',
+      errorContainer: '#FFDAD6',
+      onErrorContainer: '#410002',
+      background: '#FFFBFE',
+      onBackground: '#1C1B1F',
+      surface: '#FFFBFE',
+      onSurface: '#1C1B1F',
+      surfaceVariant: '#E7E0EC',
+      onSurfaceVariant: '#49454F',
+      outline: '#79747E',
+      outlineVariant: '#CAC4D0',
+      shadow: '#000000',
+      scrim: '#000000',
+      inverseSurface: '#313033',
+      inverseOnSurface: '#F4EFF4',
+      inversePrimary: '#D0BCFF'
+    };
+  }
+  
+  private getDarkColorTokens(): ColorTokens {
+    return {
+      primary: '#D0BCFF',
+      onPrimary: '#381E72',
+      primaryContainer: '#4F378B',
+      onPrimaryContainer: '#EADDFF',
+      secondary: '#CCC2DC',
+      onSecondary: '#332D41',
+      secondaryContainer: '#4A4458',
+      onSecondaryContainer: '#E8DEF8',
+      tertiary: '#EFB8C8',
+      onTertiary: '#492532',
+      tertiaryContainer: '#633B48',
+      onTertiaryContainer: '#FFD8E4',
+      error: '#FFB4AB',
+      onError: '#690005',
+      errorContainer: '#93000A',
+      onErrorContainer: '#FFDAD6',
+      background: '#1C1B1F',
+      onBackground: '#E6E1E5',
+      surface: '#1C1B1F',
+      onSurface: '#E6E1E5',
+      surfaceVariant: '#49454F',
+      onSurfaceVariant: '#CAC4D0',
+      outline: '#938F99',
+      outlineVariant: '#49454F',
+      shadow: '#000000',
+      scrim: '#000000',
+      inverseSurface: '#E6E1E5',
+      inverseOnSurface: '#313033',
+      inversePrimary: '#6750A4'
+    };
+  }
+  
+  private applyHighContrastAdjustments(tokens: ColorTokens): ColorTokens {
+    // Apply high contrast adjustments
+    return {
+      ...tokens,
+      outline: tokens.onSurface,
+      outlineVariant: tokens.onSurfaceVariant
+    };
+  }
+  
+  private applyThemeToDOM(theme: any): void {
+    const root = this.document.documentElement;
+    
+    // Apply color tokens as CSS custom properties
+    Object.entries(theme.colorTokens).forEach(([key, value]) => {
+      root.style.setProperty(`--md-sys-color-${this.kebabCase(key)}`, value);
+    });
+    
+    // Apply theme classes
+    root.classList.toggle('dark-theme', theme.isDark);
+    root.classList.toggle('high-contrast', theme.isHighContrast);
+    root.classList.toggle('reduced-motion', theme.isReducedMotion);
+    root.classList.toggle(`density-${theme.density}`, true);
+    
+    // Apply density scale
+    const densityScale = {
+      compact: '-1',
+      default: '0',
+      comfortable: '1'
+    };
+    root.style.setProperty('--md-density-scale', densityScale[theme.density]);
+  }
+  
+  private kebabCase(str: string): string {
+    return str.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+  }
+  
+  // Public API
+  setThemeMode(mode: 'light' | 'dark' | 'auto'): void {
+    this.themeConfig.update(config => ({ ...config, mode }));
+    this.saveThemePreferences();
+  }
+  
+  setDensity(density: 'compact' | 'default' | 'comfortable'): void {
+    this.themeConfig.update(config => ({ ...config, density }));
+    this.saveThemePreferences();
+  }
+  
+  setContrast(contrast: 'normal' | 'high'): void {
+    this.themeConfig.update(config => ({ ...config, contrast }));
+    this.saveThemePreferences();
+  }
+  
+  toggleReducedMotion(): void {
+    this.themeConfig.update(config => ({ 
+      ...config, 
+      reducedMotion: !config.reducedMotion 
+    }));
+    this.saveThemePreferences();
+  }
+  
+  private saveThemePreferences(): void {
+    localStorage.setItem('theme-preferences', JSON.stringify(this.themeConfig()));
+  }
+  
+  private loadThemePreferences(): void {
+    const saved = localStorage.getItem('theme-preferences');
+    if (saved) {
+      try {
+        const config = JSON.parse(saved);
+        this.themeConfig.set(config);
+      } catch (error) {
+        console.error('Failed to load theme preferences:', error);
+      }
+    }
+  }
+}
+```
+
+**Advanced Material 3 Components:**
+```typescript
+// advanced-card.component.ts
+import { Component, input, output, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatRippleModule } from '@angular/material/core';
+
+interface CardAction {
+  label: string;
+  icon?: string;
+  action: () => void;
+  disabled?: boolean;
+}
+
+@Component({
+  selector: 'app-advanced-card',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatRippleModule
+  ],
+  template: `
+    <mat-card 
+      class="advanced-card"
+      [class.elevated]="variant() === 'elevated'"
+      [class.filled]="variant() === 'filled'"
+      [class.outlined]="variant() === 'outlined'"
+      [class.interactive]="interactive()"
+      [matRipple]="interactive()"
+      (click)="onCardClick()"
+    >
+      @if (headerImage()) {
+        <div class="card-header-image">
+          <img [src]="headerImage()" [alt]="headerImageAlt()" />
+        </div>
+      }
+      
+      @if (title() || subtitle()) {
+        <mat-card-header>
+          @if (avatar()) {
+            <div mat-card-avatar class="card-avatar">
+              <img [src]="avatar()" [alt]="avatarAlt()" />
+            </div>
+          }
+          @if (title()) {
+            <mat-card-title>{{ title() }}</mat-card-title>
+          }
+          @if (subtitle()) {
+            <mat-card-subtitle>{{ subtitle() }}</mat-card-subtitle>
+          }
+        </mat-card-header>
+      }
+      
+      @if (content()) {
+        <mat-card-content>
+          <ng-content></ng-content>
+        </mat-card-content>
+      }
+      
+      @if (actions().length > 0) {
+        <mat-card-actions align="end">
+          @for (action of actions(); track action.label) {
+            <button 
+              mat-button
+              [disabled]="action.disabled"
+              (click)="executeAction(action, $event)"
+            >
+              @if (action.icon) {
+                <mat-icon>{{ action.icon }}</mat-icon>
+              }
+              {{ action.label }}
+            </button>
+          }
+        </mat-card-actions>
+      }
+    </mat-card>
+  `,
+  styles: [`
+    .advanced-card {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      
+      &.elevated {
+        box-shadow: var(--md-elevation-level1);
+        
+        &:hover {
+          box-shadow: var(--md-elevation-level2);
+        }
+      }
+      
+      &.filled {
+        background-color: var(--md-sys-color-surface-variant);
+        color: var(--md-sys-color-on-surface-variant);
+      }
+      
+      &.outlined {
+        border: 1px solid var(--md-sys-color-outline-variant);
+        background-color: var(--md-sys-color-surface);
+      }
+      
+      &.interactive {
+        cursor: pointer;
+        
+        &:hover {
+          transform: translateY(-2px);
+        }
+        
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+    
+    .card-header-image {
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+    
+    .card-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+      .advanced-card {
+        transition: none;
+        
+        &.interactive:hover {
+          transform: none;
+        }
+      }
+    }
+  `]
+})
+export class AdvancedCardComponent {
+  // Input signals
+  title = input<string>();
+  subtitle = input<string>();
+  content = input<boolean>(true);
+  headerImage = input<string>();
+  headerImageAlt = input<string>('Header image');
+  avatar = input<string>();
+  avatarAlt = input<string>('Avatar');
+  variant = input<'elevated' | 'filled' | 'outlined'>('elevated');
+  interactive = input<boolean>(false);
+  actions = input<CardAction[]>([]);
+  
+  // Output signals
+  cardClick = output<void>();
+  actionClick = output<CardAction>();
+  
+  // Computed properties
+  hasHeader = computed(() => !!(this.title() || this.subtitle() || this.avatar()));
+  
+  onCardClick(): void {
+    if (this.interactive()) {
+      this.cardClick.emit();
+    }
+  }
+  
+  executeAction(action: CardAction, event: Event): void {
+    event.stopPropagation();
+    if (!action.disabled) {
+      action.action();
+      this.actionClick.emit(action);
+    }
+  }
+}
+```
+
+---
+
+### Q16: How do you implement advanced Angular 18+ performance optimization with new control flow and deferrable views?
+
+**Answer:**
+Angular 18+ introduces advanced performance optimization techniques including new control flow syntax, deferrable views, and intelligent loading strategies.
+
+**New Control Flow Implementation:**
+```typescript
+// performance-optimized.component.ts
+import { Component, signal, computed, effect } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { defer, fromEvent, merge, timer } from 'rxjs';
+import { map, startWith, debounceTime } from 'rxjs/operators';
+
+interface ListItem {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high';
+  category: string;
+  lastModified: Date;
+}
+
+interface ViewportInfo {
+  width: number;
+  height: number;
+  isVisible: boolean;
+}
+
+@Component({
+  selector: 'app-performance-optimized',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="performance-container">
+      <!-- New @if control flow with performance optimization -->
+      @if (isLoading()) {
+        <div class="loading-skeleton">
+          @for (item of skeletonItems(); track $index) {
+            <div class="skeleton-item"></div>
+          }
+        </div>
+      } @else {
+        <!-- Conditional rendering based on viewport -->
+        @if (viewportInfo().width > 768) {
+          <!-- Desktop layout with advanced features -->
+          <div class="desktop-layout">
+            @defer (on viewport; prefetch on idle) {
+              <app-advanced-filters 
+                [filters]="filters()"
+                (filtersChange)="onFiltersChange($event)"
+              ></app-advanced-filters>
+            } @placeholder {
+              <div class="filter-placeholder">Loading filters...</div>
+            } @loading (minimum 500ms) {
+              <div class="filter-loading">Preparing filters...</div>
+            } @error {
+              <div class="filter-error">Failed to load filters</div>
+            }
+          </div>
+        } @else {
+          <!-- Mobile layout with simplified features -->
+          <div class="mobile-layout">
+            @defer (on interaction; prefetch on hover) {
+              <app-mobile-filters 
+                [filters]="filters()"
+                (filtersChange)="onFiltersChange($event)"
+              ></app-mobile-filters>
+            } @placeholder {
+              <button class="show-filters-btn">Show Filters</button>
+            }
+          </div>
+        }
+        
+        <!-- Virtualized list with new @for control flow -->
+        <div class="items-container" #container>
+          @for (item of visibleItems(); track item.id; let i = $index) {
+            <!-- Conditional rendering based on item priority -->
+            @switch (item.priority) {
+              @case ('high') {
+                @defer (on immediate) {
+                  <app-high-priority-item 
+                    [item]="item"
+                    [index]="i"
+                    (itemClick)="onItemClick(item)"
+                  ></app-high-priority-item>
+                }
+              }
+              @case ('medium') {
+                @defer (on viewport; prefetch on idle) {
+                  <app-medium-priority-item 
+                    [item]="item"
+                    [index]="i"
+                    (itemClick)="onItemClick(item)"
+                  ></app-medium-priority-item>
+                } @placeholder {
+                  <div class="item-placeholder">{{ item.title }}</div>
+                }
+              }
+              @default {
+                @defer (on interaction) {
+                  <app-low-priority-item 
+                    [item]="item"
+                    [index]="i"
+                    (itemClick)="onItemClick(item)"
+                  ></app-low-priority-item>
+                } @placeholder {
+                  <div class="item-placeholder">{{ item.title }}</div>
+                }
+              }
+            }
+          } @empty {
+            <div class="empty-state">
+              <h3>No items found</h3>
+              <p>Try adjusting your filters or search criteria.</p>
+            </div>
+          }
+        </div>
+        
+        <!-- Infinite scroll with deferred loading -->
+        @if (hasMoreItems()) {
+          @defer (on viewport) {
+            <app-load-more-trigger 
+              (loadMore)="loadMoreItems()"
+              [loading]="loadingMore()"
+            ></app-load-more-trigger>
+          } @placeholder {
+            <div class="load-more-placeholder">Scroll to load more</div>
+          }
+        }
+      }
+      
+      <!-- Performance monitoring overlay (dev only) -->
+      @if (showPerformanceOverlay()) {
+        @defer (on idle) {
+          <app-performance-overlay 
+            [metrics]="performanceMetrics()"
+          ></app-performance-overlay>
+        }
+      }
+    </div>
+  `,
+  styles: [`
+    .performance-container {
+      height: 100vh;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+    
+    .loading-skeleton {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1rem;
+    }
+    
+    .skeleton-item {
+      height: 80px;
+      background: linear-gradient(
+        90deg,
+        var(--md-sys-color-surface-variant) 25%,
+        var(--md-sys-color-surface) 50%,
+        var(--md-sys-color-surface-variant) 75%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    .items-container {
+      contain: layout style paint;
+      will-change: scroll-position;
+    }
+    
+    .item-placeholder {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      background-color: var(--md-sys-color-surface-variant);
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--md-sys-color-on-surface-variant);
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+      .skeleton-item {
+        animation: none;
+      }
+      
+      .performance-container {
+        scroll-behavior: auto;
+      }
+    }
+  `]
+})
+export class PerformanceOptimizedComponent {
+  // Signals for reactive state management
+  private items = signal<ListItem[]>([]);
+  private filters = signal<Record<string, any>>({});
+  private isLoading = signal(true);
+  private loadingMore = signal(false);
+  private viewportInfo = signal<ViewportInfo>({
+    width: window.innerWidth,
+    height: window.innerHeight,
+    isVisible: true
+  });
+  
+  // Performance monitoring
+  private performanceMetrics = signal({
+    renderTime: 0,
+    memoryUsage: 0,
+    frameRate: 60,
+    bundleSize: 0
+  });
+  
+  private showPerformanceOverlay = signal(
+    !environment.production && localStorage.getItem('showPerfOverlay') === 'true'
+  );
+  
+  // Computed values for optimized rendering
+  readonly filteredItems = computed(() => {
+    const items = this.items();
+    const filters = this.filters();
+    
+    if (Object.keys(filters).length === 0) {
+      return items;
+    }
+    
+    return items.filter(item => {
+      return Object.entries(filters).every(([key, value]) => {
+        if (!value) return true;
+        return item[key as keyof ListItem]?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase());
+      });
+    });
+  });
+  
+  readonly visibleItems = computed(() => {
+    // Virtual scrolling implementation
+    const items = this.filteredItems();
+    const viewport = this.viewportInfo();
+    
+    // Calculate visible range based on viewport
+    const itemHeight = 80;
+    const containerHeight = viewport.height;
+    const visibleCount = Math.ceil(containerHeight / itemHeight) + 5; // Buffer
+    
+    return items.slice(0, Math.min(visibleCount, items.length));
+  });
+  
+  readonly hasMoreItems = computed(() => {
+    return this.visibleItems().length < this.filteredItems().length;
+  });
+  
+  readonly skeletonItems = computed(() => {
+    return Array(10).fill(null);
+  });
+  
+  constructor(
+    private itemService: ItemService,
+    private performanceService: PerformanceService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    // Setup viewport monitoring
+    this.setupViewportMonitoring();
+    
+    // Setup performance monitoring
+    this.setupPerformanceMonitoring();
+    
+    // Load initial data
+    this.loadInitialData();
+  }
+  
+  private setupViewportMonitoring(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      // Viewport size monitoring
+      const resize$ = fromEvent(window, 'resize').pipe(
+        debounceTime(100),
+        map(() => ({
+          width: window.innerWidth,
+          height: window.innerHeight,
+          isVisible: !document.hidden
+        }))
+      );
+      
+      // Visibility monitoring
+      const visibility$ = fromEvent(document, 'visibilitychange').pipe(
+        map(() => ({
+          width: window.innerWidth,
+          height: window.innerHeight,
+          isVisible: !document.hidden
+        }))
+      );
+      
+      merge(resize$, visibility$)
+        .pipe(startWith(this.viewportInfo()))
+        .subscribe(info => this.viewportInfo.set(info));
+    }
+  }
+  
+  private setupPerformanceMonitoring(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      // Monitor performance metrics
+      effect(() => {
+        const startTime = performance.now();
+        
+        // Measure render time
+        requestAnimationFrame(() => {
+          const renderTime = performance.now() - startTime;
+          
+          this.performanceMetrics.update(metrics => ({
+            ...metrics,
+            renderTime,
+            memoryUsage: (performance as any).memory?.usedJSHeapSize || 0,
+            frameRate: this.calculateFrameRate()
+          }));
+        });
+      });
+    }
+  }
+  
+  private calculateFrameRate(): number {
+    // Simple frame rate calculation
+    let frames = 0;
+    let lastTime = performance.now();
+    
+    const countFrames = () => {
+      frames++;
+      const currentTime = performance.now();
+      
+      if (currentTime - lastTime >= 1000) {
+        const fps = Math.round((frames * 1000) / (currentTime - lastTime));
+        frames = 0;
+        lastTime = currentTime;
+        return fps;
+      }
+      
+      requestAnimationFrame(countFrames);
+      return 60; // Default
+    };
+    
+    return countFrames();
+  }
+  
+  private async loadInitialData(): Promise<void> {
+    try {
+      this.isLoading.set(true);
+      
+      // Simulate loading with minimum time for UX
+      const [items] = await Promise.all([
+        firstValueFrom(this.itemService.getItems()),
+        timer(500).toPromise() // Minimum loading time
+      ]);
+      
+      this.items.set(items);
+    } catch (error) {
+      console.error('Failed to load items:', error);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+  
+  async loadMoreItems(): Promise<void> {
+    if (this.loadingMore()) return;
+    
+    try {
+      this.loadingMore.set(true);
+      
+      const currentItems = this.items();
+      const nextPage = Math.floor(currentItems.length / 20) + 1;
+      
+      const newItems = await firstValueFrom(
+        this.itemService.getItems({ page: nextPage })
+      );
+      
+      this.items.update(items => [...items, ...newItems]);
+    } catch (error) {
+      console.error('Failed to load more items:', error);
+    } finally {
+      this.loadingMore.set(false);
+    }
+  }
+  
+  onFiltersChange(newFilters: Record<string, any>): void {
+    this.filters.set(newFilters);
+  }
+  
+  onItemClick(item: ListItem): void {
+    // Handle item click with performance tracking
+    const startTime = performance.now();
+    
+    // Navigate or perform action
+    this.router.navigate(['/items', item.id]);
+    
+    // Track interaction performance
+    const interactionTime = performance.now() - startTime;
+    this.performanceService.trackInteraction('item_click', {
+      itemId: item.id,
+      interactionTime
+    });
+  }
+}
+```
+
+This comprehensive Angular guide now covers the most advanced topics including Angular 15+ image optimization, standalone APIs, Angular 16+ Signals, Angular 17+ SSR enhancements, Angular 18+ Material 3 design system with advanced theming, new control flow syntax with deferrable views, micro-frontends with Module Federation, cross-application state management, advanced performance monitoring, and sophisticated caching strategies essential for enterprise-level Angular applications.
