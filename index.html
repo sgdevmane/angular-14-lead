@@ -7,7 +7,7 @@
 
     <!-- Prism.js for syntax highlighting -->
     <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-atom-dark.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-coy.min.css"
       rel="stylesheet"
     />
     <link
@@ -305,27 +305,7 @@
         border-radius: 8px;
         box-shadow: var(--shadow);
       }
-
-      .token.comment {
-        color: #6a737d;
-      }
-
-      .token.keyword {
-        color: #d73a49;
-        font-weight: 600;
-      }
-
-      .token.string {
-        color: #032f62;
-      }
-
-      .token.function {
-        color: #6f42c1;
-      }
-
-      .token.number {
-        color: #005cc5;
-      }
+      /* Custom token styles removed to allow Prism 'coy' theme to work properly */
 
       /* Search functionality */
       .search-container {
@@ -470,7 +450,10 @@
           >
             JavaScript <span class="badge">80+</span>
           </button>
-          <button class="nav-item" data-file="typescript/typescript-questions.md">
+          <button
+            class="nav-item"
+            data-file="typescript/typescript-questions.md"
+          >
             TypeScript <span class="badge">70+</span>
           </button>
           <button class="nav-item" data-file="html/html-questions.md">
@@ -478,6 +461,9 @@
           </button>
           <button class="nav-item" data-file="css/css-questions.md">
             CSS3 <span class="badge">60+</span>
+          </button>
+          <button class="nav-item" data-file="react/react-questions.md">
+            React.js <span class="badge">45+</span>
           </button>
         </div>
 
@@ -502,12 +488,37 @@
         </div>
 
         <div class="nav-section">
+          <h3>Backend Technologies</h3>
+          <button class="nav-item" data-file="nodejs/nodejs-questions.md">
+            Node.js <span class="badge">60+</span>
+          </button>
+          <button class="nav-item" data-file="python/python-questions.md">
+            Python & Django <span class="badge">55+</span>
+          </button>
+          <button class="nav-item" data-file="docker/docker-questions.md">
+            Docker & DevOps <span class="badge">45+</span>
+          </button>
+          <button class="nav-item" data-file="kubernetes/kubernetes-questions.md">
+            Kubernetes <span class="badge">40+</span>
+          </button>
+          <button class="nav-item" data-file="aws/aws-questions.md">
+            AWS Cloud <span class="badge">50+</span>
+          </button>
+          <button class="nav-item" data-file="database/database-questions.md">
+            Database & SQL <span class="badge">65+</span>
+          </button>
+        </div>
+
+        <div class="nav-section">
           <h3>Integration & Advanced</h3>
           <button
             class="nav-item"
             data-file="integration/angular14-integration-questions.md"
           >
             Angular 14 Integration <span class="badge">25+</span>
+          </button>
+          <button class="nav-item" data-file="vue/vue-questions.md">
+            Vue.js <span class="badge">50+</span>
           </button>
         </div>
 
@@ -556,8 +567,8 @@
                   Prototypes, and modern patterns
                 </li>
                 <li>
-                  <strong>TypeScript:</strong> Type system, Generics, Decorators,
-                  and advanced patterns
+                  <strong>TypeScript:</strong> Type system, Generics,
+                  Decorators, and advanced patterns
                 </li>
                 <li>
                   <strong>HTML5:</strong> Semantic elements, APIs, Forms, and
