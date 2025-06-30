@@ -1252,7 +1252,7 @@ This comprehensive HTML guide covers all essential topics from basic structure t
 
 ## Advanced HTML Concepts
 
-### Q1: Explain HTML5 Web Components and their implementation.
+### Q10: Explain HTML5 Web Components and their implementation.
 **Difficulty: Hard**
 
 **Answer:**
@@ -1558,7 +1558,7 @@ input.addEventListener('input', (event) => {
 
 ---
 
-### Q2: Explain HTML5 Performance Optimization techniques.
+### Q11: Explain HTML5 Performance Optimization techniques.
 **Difficulty: Medium**
 
 **Answer:**
@@ -1828,7 +1828,7 @@ window.addEventListener('load', () => {
 
 ---
 
-### Q3: Explain HTML5 Accessibility (a11y) best practices.
+### Q12: Explain HTML5 Accessibility (a11y) best practices.
 **Difficulty: Medium**
 
 **Answer:**
@@ -2249,7 +2249,7 @@ document.querySelectorAll('.tabs').forEach(tabs => {
 
 ---
 
-### Q4: Explain HTML5 Progressive Web App (PWA) implementation.
+### Q13: Explain HTML5 Progressive Web App (PWA) implementation.
 **Difficulty: Hard**
 
 **Answer:**
@@ -2609,7 +2609,7 @@ function doBackgroundSync() {
 
 ---
 
-### Q5: Explain HTML5 Security best practices.
+### Q14: Explain HTML5 Security best practices.
 **Difficulty: Medium**
 
 **Answer:**
@@ -2985,7 +2985,7 @@ This comprehensive HTML guide now covers fundamental concepts through advanced m
 
 ## Modern HTML Features and Web Standards
 
-### Q11: What are the latest HTML features and how do you implement modern web standards?
+### Q15: What are the latest HTML features and how do you implement modern web standards?
 **Difficulty: Advanced**
 
 **Answer:**
@@ -3613,7 +3613,7 @@ This enhanced HTML guide now includes cutting-edge web standards, modern HTML fe
 
 ## Modern HTML5 Advanced Features and Web Components
 
-### Q1: How do you create and implement custom Web Components?
+### Q16: How do you create and implement custom Web Components?
 **Difficulty: Expert**
 
 **Answer:**
@@ -4339,7 +4339,7 @@ customElements.define('data-table', DataTable);
 ></data-table>
 ```
 
-### Q2: How do you implement advanced Progressive Web App (PWA) features?
+### Q17: How do you implement advanced Progressive Web App (PWA) features?
 **Difficulty: Expert**
 
 **Answer:**
@@ -5145,7 +5145,7 @@ window.pwaManager = pwaManager;
 
 ---
 
-### Q3: How do you implement advanced HTML5 Web APIs and modern browser features?
+### Q18: How do you implement advanced HTML5 Web APIs and modern browser features?
 **Difficulty: Expert**
 
 **Answer:**
@@ -5481,7 +5481,7 @@ Modern HTML5 applications leverage sophisticated Web APIs for enhanced user expe
 
 ---
 
-### Q4: How do you implement advanced HTML5 accessibility and inclusive design patterns?
+### Q19: How do you implement advanced HTML5 accessibility and inclusive design patterns?
 **Difficulty: Expert**
 
 **Answer:**
@@ -5826,7 +5826,7 @@ Advanced accessibility involves sophisticated ARIA patterns, inclusive design pr
 
 ---
 
-### Q11: How do you implement advanced Web Components with Shadow DOM and modern HTML5 features?
+### Q20: How do you implement advanced Web Components with Shadow DOM and modern HTML5 features?
 
 **Answer:**
 Web Components provide a way to create reusable, encapsulated HTML elements using native browser APIs. They combine Custom Elements, Shadow DOM, HTML Templates, and ES Modules for powerful component architecture.
@@ -6597,7 +6597,7 @@ Web Components provide a way to create reusable, encapsulated HTML elements usin
 
 ---
 
-### Q12: How do you implement Progressive Web App (PWA) features with advanced caching strategies and offline functionality?
+### Q21: How do you implement Progressive Web App (PWA) features with advanced caching strategies and offline functionality?
 
 **Answer:**
 Progressive Web Apps combine the best of web and mobile apps, providing app-like experiences with advanced caching, offline functionality, push notifications, and native device integration.

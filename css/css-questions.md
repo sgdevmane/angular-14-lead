@@ -2330,7 +2330,7 @@ CSS Logical Properties provide a way to control layout through logical, rather t
 }
 ```
 
-### Q11: How do you implement advanced CSS Grid and Flexbox layouts?
+### Q12: How do you implement advanced CSS Grid and Flexbox layouts?
 
 **Answer:**
 Advanced CSS Grid and Flexbox techniques enable complex, responsive layouts with minimal code.
@@ -2587,7 +2587,7 @@ Advanced CSS Grid and Flexbox techniques enable complex, responsive layouts with
 }
 ```
 
-### Q12: How do you implement advanced CSS animations and transitions?
+### Q13: How do you implement advanced CSS animations and transitions?
 
 **Answer:**
 Advanced CSS animations involve complex keyframes, custom timing functions, and performance optimization.
@@ -2894,7 +2894,7 @@ Advanced CSS animations involve complex keyframes, custom timing functions, and 
 }
 ```
 
-### Q13: How do you implement modern CSS features and best practices?
+### Q14: How do you implement modern CSS features and best practices?
 
 **Answer:**
 Modern CSS includes cutting-edge features like custom properties, logical properties, and advanced selectors.
@@ -3196,7 +3196,7 @@ h6 {
 }
 ```
 
-### Q11: How do you implement CSS Container Queries for responsive components?
+### Q15: How do you implement CSS Container Queries for responsive components?
 
 **Answer:**
 CSS Container Queries allow components to respond to their container's size rather than the viewport, enabling true component-based responsive design.
@@ -3308,7 +3308,7 @@ CSS Container Queries allow components to respond to their container's size rath
 }
 ```
 
-### Q12: How do you use CSS Cascade Layers for better style organization?
+### Q16: How do you use CSS Cascade Layers for better style organization?
 
 **Answer:**
 CSS Cascade Layers provide explicit control over the cascade, allowing you to organize styles into layers with defined precedence.
@@ -3500,7 +3500,7 @@ CSS Cascade Layers provide explicit control over the cascade, allowing you to or
 @import url("components.css") layer(components);
 ```
 
-### Q13: How do you implement advanced CSS custom properties and functions?
+### Q17: How do you implement advanced CSS custom properties and functions?
 
 **Answer:**
 Modern CSS custom properties support complex data types, calculations, and dynamic behavior for sophisticated design systems.
@@ -3679,7 +3679,7 @@ Modern CSS custom properties support complex data types, calculations, and dynam
 }
 ```
 
-### Q14: How do you implement modern CSS layout techniques?
+### Q18: How do you implement modern CSS layout techniques?
 
 **Answer:**
 Modern CSS provides powerful layout methods including Subgrid, advanced Grid features, and sophisticated Flexbox patterns.
@@ -3897,7 +3897,7 @@ Modern CSS provides powerful layout methods including Subgrid, advanced Grid fea
 }
 ```
 
-### Q15: How do you implement advanced CSS animations and micro-interactions?
+### Q19: How do you implement advanced CSS animations and micro-interactions?
 
 **Answer:**
 Modern CSS animations enable sophisticated micro-interactions, performance-optimized animations, and complex motion design.
@@ -4212,7 +4212,7 @@ This comprehensive CSS guide now covers advanced layout techniques, modern anima
 
 ## Advanced CSS Architecture and Modern Patterns
 
-### Q11: How do you implement CSS-in-JS patterns and component-scoped styling?
+### Q20: How do you implement CSS-in-JS patterns and component-scoped styling?
 **Difficulty: Advanced**
 
 **Answer:**
@@ -4501,7 +4501,7 @@ const Component = () => (
 );
 ```
 
-### Q12: How do you implement advanced CSS custom properties and design systems?
+### Q21: How do you implement advanced CSS custom properties and design systems?
 **Difficulty: Expert**
 
 **Answer:**
@@ -4889,7 +4889,7 @@ const ThemeToggle = () => {
 
 This enhanced CSS guide now includes advanced CSS-in-JS patterns, sophisticated design system implementation with custom properties, dynamic theming capabilities, and modern CSS architecture patterns essential for scalable web applications.
 
-### Q13: How do you implement CSS Houdini and advanced CSS features?
+### Q22: How do you implement CSS Houdini and advanced CSS features?
 **Difficulty: Expert**
 
 **Answer:**
@@ -5246,7 +5246,7 @@ input[type="email" i]:invalid {
 }
 ```
 
-### Q14: How do you implement modern CSS framework integration and performance optimization?
+### Q23: How do you implement modern CSS framework integration and performance optimization?
 **Difficulty: Expert**
 
 **Answer:**
@@ -5585,7 +5585,7 @@ cssMonitor.monitorLayoutShifts();
 
 ---
 
-### Q15: How do you implement advanced CSS architecture patterns and design systems?
+### Q24: How do you implement advanced CSS architecture patterns and design systems?
 **Difficulty: Expert**
 
 **Answer:**
@@ -5911,7 +5911,7 @@ const Button = styled.button<ButtonProps>`
 
 ---
 
-### Q16: How do you implement advanced CSS performance optimization and critical rendering path?
+### Q25: How do you implement advanced CSS performance optimization and critical rendering path?
 **Difficulty: Expert**
 
 **Answer:**
@@ -6075,7 +6075,7 @@ extractor.extractCritical(pages).then(results => {
 
 ---
 
-### Q11: How do you implement advanced CSS Container Queries and modern layout techniques for responsive design?
+### Q26: How do you implement advanced CSS Container Queries and modern layout techniques for responsive design?
 
 **Answer:**
 Container Queries represent a paradigm shift in responsive design, allowing components to respond to their container's size rather than the viewport. Combined with modern layout techniques, they enable truly modular and adaptive designs.
@@ -6499,7 +6499,7 @@ Container Queries represent a paradigm shift in responsive design, allowing comp
 
 ---
 
-### Q12: How do you implement advanced CSS architecture with CSS Layers, Scope, and modern design systems?
+### Q27: How do you implement advanced CSS architecture with CSS Layers, Scope, and modern design systems?
 
 **Answer:**
 Modern CSS architecture leverages CSS Layers for cascade control, CSS Scope for component isolation, and systematic approaches to design tokens and component libraries for scalable, maintainable stylesheets.

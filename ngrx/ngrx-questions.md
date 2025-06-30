@@ -1095,7 +1095,7 @@ This comprehensive NgRx guide covers all essential concepts from basic setup to 
 
 ## Advanced NgRx Patterns
 
-### Q11: How do you implement advanced NgRx patterns for complex state management?
+### Q7: How do you implement advanced NgRx patterns for complex state management?
 
 **Answer:**
 Advanced NgRx patterns help manage complex state scenarios, including nested entities, optimistic updates, and real-time synchronization.
@@ -1597,7 +1597,7 @@ export class OptimisticUpdateService {
 }
 ```
 
-### Q12: How do you implement real-time state synchronization with NgRx?
+### Q8: How do you implement real-time state synchronization with NgRx?
 
 **Answer:**
 Real-time state synchronization requires WebSocket integration, conflict resolution, and optimistic updates with server reconciliation.
@@ -1973,7 +1973,7 @@ export class RealTimeSyncService {
 }
 ```
 
-### Q11: How do you implement advanced NgRx patterns for enterprise applications?
+### Q9: How do you implement advanced NgRx patterns for enterprise applications?
 
 **Answer:**
 Enterprise NgRx applications require sophisticated patterns for scalability, maintainability, and performance optimization.
@@ -2480,7 +2480,7 @@ if (hydratedState) {
 }
 ```
 
-### Q12: How do you implement NgRx with micro-frontend architecture?
+### Q10: How do you implement NgRx with micro-frontend architecture?
 
 **Answer:**
 Integrating NgRx with micro-frontend architecture requires careful state isolation, cross-application communication, and shared state management strategies.
@@ -2763,7 +2763,7 @@ interface StateSync {
 
 ---
 
-### Q13: How do you implement NgRx with Angular 15+ Standalone Components and modern architecture?
+### Q11: How do you implement NgRx with Angular 15+ Standalone Components and modern architecture?
 
 **Answer:**
 Implementing NgRx with Angular 15+ standalone components requires adapting state management patterns to work without NgModules while maintaining type safety and performance.
@@ -3163,7 +3163,7 @@ export class UserFormComponentStore extends ComponentStore<UserFormState> {
 
 ---
 
-### Q14: How do you implement advanced NgRx testing strategies with modern Angular testing utilities?
+### Q12: How do you implement advanced NgRx testing strategies with modern Angular testing utilities?
 
 **Answer:**
 Advanced NgRx testing requires comprehensive strategies for testing actions, reducers, effects, selectors, and component integration with modern Angular testing utilities.
@@ -3552,7 +3552,7 @@ describe('UserManagementComponent', () => {
 
 ## Advanced NgRx Patterns
 
-### Q11: How would you implement NgRx Signal Store for modern Angular applications?
+### Q13: How would you implement NgRx Signal Store for modern Angular applications?
 
 **Answer:**
 NgRx Signal Store is a modern state management solution that leverages Angular's Signals API for reactive state management with reduced boilerplate compared to traditional NgRx.
@@ -3717,7 +3717,7 @@ loadProducts: rxMethod<void>(pipe(
 ))
 ```
 
-### Q12: How would you implement advanced NgRx patterns for enterprise applications?
+### Q14: How would you implement advanced NgRx patterns for enterprise applications?
 
 **Answer:**
 Enterprise applications require sophisticated state management patterns to handle complex domains, scale effectively, and maintain performance.

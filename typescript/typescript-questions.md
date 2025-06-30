@@ -2890,7 +2890,7 @@ This comprehensive TypeScript guide covers all essential concepts from basic typ
 
 ## Advanced TypeScript 5.0+ Features and Patterns
 
-### Q15: How do you implement advanced type manipulation and metaprogramming in TypeScript?
+### Q14: How do you implement advanced type manipulation and metaprogramming in TypeScript?
 **Difficulty: Expert**
 
 **Answer:**
@@ -3174,7 +3174,7 @@ class UserModel {
 }
 ```
 
-### Q16: How do you implement advanced type-safe patterns for modern applications?
+### Q15: How do you implement advanced type-safe patterns for modern applications?
 **Difficulty: Expert**
 
 **Answer:**
@@ -3600,7 +3600,7 @@ async function handleUserOperations() {
 
 ---
 
-### Q17: How do you implement TypeScript 5.0+ decorators and metadata reflection?
+### Q16: How do you implement TypeScript 5.0+ decorators and metadata reflection?
 **Difficulty: Expert**
 
 **Answer:**
@@ -3727,7 +3727,7 @@ class UserController {
 
 ---
 
-### Q18: How do you implement advanced TypeScript patterns for reactive programming?
+### Q17: How do you implement advanced TypeScript patterns for reactive programming?
 **Difficulty: Expert**
 
 **Answer:**
@@ -3877,7 +3877,7 @@ class AppStore {
 
 ---
 
-### Q13: How do you implement TypeScript 5.0+ const assertions and satisfies operator for advanced type safety?
+### Q18: How do you implement TypeScript 5.0+ const assertions and satisfies operator for advanced type safety?
 
 **Answer:**
 TypeScript 5.0+ introduces powerful features like const assertions, the satisfies operator, and improved type inference for enhanced type safety and developer experience.
@@ -4194,7 +4194,7 @@ class FormValidator {
 
 ---
 
-### Q14: How do you implement advanced TypeScript 5.0+ decorators and metadata reflection for enterprise applications?
+### Q19: How do you implement advanced TypeScript 5.0+ decorators and metadata reflection for enterprise applications?
 
 **Answer:**
 TypeScript 5.0+ introduces stage 3 decorators with improved metadata reflection capabilities, enabling powerful enterprise patterns for dependency injection, validation, and aspect-oriented programming.

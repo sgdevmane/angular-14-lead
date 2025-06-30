@@ -1058,7 +1058,7 @@ This security guide provides comprehensive protection against XSS and other comm
 
 ## Advanced Security Patterns
 
-### Q11: How do you implement advanced authentication and authorization patterns?
+### Q4: How do you implement advanced authentication and authorization patterns?
 
 **Answer:**
 Advanced authentication and authorization require sophisticated patterns including multi-factor authentication, role-based access control, and secure session management.
@@ -1655,7 +1655,7 @@ interface AttemptRecord {
 }
 ```
 
-### Q12: How do you implement advanced threat detection and security monitoring?
+### Q5: How do you implement advanced threat detection and security monitoring?
 
 **Answer:**
 Advanced threat detection requires real-time monitoring, anomaly detection, and automated response systems to identify and mitigate security threats.
@@ -2525,7 +2525,7 @@ console.log('Security Report:', report);
 
 ---
 
-### Q13: How do you implement advanced security monitoring and incident response automation?
+### Q6: How do you implement advanced security monitoring and incident response automation?
 
 **Answer:**
 Advanced security monitoring requires real-time threat detection, automated incident response, and comprehensive security analytics with machine learning capabilities.
@@ -3027,7 +3027,7 @@ export class ThreatDetectionService {
 
 ---
 
-### Q14: How do you implement comprehensive security compliance and audit frameworks?
+### Q7: How do you implement comprehensive security compliance and audit frameworks?
 
 **Answer:**
 Implementing comprehensive security compliance requires automated compliance monitoring, audit trail management, and regulatory framework adherence with continuous assessment capabilities.

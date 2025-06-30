@@ -1291,7 +1291,7 @@ This comprehensive performance guide covers all essential optimization technique
 
 ## Advanced Performance Optimization
 
-### Q11: How do you implement advanced performance optimization strategies?
+### Q6: How do you implement advanced performance optimization strategies?
 
 **Answer:**
 Advanced performance optimization involves sophisticated techniques for resource management, rendering optimization, and intelligent caching strategies.
@@ -2308,7 +2308,7 @@ fetch('/api/user/profile')
   .finally(() => apiTimer());
 ```
 
-### Q12: How do you implement advanced performance monitoring and real-time optimization?
+### Q7: How do you implement advanced performance monitoring and real-time optimization?
 
 **Answer:**
 Advanced performance monitoring involves real-time metrics collection, intelligent alerting, and automatic optimization based on performance data.
@@ -2812,7 +2812,7 @@ interface CacheStats {
 }
 ```
 
-### Q12: How do you implement comprehensive performance monitoring and analytics?
+### Q8: How do you implement comprehensive performance monitoring and analytics?
 
 **Answer:**
 Comprehensive performance monitoring requires real-time metrics collection, intelligent alerting, and detailed analytics for optimization insights.
@@ -3394,7 +3394,7 @@ performanceMonitor.recordCustomMetric('user.actions', 1, 'counter');
 
 ---
 
-### Q11: How do you implement advanced performance optimization for modern web applications?
+### Q9: How do you implement advanced performance optimization for modern web applications?
 **Difficulty: Expert**
 
 **Answer:**
@@ -3869,7 +3869,7 @@ console.log('Current adaptive settings:', settings);
 
 ---
 
-### Q12: How do you implement advanced caching strategies and service worker optimization?
+### Q10: How do you implement advanced caching strategies and service worker optimization?
 **Difficulty: Expert**
 
 **Answer:**
