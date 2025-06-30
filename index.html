@@ -7,7 +7,7 @@
 
     <!-- Prism.js for syntax highlighting -->
     <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-coy.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-coy.min.css"
       rel="stylesheet"
     />
     <link
@@ -278,9 +278,9 @@
 
       /* Code Blocks */
       .markdown-content pre {
-        background-color: #2d3748;
+        /* background-color: #2d3748; */
         border-radius: 8px;
-        padding: 20px;
+        padding: 5px;
         margin: 20px 0;
         overflow-x: auto;
         box-shadow: var(--shadow);
@@ -299,13 +299,18 @@
         font-weight: 600;
       }
 
-      /* Prism.js customizations */
+      /* Prism.js customizations - minimal to preserve 'coy' theme */
       pre[class*="language-"] {
-        margin: 20px 0;
-        border-radius: 8px;
-        box-shadow: var(--shadow);
+        margin: 20px 0 !important;
+        border-radius: 8px !important;
+        box-shadow: var(--shadow) !important;
+        /* Remove any background/color overrides to let 'coy' theme work */
       }
-      /* Custom token styles removed to allow Prism 'coy' theme to work properly */
+      /* Ensure 'coy' theme colors are preserved */
+      pre[class*="language-"] code[class*="language-"] {
+        background: inherit !important;
+        color: inherit !important;
+      }
 
       /* Search functionality */
       .search-container {
@@ -420,6 +425,11 @@
           color: #000 !important;
           border: 1px solid #ccc;
         }
+
+        /* Preserve token colors in print */
+        .token {
+          color: #000 !important;
+        }
       }
     </style>
   </head>
@@ -498,7 +508,10 @@
           <button class="nav-item" data-file="docker/docker-questions.md">
             Docker & DevOps <span class="badge">45+</span>
           </button>
-          <button class="nav-item" data-file="kubernetes/kubernetes-questions.md">
+          <button
+            class="nav-item"
+            data-file="kubernetes/kubernetes-questions.md"
+          >
             Kubernetes <span class="badge">40+</span>
           </button>
           <button class="nav-item" data-file="aws/aws-questions.md">
