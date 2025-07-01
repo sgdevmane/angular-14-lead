@@ -8,7 +8,11 @@
 5. [Advanced Concepts](#advanced-concepts)
 6. [Event Handling](#event-handling)
 7. [Performance and Optimization](#performance-and-optimization)
-8. [Guess the Output](#guess-the-output)
+8. [Design Patterns](#design-patterns)
+9. [Memory Management](#memory-management)
+10. [Browser APIs](#browser-apis)
+11. [Security](#security)
+12. [Guess the Output](#guess-the-output)
 
 ---
 
@@ -7291,7 +7295,291 @@ console.log(result);
 
 ---
 
-## Performance Optimization and Memory Management
+## Memory Management
+
+### Q1: Explain JavaScript memory management and garbage collection. How can you prevent memory leaks?
+**Difficulty: Hard**
+
+**Answer:**
+JavaScript memory management is handled automatically through garbage collection, but understanding how it works is crucial for writing efficient applications.
+
+**Memory Lifecycle:**
+1. **Allocation** - JavaScript automatically allocates memory when objects are created
+2. **Usage** - Reading and writing to allocated memory
+3. **Release** - Garbage collector frees memory when objects are no longer needed
+
+**Garbage Collection Algorithms:**
+
+1. **Reference Counting:**
+   - Counts references to each object
+   - When count reaches zero, memory is freed
+   - Problem: Cannot handle circular references
+
+```javascript
+function referenceCountingIssue() {
+    let obj1 = {};
+    let obj2 = {};
+    
+    // Circular reference
+    obj1.ref = obj2;
+    obj2.ref = obj1;
+    
+    // Both objects go out of scope but won't be collected
+    // if using only reference counting
+    return "done";
+}
+```
+
+2. **Mark and Sweep:**
+   - Modern browsers use this algorithm
+   - Starts from "roots" (global objects)
+   - Marks all reachable objects
+   - Sweeps and frees unmarked objects
+   - Can handle circular references
+
+**Common Memory Leak Causes:**
+
+1. **Accidental Global Variables:**
+```javascript
+function leakyFunction() {
+    notDeclared = "I'm a global variable"; // Missing 'let/const/var'
+    this.anotherGlobal = []; // 'this' refers to window in non-strict mode
+}
+```
+
+2. **Forgotten Timers and Callbacks:**
+```javascript
+function setupLeakyTimer() {
+    const largeData = new Array(1000000).fill('x');
+    
+    setInterval(() => {
+        // This reference prevents largeData from being garbage collected
+        console.log(largeData.length);
+    }, 1000);
+}
+```
+
+3. **Closures Capturing Variables:**
+```javascript
+function createLeak() {
+    const largeData = new Array(1000000).fill('x');
+    
+    return function() {
+        // Closure keeps reference to largeData even if only length is needed
+        console.log(largeData.length);
+    };
+}
+
+const leakyFunction = createLeak(); // largeData stays in memory
+```
+
+4. **DOM References Outside of DOM:**
+```javascript
+let elements = [];
+
+function cacheElements() {
+    // Store DOM elements
+    elements.push(document.getElementById('element'));
+    
+    // Even if element is removed from DOM, it stays in memory
+    document.body.removeChild(document.getElementById('element'));
+}
+```
+
+5. **Event Listeners Not Removed:**
+```javascript
+function addLeakyListener() {
+    const element = document.getElementById('button');
+    const largeData = new Array(1000000).fill('x');
+    
+    element.addEventListener('click', function() {
+        // This function captures largeData
+        console.log(largeData.length);
+    });
+    
+    // If element is removed without removing listener, leak occurs
+}
+```
+
+**Preventing Memory Leaks:**
+
+1. **Use Block Scope and Strict Mode:**
+```javascript
+'use strict';
+
+function safeFunction() {
+    let localVar = "I'm properly scoped";
+    // localVar is garbage collected when function exits
+}
+```
+
+2. **Clear Timers and Event Listeners:**
+```javascript
+function safeTimerUsage() {
+    const largeData = new Array(1000000).fill('x');
+    
+    const timerId = setInterval(() => {
+        console.log('Processing...');
+    }, 1000);
+    
+    // Later, when done:
+    clearInterval(timerId);
+    // Now largeData can be garbage collected
+}
+
+function safeEventListener() {
+    const element = document.getElementById('button');
+    const largeData = new Array(1000000).fill('x');
+    
+    const clickHandler = function() {
+        console.log(largeData.length);
+    };
+    
+    element.addEventListener('click', clickHandler);
+    
+    // When done:
+    element.removeEventListener('click', clickHandler);
+    // Now largeData can be garbage collected
+}
+```
+
+3. **Nullify References:**
+```javascript
+function processData() {
+    let largeData = new Array(1000000).fill('x');
+    
+    // Process data...
+    
+    // When done, explicitly nullify
+    largeData = null;
+}
+```
+
+4. **Use WeakMap and WeakSet:**
+```javascript
+// Regular Map keeps strong references
+const regularMap = new Map();
+let obj = { data: "some data" };
+regularMap.set(obj, "metadata");
+
+// obj reference is maintained by regularMap
+obj = null; // Original reference removed, but object still in memory
+
+// WeakMap allows garbage collection of keys
+const weakMap = new WeakMap();
+let obj2 = { data: "some data" };
+weakMap.set(obj2, "metadata");
+
+// When obj2 has no other references, it can be garbage collected
+// along with its associated data in weakMap
+obj2 = null;
+```
+
+5. **Avoid Circular References or Break Them:**
+```javascript
+function handleCircularReferences() {
+    let parent = { name: 'parent' };
+    let child = { name: 'child' };
+    
+    // Create circular reference
+    parent.child = child;
+    child.parent = parent;
+    
+    // Use the objects...
+    
+    // Break circular reference when done
+    child.parent = null;
+    // Now both objects can be garbage collected when they go out of scope
+}
+```
+
+6. **Use Chrome DevTools Memory Profiler:**
+   - Take heap snapshots
+   - Compare snapshots to find memory growth
+   - Analyze retention paths
+
+**Advanced Memory Management Techniques:**
+
+1. **Object Pooling for Frequent Allocations:**
+```javascript
+class ObjectPool {
+    constructor(createFn, initialSize = 10) {
+        this.createFn = createFn;
+        this.pool = Array(initialSize).fill().map(() => createFn());
+    }
+    
+    acquire() {
+        return this.pool.pop() || this.createFn();
+    }
+    
+    release(obj) {
+        this.pool.push(obj);
+    }
+}
+
+// Usage for expensive objects
+const vectorPool = new ObjectPool(() => ({ x: 0, y: 0 }));
+
+function processVectors() {
+    const v = vectorPool.acquire();
+    v.x = 10;
+    v.y = 20;
+    
+    // Use vector...
+    
+    // Return to pool instead of letting GC handle it
+    vectorPool.release(v);
+}
+```
+
+2. **Incremental Processing for Large Data:**
+```javascript
+function processLargeDataIncrementally(data, chunkSize = 1000) {
+    let index = 0;
+    
+    function processChunk() {
+        const chunk = data.slice(index, index + chunkSize);
+        
+        // Process chunk
+        chunk.forEach(item => {
+            // Do something with item
+        });
+        
+        index += chunkSize;
+        
+        // Continue processing if more data
+        if (index < data.length) {
+            // Use setTimeout to avoid blocking the main thread
+            setTimeout(processChunk, 0);
+        }
+    }
+    
+    processChunk();
+}
+```
+
+**Memory Leak Detection Tools:**
+
+1. Chrome DevTools Memory Panel
+2. Heap Snapshot Comparison
+3. Allocation Timeline
+4. `performance.memory` API (Chrome only)
+5. Node.js `--inspect` flag with Chrome DevTools
+
+**Best Practices Summary:**
+
+1. Understand the memory lifecycle and garbage collection mechanisms
+2. Use appropriate data structures (WeakMap/WeakSet when needed)
+3. Clean up event listeners, timers, and references
+4. Avoid accidental globals with strict mode
+5. Profile memory usage regularly
+6. Consider object pooling for performance-critical code
+7. Break circular references when no longer needed
+8. Use incremental processing for large datasets
+
+---
+
+## Performance Optimization
 
 ### Q3: How do you optimize JavaScript performance and manage memory effectively?
 **Difficulty: Advanced**
@@ -7882,6 +8170,6715 @@ setInterval(() => {
 ```
 
 This comprehensive JavaScript guide now covers modern ES2020-2023+ features, advanced design patterns, performance optimization, memory management, and sophisticated async patterns. Each section provides practical, production-ready examples that demonstrate real-world usage patterns for building high-performance JavaScript applications.
+
+---
+
+## Browser APIs
+
+### Q1: Explain the Intersection Observer API and how it can be used for performance optimization.
+**Difficulty: Hard**
+
+**Answer:**
+The Intersection Observer API provides a way to asynchronously observe changes in the intersection of a target element with an ancestor element or with the document's viewport. It's particularly useful for implementing lazy loading, infinite scrolling, and performance optimizations.
+
+**Basic Usage:**
+
+```javascript
+const options = {
+  root: null, // Use the viewport as the root
+  rootMargin: '0px', // No margin around the root
+  threshold: 0.1 // Trigger when 10% of the target is visible
+};
+
+const callback = (entries, observer) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      console.log('Element is now visible in the viewport!');
+      // Do something with the visible element
+      const element = entry.target;
+      
+      // Example: Lazy load an image
+      if (element.dataset.src) {
+        element.src = element.dataset.src;
+        // Stop observing after loading
+        observer.unobserve(element);
+      }
+    }
+  });
+};
+
+const observer = new IntersectionObserver(callback, options);
+
+// Start observing elements
+const elements = document.querySelectorAll('.lazy-load');
+elements.forEach(element => observer.observe(element));
+```
+
+**Configuration Options Explained:**
+
+1. **root**: The element that is used as the viewport for checking visibility
+   - `null` means use the browser viewport
+   - Can be any ancestor element of the targets
+
+2. **rootMargin**: Margin around the root, specified as CSS margin property
+   - Expands or shrinks the effective size of the root element
+   - Example: '50px 0px' creates a 50px margin at top and bottom
+
+3. **threshold**: Percentage of the target's visibility needed to trigger the callback
+   - 0.0 means as soon as even one pixel is visible
+   - 1.0 means the entire element must be visible
+   - Can be an array like [0, 0.25, 0.5, 0.75, 1] for multiple triggers
+
+**Advanced Use Cases:**
+
+1. **Lazy Loading Images:**
+
+```javascript
+document.addEventListener('DOMContentLoaded', () => {
+  const imageObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        const src = img.dataset.src;
+        
+        if (src) {
+          img.src = src;
+          img.onload = () => {
+            img.classList.add('loaded');
+          };
+          observer.unobserve(img);
+        }
+      }
+    });
+  }, {
+    rootMargin: '200px 0px', // Start loading 200px before the image enters viewport
+    threshold: 0.01
+  });
+  
+  // Select all images with data-src attribute
+  const lazyImages = document.querySelectorAll('img[data-src]');
+  lazyImages.forEach(img => imageObserver.observe(img));
+});
+```
+
+2. **Infinite Scrolling:**
+
+```javascript
+function createInfiniteScroll() {
+  let page = 1;
+  let loading = false;
+  const contentContainer = document.getElementById('content');
+  const loadingIndicator = document.getElementById('loading');
+  
+  const loadMoreContent = async () => {
+    if (loading) return;
+    
+    loading = true;
+    loadingIndicator.style.display = 'block';
+    
+    try {
+      const response = await fetch(`/api/content?page=${page}`);
+      const data = await response.json();
+      
+      if (data.items.length === 0) {
+        // No more content to load
+        observer.unobserve(loadingIndicator);
+        loadingIndicator.textContent = 'No more content';
+        return;
+      }
+      
+      // Append new content
+      data.items.forEach(item => {
+        const element = document.createElement('div');
+        element.classList.add('content-item');
+        element.textContent = item.title;
+        contentContainer.appendChild(element);
+      });
+      
+      page++;
+    } catch (error) {
+      console.error('Error loading content:', error);
+    } finally {
+      loading = false;
+      loadingIndicator.style.display = 'none';
+    }
+  };
+  
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      loadMoreContent();
+    }
+  }, {
+    rootMargin: '100px 0px'
+  });
+  
+  observer.observe(loadingIndicator);
+  
+  return {
+    destroy: () => observer.disconnect()
+  };
+}
+
+// Initialize infinite scroll
+const infiniteScroll = createInfiniteScroll();
+
+// Clean up when needed
+// infiniteScroll.destroy();
+```
+
+3. **Animation Triggers:**
+
+```javascript
+function setupAnimationObserver() {
+  const animationObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('animate');
+        
+        // Optional: run the animation only once
+        if (entry.target.dataset.animateOnce === 'true') {
+          animationObserver.unobserve(entry.target);
+        }
+      } else if (!entry.target.dataset.animateOnce) {
+        // Remove animation class when element leaves viewport
+        // unless it's set to animate only once
+        entry.target.classList.remove('animate');
+      }
+    });
+  }, {
+    threshold: 0.2 // Element must be 20% visible before animating
+  });
+  
+  const animatedElements = document.querySelectorAll('.animate-on-scroll');
+  animatedElements.forEach(el => animationObserver.observe(el));
+  
+  return animationObserver;
+}
+```
+
+4. **Viewport Analytics:**
+
+```javascript
+function trackElementVisibility() {
+  const analyticsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const elementId = entry.target.id;
+      
+      if (entry.isIntersecting) {
+        // Element entered viewport
+        const visibleTime = Date.now();
+        entry.target.dataset.visibleSince = visibleTime;
+        
+        console.log(`Element ${elementId} became visible at ${new Date(visibleTime).toISOString()}`);
+        // Send analytics event: element visible
+        sendAnalyticsEvent('element_visible', { elementId });
+      } else if (entry.target.dataset.visibleSince) {
+        // Element left viewport
+        const visibleSince = parseInt(entry.target.dataset.visibleSince);
+        const visibleDuration = Date.now() - visibleSince;
+        
+        console.log(`Element ${elementId} was visible for ${visibleDuration}ms`);
+        // Send analytics event: element hidden with duration
+        sendAnalyticsEvent('element_hidden', { elementId, visibleDuration });
+        
+        delete entry.target.dataset.visibleSince;
+      }
+    });
+  }, {
+    threshold: [0, 0.5, 1.0] // Track at different visibility thresholds
+  });
+  
+  const trackedElements = document.querySelectorAll('[data-track-visibility]');
+  trackedElements.forEach(el => analyticsObserver.observe(el));
+  
+  function sendAnalyticsEvent(eventName, data) {
+    // Implementation would depend on your analytics provider
+    console.log('Analytics event:', eventName, data);
+    // Example: gtag('event', eventName, data);
+  }
+  
+  return analyticsObserver;
+}
+```
+
+5. **Performance Optimization with Disconnection:**
+
+```javascript
+class ViewportManager {
+  constructor() {
+    this.observers = new Map();
+    this.visibleElements = new Set();
+  }
+  
+  observe(elements, options = {}, callback) {
+    const defaultOptions = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1,
+      once: false
+    };
+    
+    const mergedOptions = { ...defaultOptions, ...options };
+    const { once, ...observerOptions } = mergedOptions;
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const element = entry.target;
+        
+        if (entry.isIntersecting) {
+          this.visibleElements.add(element);
+          callback(element, true);
+          
+          if (once) {
+            observer.unobserve(element);
+          }
+        } else if (this.visibleElements.has(element)) {
+          this.visibleElements.delete(element);
+          callback(element, false);
+        }
+      });
+    }, observerOptions);
+    
+    // Store observer reference for cleanup
+    const id = Symbol('observer');
+    this.observers.set(id, { observer, elements: new Set(elements) });
+    
+    // Start observing elements
+    elements.forEach(element => observer.observe(element));
+    
+    // Return id for later reference
+    return id;
+  }
+  
+  unobserve(id) {
+    if (!this.observers.has(id)) return false;
+    
+    const { observer, elements } = this.observers.get(id);
+    elements.forEach(element => {
+      observer.unobserve(element);
+      this.visibleElements.delete(element);
+    });
+    
+    this.observers.delete(id);
+    return true;
+  }
+  
+  disconnect() {
+    this.observers.forEach(({ observer }) => observer.disconnect());
+    this.observers.clear();
+    this.visibleElements.clear();
+  }
+}
+
+// Usage
+const viewportManager = new ViewportManager();
+
+const lazyLoadId = viewportManager.observe(
+  document.querySelectorAll('.lazy-image'),
+  { rootMargin: '200px', once: true },
+  (element, isVisible) => {
+    if (isVisible && element.dataset.src) {
+      element.src = element.dataset.src;
+    }
+  }
+);
+
+// Later, when no longer needed
+// viewportManager.unobserve(lazyLoadId);
+
+// When page changes or component unmounts
+// viewportManager.disconnect();
+```
+
+**Browser Compatibility and Polyfills:**
+
+The Intersection Observer API is supported in all modern browsers, but for older browsers like IE, you may need a polyfill:
+
+```javascript
+// Check if IntersectionObserver is supported
+if (!('IntersectionObserver' in window)) {
+  // Load polyfill
+  const script = document.createElement('script');
+  script.src = 'https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver';
+  document.head.appendChild(script);
+}
+```
+
+**Performance Benefits:**
+
+1. **Reduced DOM Operations**: Only process elements when they become visible
+2. **Efficient Event Handling**: No need for scroll event listeners which can cause performance issues
+3. **Optimized Resource Loading**: Load resources only when needed
+4. **Smoother User Experience**: Prevent layout thrashing and jank
+5. **Battery Efficiency**: Especially important for mobile devices
+
+**Best Practices:**
+
+1. Always unobserve elements when you're done with them to prevent memory leaks
+2. Use appropriate thresholds based on your use case
+3. Consider using rootMargin to load content before it's visible for smoother experience
+4. Implement error handling for resources that fail to load
+5. Use a polyfill for older browsers if needed
+6. Combine with other performance techniques like debouncing and throttling for optimal results
+
+### Q2: Explain Web Workers in JavaScript and how they can improve application performance.
+**Difficulty: Hard**
+
+**Answer:**
+Web Workers provide a way to run JavaScript code in background threads, separate from the main execution thread of a web application. This enables true multi-threading in JavaScript, allowing CPU-intensive tasks to run without blocking the user interface.
+
+**Basic Concepts:**
+
+1. **Types of Web Workers:**
+   - **Dedicated Workers**: Used by a single script
+   - **Shared Workers**: Can be shared between multiple scripts or windows
+   - **Service Workers**: Act as proxy servers that sit between web applications, the browser, and the network
+
+2. **Limitations:**
+   - No direct access to the DOM, window, or parent objects
+   - Limited access to browser APIs
+   - Communication only through messaging
+   - Cannot use certain methods like `alert()` or `confirm()`
+
+**Creating and Using a Dedicated Worker:**
+
+```javascript
+// main.js - Main thread code
+function startWorker() {
+  // Create a new worker
+  const worker = new Worker('worker.js');
+  
+  // Send data to the worker
+  worker.postMessage({
+    command: 'calculate',
+    data: { numbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] }
+  });
+  
+  // Listen for messages from the worker
+  worker.onmessage = function(event) {
+    console.log('Result received from worker:', event.data);
+    document.getElementById('result').textContent = event.data.result;
+  };
+  
+  // Handle errors
+  worker.onerror = function(error) {
+    console.error('Worker error:', error.message);
+  };
+  
+  return worker;
+}
+
+// Terminate worker when done
+function stopWorker(worker) {
+  worker.terminate();
+  console.log('Worker terminated');
+}
+
+// Usage
+const myWorker = startWorker();
+// Later when done
+// stopWorker(myWorker);
+```
+
+```javascript
+// worker.js - Worker thread code
+self.onmessage = function(event) {
+  const { command, data } = event.data;
+  
+  if (command === 'calculate') {
+    // CPU-intensive task
+    const result = performComplexCalculation(data.numbers);
+    
+    // Send the result back to the main thread
+    self.postMessage({
+      result: result
+    });
+  }
+};
+
+function performComplexCalculation(numbers) {
+  // Simulate a CPU-intensive task
+  let result = 0;
+  
+  // Fibonacci calculation as an example of CPU-intensive work
+  for (const num of numbers) {
+    result += fibonacci(num);
+  }
+  
+  return result;
+}
+
+function fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+```
+
+**Transferable Objects for Better Performance:**
+
+When passing large data between the main thread and workers, you can use transferable objects to avoid the cost of copying:
+
+```javascript
+// In main thread
+const hugeArray = new Uint8Array(100 * 1024 * 1024); // 100MB array
+fillWithData(hugeArray); // Fill with some data
+
+// Transfer ownership to worker (much faster than copying)
+worker.postMessage({ data: hugeArray }, [hugeArray.buffer]);
+
+// hugeArray is now neutered/emptied in the main thread
+console.log(hugeArray.length); // 0
+```
+
+**Shared Workers:**
+
+Shared Workers allow multiple scripts to share the same worker instance:
+
+```javascript
+// In multiple scripts/windows
+const sharedWorker = new SharedWorker('shared-worker.js');
+
+// Communication happens through a port object
+sharedWorker.port.start();
+sharedWorker.port.postMessage('Hello from script A');
+
+sharedWorker.port.onmessage = function(event) {
+  console.log('Message received from shared worker:', event.data);
+};
+```
+
+```javascript
+// shared-worker.js
+const connections = new Set();
+
+// Handle connections from different scripts
+self.onconnect = function(event) {
+  const port = event.ports[0];
+  connections.add(port);
+  
+  port.start();
+  
+  port.onmessage = function(event) {
+    console.log('Shared worker received:', event.data);
+    
+    // Broadcast to all connected ports
+    for (const connection of connections) {
+      connection.postMessage('Broadcasting: ' + event.data);
+    }
+  };
+  
+  port.postMessage('Connected to shared worker');
+};
+```
+
+**Worker Pools for Task Management:**
+
+For managing multiple workers efficiently:
+
+```javascript
+class WorkerPool {
+  constructor(workerScript, numWorkers = navigator.hardwareConcurrency || 4) {
+    this.workerScript = workerScript;
+    this.workers = [];
+    this.taskQueue = [];
+    this.activeWorkers = 0;
+    
+    // Create worker pool
+    for (let i = 0; i < numWorkers; i++) {
+      const worker = new Worker(workerScript);
+      
+      worker.onmessage = (event) => {
+        // Get the callback for this task
+        const callback = worker.currentCallback;
+        delete worker.currentCallback;
+        
+        // Mark worker as free
+        worker.busy = false;
+        this.activeWorkers--;
+        
+        // Execute callback with result
+        if (callback) {
+          callback(null, event.data);
+        }
+        
+        // Process next task if any
+        this.processQueue();
+      };
+      
+      worker.onerror = (error) => {
+        const callback = worker.currentCallback;
+        delete worker.currentCallback;
+        
+        worker.busy = false;
+        this.activeWorkers--;
+        
+        if (callback) {
+          callback(error, null);
+        }
+        
+        this.processQueue();
+      };
+      
+      worker.busy = false;
+      this.workers.push(worker);
+    }
+  }
+  
+  processQueue() {
+    // If no tasks or all workers busy, return
+    if (this.taskQueue.length === 0) return;
+    
+    // Find a free worker
+    const freeWorker = this.workers.find(worker => !worker.busy);
+    if (!freeWorker) return;
+    
+    // Get next task
+    const task = this.taskQueue.shift();
+    const { data, callback, transferables } = task;
+    
+    // Assign task to worker
+    freeWorker.busy = true;
+    freeWorker.currentCallback = callback;
+    this.activeWorkers++;
+    
+    // Execute task
+    if (transferables) {
+      freeWorker.postMessage(data, transferables);
+    } else {
+      freeWorker.postMessage(data);
+    }
+  }
+  
+  addTask(data, callback, transferables = null) {
+    this.taskQueue.push({ data, callback, transferables });
+    this.processQueue();
+    
+    return this.taskQueue.length + this.activeWorkers;
+  }
+  
+  terminate() {
+    this.workers.forEach(worker => worker.terminate());
+    this.workers = [];
+    this.taskQueue = [];
+    this.activeWorkers = 0;
+  }
+}
+
+// Usage
+const pool = new WorkerPool('calculation-worker.js', 4);
+
+pool.addTask({ type: 'fibonacci', n: 40 }, (error, result) => {
+  if (error) {
+    console.error('Task failed:', error);
+  } else {
+    console.log('Task completed with result:', result);
+  }
+});
+
+// Add more tasks as needed
+for (let i = 0; i < 10; i++) {
+  pool.addTask({ type: 'complex-math', value: i * 1000 }, (err, result) => {
+    console.log(`Task ${i} result:`, result);
+  });
+}
+
+// When completely done
+// pool.terminate();
+```
+
+**Web Worker Use Cases:**
+
+1. **Data Processing and Analysis:**
+   - Parsing large JSON/XML files
+   - Processing images or video frames
+   - Analyzing datasets for visualization
+
+2. **Computation-Heavy Tasks:**
+   - Complex mathematical calculations
+   - Cryptography and encryption
+   - Physics simulations
+
+3. **Background Synchronization:**
+   - Syncing local data with servers
+   - Periodic data fetching and processing
+
+4. **Real-time Data Processing:**
+   - Processing WebSocket streams
+   - Handling high-frequency updates
+
+**Advanced Patterns:**
+
+1. **Comlink Library for Easier Communication:**
+
+```javascript
+// Using Comlink to simplify worker communication
+import * as Comlink from 'comlink';
+
+// In worker.js
+const api = {
+  calculateFibonacci(n) {
+    // Complex calculation
+    return fibonacci(n);
+  },
+  
+  processData(data) {
+    // Process data
+    return transformedData;
+  }
+};
+
+Comlink.expose(api);
+
+// In main.js
+async function init() {
+  const worker = new Worker('worker.js');
+  const api = Comlink.wrap(worker);
+  
+  // Use worker functions as if they were local
+  const result = await api.calculateFibonacci(40);
+  console.log('Fibonacci result:', result);
+}
+```
+
+2. **Workbox for Service Worker Management:**
+
+```javascript
+// Using Workbox for service worker management
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.1.5/workbox-sw.js');
+
+workbox.routing.registerRoute(
+  ({request}) => request.destination === 'image',
+  new workbox.strategies.CacheFirst({
+    cacheName: 'images',
+    plugins: [
+      new workbox.expiration.ExpirationPlugin({
+        maxEntries: 50,
+        maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Days
+      }),
+    ],
+  })
+);
+```
+
+**Performance Considerations:**
+
+1. **When to Use Web Workers:**
+   - Tasks taking more than 100ms
+   - CPU-intensive operations
+   - Tasks that would otherwise freeze the UI
+
+2. **When NOT to Use Web Workers:**
+   - Simple, quick calculations
+   - DOM manipulation (must be done on main thread)
+   - Tasks requiring frequent small data exchanges
+
+3. **Measuring Performance Gains:**
+
+```javascript
+function measurePerformance(withWorker = false) {
+  const startTime = performance.now();
+  
+  if (withWorker) {
+    const worker = new Worker('heavy-task.js');
+    
+    return new Promise((resolve) => {
+      worker.onmessage = function(event) {
+        const endTime = performance.now();
+        worker.terminate();
+        resolve({
+          result: event.data,
+          time: endTime - startTime,
+          uiBlocked: false
+        });
+      };
+      
+      worker.postMessage({ command: 'start' });
+    });
+  } else {
+    // Run on main thread
+    const result = performHeavyTask();
+    const endTime = performance.now();
+    
+    return Promise.resolve({
+      result,
+      time: endTime - startTime,
+      uiBlocked: true
+    });
+  }
+}
+
+// Compare performance
+async function comparePerformance() {
+  console.log('Running on main thread...');
+  const mainThreadResult = await measurePerformance(false);
+  
+  console.log('Running in worker...');
+  const workerResult = await measurePerformance(true);
+  
+  console.log(`Main thread: ${mainThreadResult.time.toFixed(2)}ms (UI Blocked)`); 
+  console.log(`Worker: ${workerResult.time.toFixed(2)}ms (UI Responsive)`);
+  console.log(`Performance difference: ${(mainThreadResult.time / workerResult.time).toFixed(2)}x`);
+}
+```
+
+**Browser Compatibility and Fallbacks:**
+
+```javascript
+function createWorkerFallback(workerScript) {
+  if (typeof Worker !== 'undefined') {
+    // Browsers that support Web Workers
+    return new Worker(workerScript);
+  } else {
+    // Fallback for browsers without Web Worker support
+    return {
+      postMessage: function(data) {
+        setTimeout(() => {
+          // Execute the worker code in the main thread
+          // This is a simplified fallback
+          const result = performTaskSynchronously(data);
+          if (this.onmessage) {
+            this.onmessage({ data: result });
+          }
+        }, 0);
+      },
+      terminate: function() {
+        // Nothing to terminate in the fallback
+      }
+    };
+  }
+}
+
+// Usage with fallback
+const worker = createWorkerFallback('worker.js');
+worker.postMessage({ data: [1, 2, 3, 4, 5] });
+```
+
+**Best Practices:**
+
+1. **Optimize Communication:**
+   - Batch messages to reduce overhead
+   - Use transferable objects for large data
+   - Keep message frequency reasonable
+
+2. **Error Handling:**
+   - Always implement error handlers
+   - Gracefully recover from worker failures
+   - Consider restarting crashed workers
+
+3. **Resource Management:**
+   - Terminate workers when no longer needed
+   - Limit the number of concurrent workers
+   - Consider device capabilities when creating workers
+
+4. **Testing and Debugging:**
+   - Use `console.log()` inside workers for debugging
+   - Chrome DevTools has dedicated Workers panel
+   - Test on various devices with different CPU capabilities
+
+5. **Security Considerations:**
+   - Workers follow same-origin policy
+   - Be cautious with data passed to workers
+   - Validate all messages between threads
+
+### Q3: Explain the Fetch API and how it compares to XMLHttpRequest.
+**Difficulty: Medium**
+
+**Answer:**
+The Fetch API provides a modern, promise-based interface for making HTTP requests in JavaScript. It offers a more powerful and flexible feature set compared to the older XMLHttpRequest (XHR) object.
+
+**Basic Usage:**
+
+```javascript
+// Simple GET request
+fetch('https://api.example.com/data')
+  .then(response => {
+    // Check if the request was successful
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    return response.json(); // Parse JSON response
+  })
+  .then(data => {
+    console.log('Data received:', data);
+  })
+  .catch(error => {
+    console.error('Fetch error:', error);
+  });
+```
+
+**Advanced Configuration:**
+
+```javascript
+// POST request with various options
+fetch('https://api.example.com/submit', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer token123'
+  },
+  body: JSON.stringify({
+    name: 'John Doe',
+    email: 'john@example.com'
+  }),
+  credentials: 'include', // Include cookies
+  mode: 'cors', // Cross-origin resource sharing mode
+  cache: 'no-cache', // Cache control
+  redirect: 'follow', // Handle redirects
+  referrerPolicy: 'no-referrer', // Control the Referer header
+  signal: abortController.signal // For request cancellation
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));
+```
+
+**Working with Response Objects:**
+
+```javascript
+fetch('https://api.example.com/data')
+  .then(response => {
+    // Response properties
+    console.log('Status:', response.status); // HTTP status code
+    console.log('OK?', response.ok); // true if status is 200-299
+    console.log('Status text:', response.statusText);
+    console.log('Headers:', response.headers);
+    console.log('URL:', response.url);
+    console.log('Type:', response.type); // basic, cors, etc.
+    
+    // Response methods (each returns a Promise)
+    // Choose ONE of these methods to read the body
+    return response.json(); // Parse as JSON
+    // return response.text(); // Read as text
+    // return response.blob(); // Read as binary data
+    // return response.formData(); // Parse as FormData
+    // return response.arrayBuffer(); // Read as ArrayBuffer
+  })
+  .then(data => {
+    // Process the data
+  });
+```
+
+**Handling Different Response Types:**
+
+```javascript
+// Function to handle different response types
+async function fetchData(url, responseType = 'json') {
+  try {
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
+    switch (responseType) {
+      case 'json':
+        return await response.json();
+      case 'text':
+        return await response.text();
+      case 'blob':
+        return await response.blob();
+      case 'formData':
+        return await response.formData();
+      case 'arrayBuffer':
+        return await response.arrayBuffer();
+      default:
+        return await response.json();
+    }
+  } catch (error) {
+    console.error('Fetch error:', error);
+    throw error;
+  }
+}
+
+// Usage
+async function loadImage() {
+  try {
+    const imageBlob = await fetchData('https://example.com/image.jpg', 'blob');
+    const imageUrl = URL.createObjectURL(imageBlob);
+    const imgElement = document.createElement('img');
+    imgElement.src = imageUrl;
+    document.body.appendChild(imgElement);
+  } catch (error) {
+    console.error('Failed to load image:', error);
+  }
+}
+```
+
+**Request Cancellation with AbortController:**
+
+```javascript
+function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
+  const controller = new AbortController();
+  const { signal } = controller;
+  
+  // Set up timeout
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, timeoutMs);
+  
+  return fetch(url, { ...options, signal })
+    .then(response => {
+      clearTimeout(timeout);
+      return response;
+    })
+    .catch(error => {
+      clearTimeout(timeout);
+      if (error.name === 'AbortError') {
+        throw new Error(`Request timed out after ${timeoutMs}ms`);
+      }
+      throw error;
+    });
+}
+
+// Usage
+fetchWithTimeout('https://api.example.com/data', {}, 3000)
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error(error));
+```
+
+**Streaming Responses:**
+
+```javascript
+async function streamResponse() {
+  try {
+    const response = await fetch('https://api.example.com/large-data');
+    
+    // Get a reader from the response body stream
+    const reader = response.body.getReader();
+    
+    // Read the stream
+    while (true) {
+      const { done, value } = await reader.read();
+      
+      if (done) {
+        console.log('Stream complete');
+        break;
+      }
+      
+      // value is a Uint8Array
+      console.log('Received chunk of data:', value.length);
+      processChunk(value);
+    }
+  } catch (error) {
+    console.error('Stream error:', error);
+  }
+}
+
+function processChunk(chunk) {
+  // Process each chunk of data as it arrives
+  // For example, update a progress bar or display partial results
+}
+```
+
+**Uploading Files:**
+
+```javascript
+async function uploadFile(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('fileName', file.name);
+  
+  try {
+    const response = await fetch('https://api.example.com/upload', {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Upload failed with status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Upload error:', error);
+    throw error;
+  }
+}
+
+// Usage with file input
+document.getElementById('fileInput').addEventListener('change', async (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    try {
+      const result = await uploadFile(file);
+      console.log('Upload successful:', result);
+    } catch (error) {
+      console.error('Upload failed:', error);
+    }
+  }
+});
+```
+
+**Comparison with XMLHttpRequest:**
+
+| Feature | Fetch API | XMLHttpRequest |
+|---------|-----------|----------------|
+| **API Design** | Promise-based, modern | Callback-based, older |
+| **Syntax** | Clean, concise | More verbose |
+| **Error Handling** | Promise catch blocks | onerror callbacks |
+| **Streaming** | Supports streaming | Limited support |
+| **Progress Events** | Limited built-in support | Built-in progress events |
+| **Request Cancellation** | Via AbortController | Via xhr.abort() |
+| **CORS** | More seamless handling | Requires more configuration |
+| **Timeout Control** | Manual implementation | Built-in xhr.timeout |
+| **Synchronous Requests** | Not supported | Supported (but discouraged) |
+| **Browser Support** | Modern browsers | All browsers including legacy |
+
+**XMLHttpRequest Example (for comparison):**
+
+```javascript
+// Equivalent XMLHttpRequest code
+function makeRequest(url, method = 'GET', data = null) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    
+    xhr.open(method, url);
+    
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    
+    xhr.onload = function() {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(JSON.parse(xhr.response));
+      } else {
+        reject(new Error(`HTTP error! Status: ${xhr.status}`));
+      }
+    };
+    
+    xhr.onerror = function() {
+      reject(new Error('Network error'));
+    };
+    
+    xhr.ontimeout = function() {
+      reject(new Error('Request timed out'));
+    };
+    
+    xhr.timeout = 5000; // 5 seconds
+    
+    // Progress tracking (not available in Fetch)
+    xhr.upload.onprogress = function(event) {
+      if (event.lengthComputable) {
+        const percentComplete = (event.loaded / event.total) * 100;
+        console.log(`Upload progress: ${percentComplete.toFixed(2)}%`);
+      }
+    };
+    
+    if (data) {
+      xhr.send(JSON.stringify(data));
+    } else {
+      xhr.send();
+    }
+  });
+}
+
+// Usage
+makeRequest('https://api.example.com/data')
+  .then(data => console.log(data))
+  .catch(error => console.error(error));
+```
+
+**When to Use Fetch vs. XMLHttpRequest:**
+
+**Use Fetch when:**
+- Building modern applications
+- Working with promises and async/await
+- Need for a cleaner API with less code
+- Streaming responses is important
+- Working with service workers
+
+**Use XMLHttpRequest when:**
+- Need to support older browsers without polyfills
+- Detailed progress monitoring is required
+- Need for synchronous requests (though rarely recommended)
+- Working with existing code that uses XHR
+
+**Best Practices with Fetch API:**
+
+1. **Always check response.ok:**
+```javascript
+fetch('/api/data')
+  .then(response => {
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    return response.json();
+  })
+  .then(data => console.log(data));
+```
+
+2. **Handle network errors properly:**
+```javascript
+fetch('/api/data')
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => {
+    console.error('Fetch error:', error);
+    // Show user-friendly error message
+    displayErrorMessage('Failed to load data. Please try again later.');
+  });
+```
+
+3. **Set appropriate request timeouts:**
+```javascript
+const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+fetch('/api/data', { signal: controller.signal })
+  .then(response => {
+    clearTimeout(timeoutId);
+    return response.json();
+  })
+  .catch(error => {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      console.log('Request timed out');
+    } else {
+      console.error('Fetch error:', error);
+    }
+  });
+```
+
+4. **Create reusable fetch utilities:**
+```javascript
+const api = {
+  async request(url, options = {}) {
+    const defaultOptions = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      credentials: 'include'
+    };
+    
+    const mergedOptions = { ...defaultOptions, ...options };
+    
+    if (options.body && typeof options.body === 'object') {
+      mergedOptions.body = JSON.stringify(options.body);
+    }
+    
+    const response = await fetch(url, mergedOptions);
+    
+    if (!response.ok) {
+      const error = new Error(`HTTP error! Status: ${response.status}`);
+      error.response = response;
+      throw error;
+    }
+    
+    return response.json();
+  },
+  
+  get(url, options = {}) {
+    return this.request(url, { ...options, method: 'GET' });
+  },
+  
+  post(url, data, options = {}) {
+    return this.request(url, { ...options, method: 'POST', body: data });
+  },
+  
+  put(url, data, options = {}) {
+    return this.request(url, { ...options, method: 'PUT', body: data });
+  },
+  
+  delete(url, options = {}) {
+    return this.request(url, { ...options, method: 'DELETE' });
+  }
+};
+
+// Usage
+async function getUserData(userId) {
+  try {
+    return await api.get(`/api/users/${userId}`);
+  } catch (error) {
+    console.error('Failed to fetch user data:', error);
+    throw error;
+  }
+}
+```
+
+### Q4: Explain Service Workers and how they enable Progressive Web Applications (PWAs).
+**Difficulty: Hard**
+
+**Answer:**
+Service Workers are a type of web worker that act as a programmable network proxy, allowing you to control how network requests from your page are handled. They run in a separate thread from the main JavaScript execution, enabling powerful features like offline functionality, background sync, push notifications, and resource caching—all essential components of Progressive Web Applications (PWAs).
+
+**Service Worker Lifecycle:**
+
+1. **Registration:**
+```javascript
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(registration => {
+        console.log('Service Worker registered with scope:', registration.scope);
+      })
+      .catch(error => {
+        console.error('Service Worker registration failed:', error);
+      });
+  });
+}
+```
+
+2. **Installation:**
+```javascript
+// Inside service-worker.js
+const CACHE_NAME = 'my-site-cache-v1';
+const urlsToCache = [
+  '/',
+  '/styles/main.css',
+  '/scripts/main.js',
+  '/images/logo.png'
+];
+
+self.addEventListener('install', event => {
+  // Perform install steps
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
+      })
+  );
+  
+  // Optional: Force activation without waiting for existing instances to be closed
+  // self.skipWaiting();
+});
+```
+
+3. **Activation:**
+```javascript
+self.addEventListener('activate', event => {
+  const cacheWhitelist = ['my-site-cache-v1'];
+  
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            // Delete old caches that are not in the whitelist
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  
+  // Optional: Claim clients so the service worker takes control immediately
+  // self.clients.claim();
+});
+```
+
+4. **Fetch Handling:**
+```javascript
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        // Cache hit - return response from cache
+        if (response) {
+          return response;
+        }
+        
+        // Clone the request because it's a one-time use stream
+        const fetchRequest = event.request.clone();
+        
+        return fetch(fetchRequest).then(response => {
+          // Check if we received a valid response
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
+          
+          // Clone the response because it's a one-time use stream
+          const responseToCache = response.clone();
+          
+          caches.open(CACHE_NAME)
+            .then(cache => {
+              cache.put(event.request, responseToCache);
+            });
+            
+          return response;
+        });
+      })
+  );
+});
+```
+
+**Caching Strategies:**
+
+1. **Cache First (Offline First):**
+```javascript
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        return response || fetch(event.request);
+      })
+  );
+});
+```
+
+2. **Network First (Stale While Revalidate):**
+```javascript
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    fetch(event.request)
+      .then(response => {
+        // Clone the response to store in cache
+        const responseToCache = response.clone();
+        
+        caches.open(CACHE_NAME)
+          .then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+          
+        return response;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
+  );
+});
+```
+
+3. **Stale While Revalidate:**
+```javascript
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.match(event.request).then(response => {
+        const fetchPromise = fetch(event.request).then(networkResponse => {
+          cache.put(event.request, networkResponse.clone());
+          return networkResponse;
+        });
+        
+        // Return the cached response if available, otherwise wait for the network response
+        return response || fetchPromise;
+      });
+    })
+  );
+});
+```
+
+4. **Cache with Network Fallback (with timeout):**
+```javascript
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    Promise.race([
+      // Try network and set a timeout
+      new Promise((resolve, reject) => {
+        setTimeout(() => reject(new Error('timeout')), 3000);
+        fetch(event.request).then(resolve, reject);
+      }),
+      // Try cache
+      caches.match(event.request)
+    ])
+    .catch(() => {
+      // If both fail, show offline page
+      return caches.match('/offline.html');
+    })
+  );
+});
+```
+
+**Background Sync:**
+
+```javascript
+// In your web app
+document.querySelector('#submit-form').addEventListener('submit', event => {
+  event.preventDefault();
+  const data = new FormData(event.target);
+  
+  if (navigator.serviceWorker && 'SyncManager' in window) {
+    navigator.serviceWorker.ready
+      .then(registration => {
+        // Store the form data in IndexedDB
+        return saveFormDataToIndexedDB(data)
+          .then(() => {
+            // Register a sync event
+            return registration.sync.register('submit-form');
+          });
+      })
+      .then(() => {
+        console.log('Form queued for background sync');
+        showSuccessMessage('Your form will be submitted when you go online');
+      })
+      .catch(error => {
+        console.error('Background sync registration failed:', error);
+        // Fall back to regular form submission
+        submitFormImmediately(data);
+      });
+  } else {
+    // No service worker or sync support, submit immediately
+    submitFormImmediately(data);
+  }
+});
+
+// In your service worker
+self.addEventListener('sync', event => {
+  if (event.tag === 'submit-form') {
+    event.waitUntil(
+      getFormDataFromIndexedDB()
+        .then(dataArray => {
+          return Promise.all(
+            dataArray.map(data => {
+              return fetch('/api/submit', {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                  'Content-Type': 'application/json'
+                }
+              })
+              .then(response => {
+                if (response.ok) {
+                  // Remove from IndexedDB if successful
+                  return removeFormDataFromIndexedDB(data.id);
+                }
+                throw new Error('Network response was not ok');
+              });
+            })
+          );
+        })
+    );
+  }
+});
+```
+
+**Push Notifications:**
+
+```javascript
+// In your web app
+function subscribeToPushNotifications() {
+  navigator.serviceWorker.ready
+    .then(registration => {
+      // Check if subscription already exists
+      return registration.pushManager.getSubscription()
+        .then(subscription => {
+          if (subscription) {
+            return subscription;
+          }
+          
+          // Get the server's public key
+          return fetch('/api/vapid-public-key')
+            .then(response => response.json())
+            .then(data => {
+              const vapidPublicKey = urlBase64ToUint8Array(data.publicKey);
+              
+              // Subscribe the user
+              return registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: vapidPublicKey
+              });
+            });
+        });
+    })
+    .then(subscription => {
+      // Send the subscription to your server
+      return fetch('/api/save-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(subscription)
+      });
+    })
+    .then(response => {
+      if (response.ok) {
+        console.log('Push notification subscription saved');
+      }
+    })
+    .catch(error => {
+      console.error('Error subscribing to push notifications:', error);
+    });
+}
+
+// Helper function to convert base64 to Uint8Array
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+  
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  
+  return outputArray;
+}
+
+// In your service worker
+self.addEventListener('push', event => {
+  let notificationData = {};
+  
+  try {
+    notificationData = event.data.json();
+  } catch (e) {
+    notificationData = {
+      title: 'New Notification',
+      body: event.data ? event.data.text() : 'No payload',
+      icon: '/images/icon.png'
+    };
+  }
+  
+  event.waitUntil(
+    self.registration.showNotification(notificationData.title, {
+      body: notificationData.body,
+      icon: notificationData.icon,
+      badge: '/images/badge.png',
+      data: notificationData.data || {},
+      actions: notificationData.actions || []
+    })
+  );
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  
+  const urlToOpen = event.notification.data.url || '/';
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window' })
+      .then(clientList => {
+        // Check if a window is already open
+        for (const client of clientList) {
+          if (client.url === urlToOpen && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        
+        // If no window is open, open a new one
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
+        }
+      })
+  );
+});
+```
+
+**Service Worker Precaching with Workbox:**
+
+Workbox is a set of libraries that simplifies service worker implementation:
+
+```javascript
+// service-worker.js using Workbox
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.4.1/workbox-sw.js');
+
+workbox.setConfig({ debug: false });
+
+// Cache page navigations
+workbox.routing.registerRoute(
+  ({ request }) => request.mode === 'navigate',
+  new workbox.strategies.NetworkFirst({
+    cacheName: 'pages-cache',
+    plugins: [
+      new workbox.expiration.ExpirationPlugin({
+        maxEntries: 50,
+        maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
+      })
+    ]
+  })
+);
+
+// Cache CSS, JS, and Web Worker requests with a Stale While Revalidate strategy
+workbox.routing.registerRoute(
+  ({ request }) =>
+    request.destination === 'style' ||
+    request.destination === 'script' ||
+    request.destination === 'worker',
+  new workbox.strategies.StaleWhileRevalidate({
+    cacheName: 'assets-cache',
+    plugins: [
+      new workbox.expiration.ExpirationPlugin({
+        maxEntries: 60,
+        maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
+      })
+    ]
+  })
+);
+
+// Cache images with a Cache First strategy
+workbox.routing.registerRoute(
+  ({ request }) => request.destination === 'image',
+  new workbox.strategies.CacheFirst({
+    cacheName: 'images-cache',
+    plugins: [
+      new workbox.expiration.ExpirationPlugin({
+        maxEntries: 60,
+        maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
+      })
+    ]
+  })
+);
+
+// Cache the Google Fonts stylesheets with a Stale While Revalidate strategy
+workbox.routing.registerRoute(
+  ({ url }) => url.origin === 'https://fonts.googleapis.com',
+  new workbox.strategies.StaleWhileRevalidate({
+    cacheName: 'google-fonts-stylesheets'
+  })
+);
+
+// Cache the Google Fonts webfont files with a Cache First strategy for 1 year
+workbox.routing.registerRoute(
+  ({ url }) => url.origin === 'https://fonts.gstatic.com',
+  new workbox.strategies.CacheFirst({
+    cacheName: 'google-fonts-webfonts',
+    plugins: [
+      new workbox.cacheableResponse.CacheableResponsePlugin({
+        statuses: [0, 200]
+      }),
+      new workbox.expiration.ExpirationPlugin({
+        maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+        maxEntries: 30
+      })
+    ]
+  })
+);
+
+// Background sync for form submissions
+workbox.routing.registerRoute(
+  ({ url }) => url.pathname === '/api/submit',
+  new workbox.strategies.NetworkOnly({
+    plugins: [
+      new workbox.backgroundSync.BackgroundSyncPlugin('formQueue', {
+        maxRetentionTime: 24 * 60 // Retry for max of 24 Hours (specified in minutes)
+      })
+    ]
+  }),
+  'POST'
+);
+
+// Precache static assets
+workbox.precaching.precacheAndRoute([
+  { url: '/', revision: '1' },
+  { url: '/index.html', revision: '1' },
+  { url: '/styles/main.css', revision: '1' },
+  { url: '/scripts/main.js', revision: '1' },
+  { url: '/images/logo.png', revision: '1' },
+  { url: '/offline.html', revision: '1' }
+]);
+```
+
+**Progressive Web App Features Enabled by Service Workers:**
+
+1. **Offline Functionality:**
+   - Caching critical assets during installation
+   - Serving cached content when offline
+   - Providing custom offline pages
+
+2. **Improved Performance:**
+   - Serving cached resources instantly
+   - Implementing various caching strategies based on resource type
+   - Precaching important resources
+
+3. **Background Processing:**
+   - Performing tasks in the background
+   - Syncing data when connectivity is restored
+   - Processing large data sets without blocking the main thread
+
+4. **Push Notifications:**
+   - Receiving push messages from a server
+   - Displaying notifications to users
+   - Handling notification clicks
+
+5. **App-like Experience:**
+   - Fast loading times from cache
+   - Reliable performance regardless of network conditions
+   - Smooth transitions between pages
+
+**Web App Manifest for PWAs:**
+
+A Web App Manifest is a JSON file that provides information about a web application, allowing it to be installed on a user's device:
+
+```json
+{
+  "name": "My Progressive Web App",
+  "short_name": "MyPWA",
+  "description": "A fully featured Progressive Web Application",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2196f3",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/images/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/screenshots/screenshot1.png",
+      "sizes": "1280x720",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/screenshots/screenshot2.png",
+      "sizes": "1280x720",
+      "type": "image/png"
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.example.app",
+      "id": "com.example.app"
+    }
+  ],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Start New Chat",
+      "short_name": "New Chat",
+      "description": "Start a new conversation",
+      "url": "/chat/new",
+      "icons": [{ "src": "/images/icons/chat.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "View Profile",
+      "short_name": "Profile",
+      "description": "View your user profile",
+      "url": "/profile",
+      "icons": [{ "src": "/images/icons/profile.png", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "lang": "en-US",
+  "dir": "ltr"
+}
+```
+
+**Best Practices for Service Workers:**
+
+1. **Progressive Enhancement:**
+   - Always check for service worker support before registering
+   - Provide fallbacks for browsers that don't support service workers
+
+2. **Versioning:**
+   - Version your cache names
+   - Implement a strategy to clean up old caches during activation
+
+3. **Scope Management:**
+   - Be mindful of the service worker scope (determined by its location)
+   - Place the service worker file at the root to control the entire site
+
+4. **Performance Considerations:**
+   - Don't cache everything—be strategic
+   - Use different caching strategies for different types of resources
+   - Implement cache size and age limits
+
+5. **Debugging:**
+   - Use Chrome DevTools' Application tab for debugging
+   - Implement logging in development mode
+   - Use `skipWaiting()` and `clients.claim()` during development for faster updates
+
+6. **Security:**
+   - Always serve service workers over HTTPS
+   - Validate data received in push notifications
+   - Be careful with caching sensitive information
+
+7. **Testing:**
+   - Test offline functionality regularly
+   - Test on various devices and browsers
+   - Use Lighthouse to audit your PWA
+
+**Limitations of Service Workers:**
+
+1. **Browser Support:**
+   - Not supported in all browsers (particularly older versions)
+   - Features like Background Sync and Push have varying support
+
+2. **Scope Restrictions:**
+   - Service workers can only control pages within their scope
+   - Cannot access DOM directly
+
+3. **No Access to:**
+   - `window` object
+   - `document` object
+   - Synchronous XHR
+   - `localStorage`
+
+4. **Lifecycle Complexity:**
+   - Understanding the installation, activation, and update processes
+   - Managing version transitions
+
+5. **Debugging Challenges:**
+   - Running in a separate thread makes debugging more complex
+   - Cache-related issues can be difficult to diagnose
+
+### Q5: Explain the History API and how it enables client-side routing in single-page applications.
+**Difficulty: Medium**
+
+**Answer:**
+The History API provides methods to manipulate the browser's session history stack, allowing developers to change the URL displayed in the browser without triggering a full page reload. This capability is fundamental to modern single-page applications (SPAs), enabling client-side routing that creates a smoother, more app-like user experience.
+
+**Core Methods of the History API:**
+
+1. **history.pushState():**
+```javascript
+history.pushState(stateObj, title, url);
+```
+- Adds a new entry to the browser's history stack
+- `stateObj`: JavaScript object associated with the new history entry
+- `title`: Currently ignored by most browsers (use empty string or document title)
+- `url`: The new URL to display in the address bar (must be same-origin)
+
+2. **history.replaceState():**
+```javascript
+history.replaceState(stateObj, title, url);
+```
+- Similar to pushState, but replaces the current history entry instead of adding a new one
+- Useful for updating the URL without creating a new history entry
+
+3. **history.state:**
+```javascript
+const currentState = history.state;
+```
+- Returns the current state object
+
+4. **Navigation Methods:**
+```javascript
+history.back();     // Equivalent to clicking the browser's back button
+history.forward();  // Equivalent to clicking the browser's forward button
+history.go(-2);     // Navigate back 2 pages
+history.go(1);      // Navigate forward 1 page
+```
+
+**The popstate Event:**
+
+```javascript
+window.addEventListener('popstate', event => {
+  // event.state contains the state object passed to pushState or replaceState
+  console.log('Navigation occurred, new state:', event.state);
+  
+  // Handle the navigation (e.g., render the appropriate view)
+  if (event.state && event.state.page) {
+    renderPage(event.state.page);
+  }
+});
+```
+
+**Important:** The `popstate` event is only triggered when navigating through history (back/forward buttons) or using `history.back()`, `history.forward()`, or `history.go()`. It is **not** triggered by `pushState()` or `replaceState()`.
+
+**Basic Client-Side Router Implementation:**
+
+```javascript
+class Router {
+  constructor(routes) {
+    this.routes = routes;
+    
+    // Handle initial route
+    this.handleLocation();
+    
+    // Handle browser back/forward navigation
+    window.addEventListener('popstate', this.handleLocation.bind(this));
+    
+    // Intercept link clicks for client-side routing
+    document.addEventListener('click', e => {
+      if (e.target.matches('a')) {
+        const href = e.target.getAttribute('href');
+        
+        // Only handle internal links
+        if (href.startsWith('/')) {
+          e.preventDefault();
+          this.navigate(href);
+        }
+      }
+    });
+  }
+  
+  handleLocation() {
+    const path = window.location.pathname;
+    const route = this.routes[path] || this.routes['404'];
+    
+    // Render the appropriate component/view
+    const mainContent = document.getElementById('app');
+    mainContent.innerHTML = '';
+    mainContent.appendChild(route());
+    
+    // Update page title if needed
+    document.title = route.title || 'My SPA';
+  }
+  
+  navigate(path) {
+    // Update the URL
+    history.pushState({ path }, '', path);
+    
+    // Render the new route
+    this.handleLocation();
+  }
+}
+
+// Usage
+const routes = {
+  '/': () => {
+    const element = document.createElement('div');
+    element.innerHTML = '<h1>Home Page</h1><p>Welcome to our SPA!</p>';
+    return element;
+  },
+  '/about': () => {
+    const element = document.createElement('div');
+    element.innerHTML = '<h1>About Us</h1><p>Learn about our company.</p>';
+    return element;
+  },
+  '/contact': () => {
+    const element = document.createElement('div');
+    element.innerHTML = '<h1>Contact</h1><p>Get in touch with us.</p>';
+    return element;
+  },
+  '404': () => {
+    const element = document.createElement('div');
+    element.innerHTML = '<h1>404</h1><p>Page not found.</p>';
+    return element;
+  }
+};
+
+// Initialize the router
+const router = new Router(routes);
+
+// Navigation buttons
+document.getElementById('home-btn').addEventListener('click', () => router.navigate('/'));
+document.getElementById('about-btn').addEventListener('click', () => router.navigate('/about'));
+document.getElementById('contact-btn').addEventListener('click', () => router.navigate('/contact'));
+```
+
+**More Advanced Router with Parameters:**
+
+```javascript
+class AdvancedRouter {
+  constructor() {
+    this.routes = [];
+    this.notFoundHandler = () => {
+      const element = document.createElement('div');
+      element.innerHTML = '<h1>404</h1><p>Page not found.</p>';
+      return element;
+    };
+    
+    // Handle initial route
+    window.addEventListener('DOMContentLoaded', () => this.handleLocation());
+    
+    // Handle browser back/forward navigation
+    window.addEventListener('popstate', () => this.handleLocation());
+  }
+  
+  addRoute(path, handler) {
+    // Convert path pattern to regex for parameter matching
+    const paramNames = [];
+    const pattern = path
+      .replace(/\/\//g, '\/')
+      .replace(/:(\w+)/g, (_, paramName) => {
+        paramNames.push(paramName);
+        return '([^\\/]+)';
+      });
+    
+    const regex = new RegExp(`^${pattern}$`);
+    
+    this.routes.push({
+      regex,
+      paramNames,
+      handler
+    });
+    
+    return this;
+  }
+  
+  setNotFound(handler) {
+    this.notFoundHandler = handler;
+    return this;
+  }
+  
+  handleLocation() {
+    const path = window.location.pathname;
+    
+    // Find matching route
+    for (const route of this.routes) {
+      const match = path.match(route.regex);
+      
+      if (match) {
+        // Extract parameters
+        const params = {};
+        match.slice(1).forEach((value, i) => {
+          params[route.paramNames[i]] = value;
+        });
+        
+        // Get state from history API
+        const state = history.state || {};
+        
+        // Render the route with parameters
+        const mainContent = document.getElementById('app');
+        mainContent.innerHTML = '';
+        mainContent.appendChild(route.handler(params, state));
+        return;
+      }
+    }
+    
+    // No route matched, show 404
+    const mainContent = document.getElementById('app');
+    mainContent.innerHTML = '';
+    mainContent.appendChild(this.notFoundHandler());
+  }
+  
+  navigate(path, state = {}) {
+    history.pushState(state, '', path);
+    this.handleLocation();
+  }
+  
+  replace(path, state = {}) {
+    history.replaceState(state, '', path);
+    this.handleLocation();
+  }
+}
+
+// Usage
+const router = new AdvancedRouter();
+
+router
+  .addRoute('/', () => {
+    const element = document.createElement('div');
+    element.innerHTML = '<h1>Home</h1><p>Welcome to our SPA!</p>';
+    return element;
+  })
+  .addRoute('/users/:id', (params, state) => {
+    const element = document.createElement('div');
+    element.innerHTML = `<h1>User Profile</h1><p>Viewing user ${params.id}</p>`;
+    
+    if (state.userData) {
+      element.innerHTML += `<p>Name: ${state.userData.name}</p>`;
+    }
+    
+    return element;
+  })
+  .addRoute('/products/:category/:id', (params) => {
+    const element = document.createElement('div');
+    element.innerHTML = `
+      <h1>Product Details</h1>
+      <p>Category: ${params.category}</p>
+      <p>Product ID: ${params.id}</p>
+    `;
+    return element;
+  })
+  .setNotFound(() => {
+    const element = document.createElement('div');
+    element.innerHTML = '<h1>404</h1><p>Page not found.</p>';
+    return element;
+  });
+
+// Navigate with parameters and state
+document.getElementById('view-user').addEventListener('click', () => {
+  router.navigate('/users/123', {
+    userData: { name: 'John Doe', email: 'john@example.com' }
+  });
+});
+
+document.getElementById('view-product').addEventListener('click', () => {
+  router.navigate('/products/electronics/456');
+});
+```
+
+**Integration with Popular Frontend Frameworks:**
+
+1. **React Router (React):**
+```jsx
+import { BrowserRouter, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <nav>
+        <Link to="/">Home</Link>
+        <Link to="/about">About</Link>
+        <Link to="/users/123">User Profile</Link>
+      </nav>
+      
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/users/:id" element={<UserProfile />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+function UserProfile() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  
+  return (
+    <div>
+      <h1>User Profile</h1>
+      <p>User ID: {id}</p>
+      <button onClick={() => navigate('/')}>Go Home</button>
+    </div>
+  );
+}
+```
+
+2. **Vue Router (Vue.js):**
+```javascript
+import { createRouter, createWebHistory } from 'vue-router';
+
+const routes = [
+  { path: '/', component: Home },
+  { path: '/about', component: About },
+  { path: '/users/:id', component: UserProfile, props: true },
+  { path: '/:pathMatch(.*)*', component: NotFound }
+];
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes
+});
+
+// In UserProfile.vue component
+export default {
+  props: ['id'],
+  methods: {
+    goHome() {
+      this.$router.push('/');
+    }
+  },
+  template: `
+    <div>
+      <h1>User Profile</h1>
+      <p>User ID: {{ id }}</p>
+      <button @click="goHome">Go Home</button>
+    </div>
+  `
+};
+```
+
+3. **Angular Router (Angular):**
+```typescript
+// app-routing.module.ts
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+
+const routes: Routes = [
+  { path: '', component: HomeComponent },
+  { path: 'about', component: AboutComponent },
+  { path: 'users/:id', component: UserProfileComponent },
+  { path: '**', component: NotFoundComponent }
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+// user-profile.component.ts
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+
+@Component({
+  selector: 'app-user-profile',
+  template: `
+    <h1>User Profile</h1>
+    <p>User ID: {{ userId }}</p>
+    <button (click)="goHome()">Go Home</button>
+  `
+})
+export class UserProfileComponent implements OnInit {
+  userId: string;
+  
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router
+  ) { }
+  
+  ngOnInit() {
+    this.route.params.subscribe(params => {
+      this.userId = params['id'];
+    });
+  }
+  
+  goHome() {
+    this.router.navigate(['/']);
+  }
+}
+```
+
+**Server-Side Considerations:**
+
+When using the History API for client-side routing, the server must be configured to handle all routes properly:
+
+1. **The server should serve the same HTML file for all routes:**
+   - For Apache, use an .htaccess file:
+   ```apache
+   <IfModule mod_rewrite.c>
+     RewriteEngine On
+     RewriteBase /
+     RewriteRule ^index\.html$ - [L]
+     RewriteCond %{REQUEST_FILENAME} !-f
+     RewriteCond %{REQUEST_FILENAME} !-d
+     RewriteRule . /index.html [L]
+   </IfModule>
+   ```
+
+   - For Nginx:
+   ```nginx
+   location / {
+     try_files $uri $uri/ /index.html;
+   }
+   ```
+
+   - For Express.js:
+   ```javascript
+   const express = require('express');
+   const path = require('path');
+   const app = express();
+   
+   // Serve static files
+   app.use(express.static(path.join(__dirname, 'public')));
+   
+   // Handle all routes
+   app.get('*', (req, res) => {
+     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+   });
+   
+   app.listen(3000);
+   ```
+
+2. **Handling 404s:**
+   - With client-side routing, 404 errors are typically handled by the client-side router
+   - The server returns the main HTML file for all routes, and the client-side router determines if the route exists
+
+**Best Practices:**
+
+1. **Always provide fallbacks for browsers that don't support the History API:**
+   ```javascript
+   if (!window.history || !window.history.pushState) {
+     // Use hash-based routing or full page reloads as fallback
+   }
+   ```
+
+2. **Handle initial page load correctly:**
+   - Ensure your router correctly handles the initial URL when the page first loads
+   - Consider server-side rendering for better SEO and initial load performance
+
+3. **Manage scroll position:**
+   ```javascript
+   // Scroll to top on navigation
+   function navigate(path) {
+     history.pushState(null, '', path);
+     window.scrollTo(0, 0);
+     renderRoute(path);
+   }
+   
+   // Or restore scroll position for back/forward navigation
+   window.addEventListener('popstate', (event) => {
+     if (event.state && event.state.scrollY) {
+       setTimeout(() => {
+         window.scrollTo(0, event.state.scrollY);
+       }, 0);
+     } else {
+       window.scrollTo(0, 0);
+     }
+     renderRoute(window.location.pathname);
+   });
+   
+   // Save scroll position before navigation
+   function navigateWithScroll(path) {
+     const currentScroll = window.scrollY;
+     history.pushState({ scrollY: currentScroll }, '', path);
+     window.scrollTo(0, 0);
+     renderRoute(path);
+   }
+   ```
+
+4. **Handle browser refresh properly:**
+   - Ensure your application state can be reconstructed from the URL
+   - Consider storing additional state in localStorage if needed
+
+5. **Use canonical URLs:**
+   ```html
+   <link rel="canonical" href="https://example.com/current-page" />
+   ```
+
+**Comparison with Hash-Based Routing:**
+
+| Feature | History API Routing | Hash-Based Routing |
+|---------|--------------------|-----------------|
+| URL Format | `/users/123` | `/#/users/123` |
+| Server Configuration | Requires special configuration | Works without server changes |
+| SEO | Better (clean URLs) | Worse (hash fragments aren't sent to server) |
+| Browser Support | Modern browsers only | All browsers |
+| Server Requests | Server receives the full path | Server only receives the part before the hash |
+| Bookmarking | Works normally | Works, but URLs are less clean |
+| Analytics | Standard tracking works | Requires custom tracking setup |
+
+**Limitations and Considerations:**
+
+1. **Same-Origin Restriction:**
+   - `pushState()` and `replaceState()` can only modify URLs within the same origin
+   - Attempting to navigate to a different domain will cause an error
+
+2. **SEO Challenges:**
+   - Search engines have improved at handling SPAs, but server-side rendering or pre-rendering is still recommended for optimal SEO
+
+3. **Initial Load Performance:**
+   - SPAs may have longer initial load times as they need to load the entire application before rendering
+   - Consider code splitting and lazy loading to improve performance
+
+4. **Accessibility:**
+   - Ensure proper focus management during navigation
+   - Announce route changes for screen readers
+   ```javascript
+   function announceRouteChange(newPageTitle) {
+     const announcer = document.getElementById('route-announcer');
+     announcer.textContent = `Navigated to ${newPageTitle}`;
+   }
+   ```
+
+### Q6: Explain the Geolocation API and how to implement location-based features in web applications.
+**Difficulty: Medium**
+
+**Answer:**
+The Geolocation API allows web applications to access a user's geographical location information. This browser API provides methods to determine the device's position (latitude, longitude, altitude, etc.) and can be used to create location-aware web applications such as maps, local search, and location-based services.
+
+**Basic Usage:**
+
+```javascript
+// Check if Geolocation API is supported
+if ('geolocation' in navigator) {
+  // Get current position
+  navigator.geolocation.getCurrentPosition(
+    // Success callback
+    position => {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+      console.log(`Location: ${latitude}, ${longitude}`);
+      
+      // Do something with the location data
+      displayMap(latitude, longitude);
+    },
+    // Error callback
+    error => {
+      console.error('Error getting location:', error.message);
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          console.error('User denied the request for geolocation');
+          break;
+        case error.POSITION_UNAVAILABLE:
+          console.error('Location information is unavailable');
+          break;
+        case error.TIMEOUT:
+          console.error('The request to get user location timed out');
+          break;
+        case error.UNKNOWN_ERROR:
+          console.error('An unknown error occurred');
+          break;
+      }
+    },
+    // Options
+    {
+      enableHighAccuracy: true, // Use GPS if available
+      timeout: 5000,           // Time to wait for location (ms)
+      maximumAge: 0            // Don't use cached position
+    }
+  );
+} else {
+  console.error('Geolocation is not supported by this browser');
+}
+```
+
+**Continuous Location Tracking:**
+
+```javascript
+// Watch position (continuous tracking)
+const watchId = navigator.geolocation.watchPosition(
+  // Success callback
+  position => {
+    const { latitude, longitude, accuracy } = position.coords;
+    console.log(`Updated location: ${latitude}, ${longitude} (accuracy: ${accuracy} meters)`);
+    
+    // Update map or other UI elements
+    updateUserMarker(latitude, longitude);
+  },
+  // Error callback
+  error => {
+    console.error('Error tracking location:', error.message);
+  },
+  // Options
+  {
+    enableHighAccuracy: true,
+    timeout: 5000,
+    maximumAge: 0
+  }
+);
+
+// Stop watching location when no longer needed
+function stopTracking() {
+  navigator.geolocation.clearWatch(watchId);
+  console.log('Location tracking stopped');
+}
+
+// Example: Stop tracking after 5 minutes
+setTimeout(stopTracking, 5 * 60 * 1000);
+```
+
+**Accessing Additional Geolocation Data:**
+
+```javascript
+navigator.geolocation.getCurrentPosition(position => {
+  // Basic coordinates
+  const latitude = position.coords.latitude;
+  const longitude = position.coords.longitude;
+  
+  // Additional data (may not be available on all devices)
+  const accuracy = position.coords.accuracy;       // Accuracy in meters
+  const altitude = position.coords.altitude;       // Height in meters (null if unavailable)
+  const altitudeAccuracy = position.coords.altitudeAccuracy; // Accuracy of altitude
+  const heading = position.coords.heading;         // Direction in degrees (0-360)
+  const speed = position.coords.speed;             // Speed in meters/second
+  
+  // Timestamp of when the position was acquired
+  const timestamp = position.timestamp;
+  const positionTime = new Date(timestamp).toLocaleTimeString();
+  
+  console.log(`Position acquired at ${positionTime}`);
+  console.log(`Coordinates: ${latitude}, ${longitude} (±${accuracy}m)`);
+  
+  if (altitude !== null) {
+    console.log(`Altitude: ${altitude}m (±${altitudeAccuracy}m)`);
+  }
+  
+  if (heading !== null) {
+    console.log(`Heading: ${heading}° from North`);
+  }
+  
+  if (speed !== null) {
+    console.log(`Speed: ${speed} m/s (${(speed * 3.6).toFixed(1)} km/h)`);
+  }
+});
+```
+
+**Handling Permissions:**
+
+```javascript
+async function checkGeolocationPermission() {
+  // For browsers that support the Permissions API
+  if ('permissions' in navigator) {
+    try {
+      const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
+      
+      switch (permissionStatus.state) {
+        case 'granted':
+          console.log('Permission to use geolocation has been granted');
+          return true;
+        case 'prompt':
+          console.log('Permission to use geolocation will be requested');
+          return 'prompt';
+        case 'denied':
+          console.log('Permission to use geolocation has been denied');
+          return false;
+      }
+      
+      // Listen for permission changes
+      permissionStatus.addEventListener('change', () => {
+        console.log(`Geolocation permission changed to: ${permissionStatus.state}`);
+      });
+      
+    } catch (error) {
+      console.error('Error checking geolocation permission:', error);
+      return 'unknown';
+    }
+  } else {
+    // Fallback for browsers without Permissions API
+    return 'unknown';
+  }
+}
+
+// Usage
+async function initializeGeolocation() {
+  const permission = await checkGeolocationPermission();
+  
+  if (permission === true) {
+    // Permission already granted, get location
+    getLocation();
+  } else if (permission === 'prompt') {
+    // Show UI explaining why we need location
+    showLocationExplanation();
+  } else if (permission === false) {
+    // Show instructions on how to enable location
+    showEnableLocationInstructions();
+  } else {
+    // Unknown permission state, try getting location anyway
+    getLocation();
+  }
+}
+
+function showLocationExplanation() {
+  const explanation = document.getElementById('location-explanation');
+  explanation.style.display = 'block';
+  
+  document.getElementById('allow-location-btn').addEventListener('click', () => {
+    explanation.style.display = 'none';
+    getLocation();
+  });
+}
+
+function showEnableLocationInstructions() {
+  document.getElementById('enable-location-instructions').style.display = 'block';
+}
+```
+
+**Implementing a Distance Calculator:**
+
+```javascript
+// Calculate distance between two points using the Haversine formula
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3; // Earth's radius in meters
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lon2 - lon1) * Math.PI / 180;
+  
+  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+           Math.cos(φ1) * Math.cos(φ2) *
+           Math.sin(Δλ/2) * Math.sin(Δλ/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c;
+  
+  return distance; // Distance in meters
+}
+
+// Example: Calculate distance between user and a point of interest
+function distanceToPointOfInterest(poiLat, poiLon) {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        const userLat = position.coords.latitude;
+        const userLon = position.coords.longitude;
+        
+        const distance = calculateDistance(userLat, userLon, poiLat, poiLon);
+        
+        // Format the distance for display
+        let formattedDistance;
+        if (distance < 1000) {
+          formattedDistance = `${Math.round(distance)} meters`;
+        } else {
+          formattedDistance = `${(distance / 1000).toFixed(2)} km`;
+        }
+        
+        resolve({
+          distance,
+          formattedDistance,
+          userLocation: { lat: userLat, lon: userLon }
+        });
+      },
+      error => {
+        reject(error);
+      }
+    );
+  });
+}
+
+// Usage
+async function showNearbyPlaces() {
+  const coffeeShop = { name: 'Coffee Shop', lat: 40.7128, lon: -74.0060 };
+  
+  try {
+    const result = await distanceToPointOfInterest(coffeeShop.lat, coffeeShop.lon);
+    console.log(`${coffeeShop.name} is ${result.formattedDistance} away from you`);
+    
+    // Check if within 1km
+    if (result.distance < 1000) {
+      showSpecialOffer(coffeeShop.name);
+    }
+  } catch (error) {
+    console.error('Could not calculate distance:', error);
+  }
+}
+```
+
+**Integrating with Mapping Libraries:**
+
+```javascript
+// Using Leaflet.js as an example
+function initMap() {
+  // Create a map centered at a default location
+  const map = L.map('map').setView([51.505, -0.09], 13);
+  
+  // Add tile layer (OpenStreetMap)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+  
+  // Get user's location and center the map
+  navigator.geolocation.getCurrentPosition(
+    position => {
+      const userLat = position.coords.latitude;
+      const userLon = position.coords.longitude;
+      
+      // Center map on user's location
+      map.setView([userLat, userLon], 15);
+      
+      // Add a marker for the user's location
+      const userMarker = L.marker([userLat, userLon])
+        .addTo(map)
+        .bindPopup('You are here')
+        .openPopup();
+      
+      // Add accuracy circle
+      const accuracyCircle = L.circle([userLat, userLon], {
+        radius: position.coords.accuracy,
+        color: 'blue',
+        fillColor: '#3388ff',
+        fillOpacity: 0.2
+      }).addTo(map);
+      
+      // Find nearby points of interest
+      fetchNearbyPlaces(userLat, userLon)
+        .then(places => {
+          places.forEach(place => {
+            L.marker([place.lat, place.lon])
+              .addTo(map)
+              .bindPopup(`<b>${place.name}</b><br>${place.description}`);
+          });
+        });
+    },
+    error => {
+      console.error('Error getting location:', error);
+      alert('Could not get your location. Using default location instead.');
+    }
+  );
+  
+  return map;
+}
+
+// Simulate fetching nearby places from an API
+function fetchNearbyPlaces(lat, lon) {
+  // In a real app, this would be an API call
+  return Promise.resolve([
+    { name: 'Coffee Shop', description: 'Great coffee', lat: lat + 0.002, lon: lon + 0.001 },
+    { name: 'Restaurant', description: 'Delicious food', lat: lat - 0.001, lon: lon + 0.003 },
+    { name: 'Park', description: 'Beautiful park', lat: lat + 0.003, lon: lon - 0.002 }
+  ]);
+}
+```
+
+**Implementing Geofencing:**
+
+```javascript
+class Geofence {
+  constructor(name, centerLat, centerLon, radiusMeters, onEnter, onExit) {
+    this.name = name;
+    this.center = { lat: centerLat, lon: centerLon };
+    this.radius = radiusMeters;
+    this.onEnter = onEnter;
+    this.onExit = onExit;
+    this.isInside = false;
+    this.watchId = null;
+  }
+  
+  start() {
+    if (this.watchId !== null) {
+      console.warn('Geofence already started');
+      return;
+    }
+    
+    this.watchId = navigator.geolocation.watchPosition(
+      position => {
+        const distance = calculateDistance(
+          position.coords.latitude,
+          position.coords.longitude,
+          this.center.lat,
+          this.center.lon
+        );
+        
+        const wasInside = this.isInside;
+        this.isInside = distance <= this.radius;
+        
+        // Trigger events if state changed
+        if (this.isInside && !wasInside) {
+          this.onEnter(this.name, distance);
+        } else if (!this.isInside && wasInside) {
+          this.onExit(this.name, distance);
+        }
+      },
+      error => {
+        console.error('Geofence error:', error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+    
+    console.log(`Geofence "${this.name}" started`);
+    return this;
+  }
+  
+  stop() {
+    if (this.watchId !== null) {
+      navigator.geolocation.clearWatch(this.watchId);
+      this.watchId = null;
+      console.log(`Geofence "${this.name}" stopped`);
+    }
+    return this;
+  }
+}
+
+// Usage
+const storeGeofence = new Geofence(
+  'Downtown Store',
+  40.7128,  // latitude
+  -74.0060, // longitude
+  100,      // radius in meters
+  (name, distance) => {
+    console.log(`Welcome to ${name}!`);
+    showWelcomeNotification();
+  },
+  (name, distance) => {
+    console.log(`You left ${name}. Hope to see you again soon!`);
+    sendFeedbackRequest();
+  }
+).start();
+
+// Stop geofence when no longer needed
+// storeGeofence.stop();
+```
+
+**Privacy and Best Practices:**
+
+1. **Always request location only when necessary:**
+```javascript
+document.getElementById('find-nearby-btn').addEventListener('click', () => {
+  // Only request location when user explicitly asks for it
+  getLocation();
+});
+```
+
+2. **Clearly communicate why you need location:**
+```html
+<div class="location-explanation">
+  <p>We need your location to show you nearby stores and provide directions.</p>
+  <p>Your location data is only used while you're using the app and is never stored on our servers.</p>
+  <button id="allow-location-btn">Allow Location Access</button>
+</div>
+```
+
+3. **Provide fallbacks for users who deny location access:**
+```javascript
+function handleLocationDenied() {
+  // Show manual location input
+  document.getElementById('manual-location-input').style.display = 'block';
+  
+  // Or use IP-based geolocation as a less accurate fallback
+  fetchIPBasedLocation()
+    .then(location => {
+      console.log('Using approximate location from IP:', location);
+      showApproximateLocationNotice();
+      initializeWithLocation(location);
+    });
+}
+```
+
+4. **Respect battery life with appropriate settings:**
+```javascript
+// For high-precision but battery-intensive tracking
+const highPrecisionOptions = {
+  enableHighAccuracy: true,
+  timeout: 5000,
+  maximumAge: 0
+};
+
+// For battery-friendly tracking
+const batterySavingOptions = {
+  enableHighAccuracy: false,
+  timeout: 10000,
+  maximumAge: 60000 // Accept positions up to 1 minute old
+};
+
+// Adjust based on application needs
+const trackingOptions = isHighPrecisionRequired() ? 
+  highPrecisionOptions : batterySavingOptions;
+```
+
+**Browser Compatibility and Limitations:**
+
+1. **Feature Detection:**
+```javascript
+function getLocationSupport() {
+  const support = {
+    basic: 'geolocation' in navigator,
+    permissions: 'permissions' in navigator,
+    highAccuracy: false, // Will be determined by testing
+    secure: window.isSecureContext
+  };
+  
+  // Geolocation API requires a secure context (HTTPS)
+  if (!support.secure) {
+    console.warn('Geolocation API requires a secure context (HTTPS)');
+  }
+  
+  return support;
+}
+```
+
+2. **Mobile vs. Desktop Differences:**
+   - Mobile devices typically provide more accurate GPS-based locations
+   - Desktop browsers often rely on IP-based or Wi-Fi-based location
+   - Mobile devices may have additional battery considerations
+
+3. **Accuracy Limitations:**
+   - Indoor locations may have reduced accuracy
+   - Urban environments with tall buildings can cause GPS reflections
+   - Network-based geolocation can be very imprecise (city-level only)
+
+**Real-World Applications:**
+
+1. **Store Locator:**
+```javascript
+async function findNearestStores() {
+  try {
+    const position = await getCurrentPositionPromise();
+    const { latitude, longitude } = position.coords;
+    
+    const stores = await fetchStoresFromAPI(latitude, longitude, 10); // 10km radius
+    
+    // Sort stores by distance
+    stores.sort((a, b) => a.distance - b.distance);
+    
+    // Display stores
+    displayStoresList(stores);
+    displayStoresOnMap(stores, { lat: latitude, lon: longitude });
+    
+  } catch (error) {
+    console.error('Error finding stores:', error);
+    showLocationErrorMessage();
+  }
+}
+
+// Helper function to promisify getCurrentPosition
+function getCurrentPositionPromise(options = {}) {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject, options);
+  });
+}
+```
+
+2. **Weather Application:**
+```javascript
+async function getLocalWeather() {
+  try {
+    const position = await getCurrentPositionPromise();
+    const { latitude, longitude } = position.coords;
+    
+    const weatherData = await fetch(
+      `https://api.weather.example/forecast?lat=${latitude}&lon=${longitude}&units=metric`
+    ).then(response => response.json());
+    
+    displayWeather(weatherData);
+    
+  } catch (error) {
+    console.error('Error getting weather:', error);
+    showWeatherFallback();
+  }
+}
+```
+
+3. **Fitness Tracking:**
+```javascript
+class RunTracker {
+  constructor() {
+    this.isTracking = false;
+    this.watchId = null;
+    this.startTime = null;
+    this.distance = 0;
+    this.path = [];
+    this.lastPosition = null;
+  }
+  
+  start() {
+    if (this.isTracking) return;
+    
+    this.isTracking = true;
+    this.startTime = new Date();
+    this.distance = 0;
+    this.path = [];
+    
+    this.watchId = navigator.geolocation.watchPosition(
+      this.handlePosition.bind(this),
+      this.handleError.bind(this),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+    
+    // Keep screen on if possible
+    if ('wakeLock' in navigator) {
+      navigator.wakeLock.request('screen')
+        .then(lock => this.wakeLock = lock)
+        .catch(err => console.warn('Wake Lock not available', err));
+    }
+  }
+  
+  handlePosition(position) {
+    const { latitude, longitude, accuracy } = position.coords;
+    const timestamp = position.timestamp;
+    
+    // Only use positions with reasonable accuracy
+    if (accuracy > 20) return; // Ignore if accuracy worse than 20 meters
+    
+    const newPosition = { lat: latitude, lon: longitude, time: timestamp };
+    
+    // Calculate distance if we have a previous position
+    if (this.lastPosition) {
+      const segmentDistance = calculateDistance(
+        this.lastPosition.lat, this.lastPosition.lon,
+        newPosition.lat, newPosition.lon
+      );
+      
+      // Ignore unrealistic movements (potential GPS errors)
+      const timeDiff = (timestamp - this.lastPosition.time) / 1000; // seconds
+      const speed = segmentDistance / timeDiff; // m/s
+      
+      if (speed < 10) { // Less than 36 km/h, reasonable for running/biking
+        this.distance += segmentDistance;
+        this.path.push(newPosition);
+        this.updateUI();
+      }
+    } else {
+      // First position
+      this.path.push(newPosition);
+    }
+    
+    this.lastPosition = newPosition;
+  }
+  
+  handleError(error) {
+    console.error('Tracking error:', error);
+    alert('There was a problem tracking your location. Please check your GPS settings.');
+  }
+  
+  stop() {
+    if (!this.isTracking) return;
+    
+    navigator.geolocation.clearWatch(this.watchId);
+    this.isTracking = false;
+    this.watchId = null;
+    
+    const duration = (new Date() - this.startTime) / 1000; // seconds
+    const result = {
+      distance: this.distance,
+      duration: duration,
+      averageSpeed: this.distance / duration,
+      path: this.path
+    };
+    
+    // Release wake lock if we have one
+    if (this.wakeLock) {
+      this.wakeLock.release();
+      this.wakeLock = null;
+    }
+    
+    return result;
+  }
+  
+  updateUI() {
+    const durationSeconds = (new Date() - this.startTime) / 1000;
+    const durationFormatted = formatDuration(durationSeconds);
+    const distanceKm = (this.distance / 1000).toFixed(2);
+    const paceMinPerKm = durationSeconds / 60 / (this.distance / 1000);
+    
+    document.getElementById('tracking-distance').textContent = `${distanceKm} km`;
+    document.getElementById('tracking-duration').textContent = durationFormatted;
+    document.getElementById('tracking-pace').textContent = `${formatPace(paceMinPerKm)} min/km`;
+  }
+}
+
+function formatDuration(seconds) {
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  
+  return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+function formatPace(minPerKm) {
+  const mins = Math.floor(minPerKm);
+  const secs = Math.floor((minPerKm - mins) * 60);
+  
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+```
+
+### Q7: Explain WebRTC (Web Real-Time Communication) and how to implement peer-to-peer communication in web applications.
+**Difficulty: Hard**
+
+**Answer:**
+WebRTC (Web Real-Time Communication) is an open-source project and collection of APIs that enables real-time communication directly between browsers without requiring plugins or native apps. It allows web applications to establish peer-to-peer connections for sharing audio, video, and data directly between clients, reducing latency and server load.
+
+**Core Components of WebRTC:**
+
+1. **MediaStream (getUserMedia)**: Accesses the user's camera and microphone
+2. **RTCPeerConnection**: Establishes and manages the peer-to-peer connection
+3. **RTCDataChannel**: Enables bidirectional data transfer between peers
+
+**Basic WebRTC Architecture:**
+
+```
+┌────────────┐                                  ┌────────────┐
+│            │                                  │            │
+│  Browser A │                                  │  Browser B │
+│            │                                  │            │
+└─────┬──────┘                                  └──────┬─────┘
+      │                                                │
+      │  ┌────────────────────────────────────┐       │
+      │  │                                    │       │
+      └──┤  Signaling Server (e.g., WebSocket)├───────┘
+         │                                    │
+         └────────────────────────────────────┘
+                          │
+                          ▼
+         ┌────────────────────────────────────┐
+         │                                    │
+         │  STUN/TURN Servers (NAT traversal) │
+         │                                    │
+         └────────────────────────────────────┘
+```
+
+**Basic Implementation Steps:**
+
+1. **Setting Up a Simple Video Call:**
+
+```javascript
+// 1. Access media devices
+async function startVideoCall() {
+  try {
+    // Get local media stream (camera and microphone)
+    const localStream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true
+    });
+    
+    // Display local video
+    const localVideo = document.getElementById('localVideo');
+    localVideo.srcObject = localStream;
+    
+    // Initialize peer connection
+    const peerConnection = new RTCPeerConnection({
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' }, // Free public STUN server
+        // Add TURN servers for production environments
+      ]
+    });
+    
+    // Add local tracks to the peer connection
+    localStream.getTracks().forEach(track => {
+      peerConnection.addTrack(track, localStream);
+    });
+    
+    // Handle incoming remote tracks
+    peerConnection.ontrack = event => {
+      const remoteVideo = document.getElementById('remoteVideo');
+      if (remoteVideo.srcObject !== event.streams[0]) {
+        remoteVideo.srcObject = event.streams[0];
+        console.log('Received remote stream');
+      }
+    };
+    
+    // Handle ICE candidates
+    peerConnection.onicecandidate = event => {
+      if (event.candidate) {
+        // Send the candidate to the remote peer via signaling server
+        sendToSignalingServer({
+          type: 'ice-candidate',
+          candidate: event.candidate
+        });
+      }
+    };
+    
+    // Connection state changes
+    peerConnection.onconnectionstatechange = event => {
+      console.log('Connection state:', peerConnection.connectionState);
+      switch(peerConnection.connectionState) {
+        case 'connected':
+          console.log('Peers connected!');
+          break;
+        case 'disconnected':
+        case 'failed':
+          console.log('Connection lost or failed');
+          break;
+        case 'closed':
+          console.log('Connection closed');
+          break;
+      }
+    };
+    
+    return peerConnection;
+    
+  } catch (error) {
+    console.error('Error accessing media devices:', error);
+  }
+}
+
+// 2. Create and send offer (caller)
+async function createOffer(peerConnection) {
+  try {
+    // Create offer
+    const offer = await peerConnection.createOffer();
+    
+    // Set local description
+    await peerConnection.setLocalDescription(offer);
+    
+    // Send offer to remote peer via signaling server
+    sendToSignalingServer({
+      type: 'offer',
+      offer: peerConnection.localDescription
+    });
+    
+  } catch (error) {
+    console.error('Error creating offer:', error);
+  }
+}
+
+// 3. Handle offer and create answer (callee)
+async function handleOfferAndCreateAnswer(peerConnection, offer) {
+  try {
+    // Set remote description based on received offer
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+    
+    // Create answer
+    const answer = await peerConnection.createAnswer();
+    
+    // Set local description
+    await peerConnection.setLocalDescription(answer);
+    
+    // Send answer to remote peer via signaling server
+    sendToSignalingServer({
+      type: 'answer',
+      answer: peerConnection.localDescription
+    });
+    
+  } catch (error) {
+    console.error('Error creating answer:', error);
+  }
+}
+
+// 4. Handle answer (caller)
+async function handleAnswer(peerConnection, answer) {
+  try {
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+  } catch (error) {
+    console.error('Error handling answer:', error);
+  }
+}
+
+// 5. Handle ICE candidate
+async function handleIceCandidate(peerConnection, candidate) {
+  try {
+    if (candidate) {
+      await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+    }
+  } catch (error) {
+    console.error('Error adding ICE candidate:', error);
+  }
+}
+
+// Placeholder for signaling server communication
+function sendToSignalingServer(message) {
+  // In a real implementation, this would send the message to a signaling server
+  // For example, using WebSockets:
+  // signalingSocket.send(JSON.stringify(message));
+  console.log('Sending to signaling server:', message);
+}
+```
+
+**Implementing a Signaling Server:**
+
+WebRTC requires a signaling mechanism to exchange session information. Here's a simple implementation using Node.js and WebSockets:
+
+```javascript
+// server.js (Node.js with Express and Socket.io)
+const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+
+// Serve static files
+app.use(express.static('public'));
+
+// Store connected users
+const users = {};
+
+io.on('connection', socket => {
+  console.log('User connected:', socket.id);
+  
+  // User joins a room
+  socket.on('join-room', roomId => {
+    socket.join(roomId);
+    users[socket.id] = { roomId };
+    
+    // Notify others in the room
+    socket.to(roomId).emit('user-connected', socket.id);
+    
+    console.log(`User ${socket.id} joined room ${roomId}`);
+  });
+  
+  // Handle WebRTC signaling
+  socket.on('offer', payload => {
+    const { target, offer } = payload;
+    socket.to(target).emit('offer', {
+      from: socket.id,
+      offer
+    });
+  });
+  
+  socket.on('answer', payload => {
+    const { target, answer } = payload;
+    socket.to(target).emit('answer', {
+      from: socket.id,
+      answer
+    });
+  });
+  
+  socket.on('ice-candidate', payload => {
+    const { target, candidate } = payload;
+    socket.to(target).emit('ice-candidate', {
+      from: socket.id,
+      candidate
+    });
+  });
+  
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    const roomId = users[socket.id]?.roomId;
+    if (roomId) {
+      socket.to(roomId).emit('user-disconnected', socket.id);
+      delete users[socket.id];
+    }
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+server.listen(3000, () => {
+  console.log('Server running on port 3000');
+});
+```
+
+**Client-Side Integration with Signaling Server:**
+
+```javascript
+// client.js
+const socket = io('/');
+let peerConnection;
+let localStream;
+let remoteStream;
+
+// Join a room
+const roomId = 'room-123'; // In a real app, this could be from URL parameters
+socket.emit('join-room', roomId);
+
+// Initialize WebRTC
+async function init() {
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true
+    });
+    
+    document.getElementById('localVideo').srcObject = localStream;
+    
+    // Create peer connection with STUN/TURN servers
+    peerConnection = new RTCPeerConnection({
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        // Add TURN servers for production
+      ]
+    });
+    
+    // Add local tracks to peer connection
+    localStream.getTracks().forEach(track => {
+      peerConnection.addTrack(track, localStream);
+    });
+    
+    // Handle remote tracks
+    peerConnection.ontrack = event => {
+      document.getElementById('remoteVideo').srcObject = event.streams[0];
+      remoteStream = event.streams[0];
+    };
+    
+    // Handle ICE candidates
+    peerConnection.onicecandidate = event => {
+      if (event.candidate) {
+        socket.emit('ice-candidate', {
+          target: remoteUserId, // This would be set when a user connects
+          candidate: event.candidate
+        });
+      }
+    };
+    
+  } catch (error) {
+    console.error('Error initializing:', error);
+  }
+}
+
+// Handle new user connection
+socket.on('user-connected', userId => {
+  console.log('New user connected:', userId);
+  remoteUserId = userId;
+  
+  // Create and send offer
+  createAndSendOffer(userId);
+});
+
+// Create and send offer
+async function createAndSendOffer(targetUserId) {
+  try {
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    
+    socket.emit('offer', {
+      target: targetUserId,
+      offer: peerConnection.localDescription
+    });
+    
+  } catch (error) {
+    console.error('Error creating offer:', error);
+  }
+}
+
+// Handle incoming offer
+socket.on('offer', async ({ from, offer }) => {
+  try {
+    remoteUserId = from;
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+    
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+    
+    socket.emit('answer', {
+      target: from,
+      answer: peerConnection.localDescription
+    });
+    
+  } catch (error) {
+    console.error('Error handling offer:', error);
+  }
+});
+
+// Handle incoming answer
+socket.on('answer', async ({ from, answer }) => {
+  try {
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+  } catch (error) {
+    console.error('Error handling answer:', error);
+  }
+});
+
+// Handle ICE candidates
+socket.on('ice-candidate', async ({ from, candidate }) => {
+  try {
+    await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+  } catch (error) {
+    console.error('Error adding ICE candidate:', error);
+  }
+});
+
+// Handle user disconnection
+socket.on('user-disconnected', userId => {
+  console.log('User disconnected:', userId);
+  // Clean up resources if needed
+});
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', init);
+```
+
+**Implementing Data Channels for Text Chat:**
+
+```javascript
+let dataChannel;
+
+// Create data channel (caller)
+function createDataChannel(peerConnection) {
+  dataChannel = peerConnection.createDataChannel('chat');
+  setupDataChannel(dataChannel);
+}
+
+// Handle data channel (callee)
+peerConnection.ondatachannel = event => {
+  dataChannel = event.channel;
+  setupDataChannel(dataChannel);
+};
+
+// Setup data channel event handlers
+function setupDataChannel(channel) {
+  channel.onopen = () => {
+    console.log('Data channel is open');
+    document.getElementById('chat-input').disabled = false;
+  };
+  
+  channel.onclose = () => {
+    console.log('Data channel is closed');
+    document.getElementById('chat-input').disabled = true;
+  };
+  
+  channel.onmessage = event => {
+    // Display received message
+    const message = event.data;
+    const chatBox = document.getElementById('chat-box');
+    const messageElement = document.createElement('div');
+    messageElement.className = 'received-message';
+    messageElement.textContent = `Peer: ${message}`;
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  };
+}
+
+// Send message through data channel
+function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const message = input.value.trim();
+  
+  if (message && dataChannel && dataChannel.readyState === 'open') {
+    // Send the message
+    dataChannel.send(message);
+    
+    // Display sent message
+    const chatBox = document.getElementById('chat-box');
+    const messageElement = document.createElement('div');
+    messageElement.className = 'sent-message';
+    messageElement.textContent = `You: ${message}`;
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    
+    // Clear input
+    input.value = '';
+  }
+}
+
+// Add event listener to send button
+document.getElementById('send-button').addEventListener('click', sendMessage);
+
+// Add event listener for Enter key
+document.getElementById('chat-input').addEventListener('keypress', event => {
+  if (event.key === 'Enter') {
+    sendMessage();
+  }
+});
+```
+
+**File Sharing with WebRTC Data Channels:**
+
+```javascript
+// Send a file through data channel
+async function sendFile() {
+  const fileInput = document.getElementById('file-input');
+  const file = fileInput.files[0];
+  
+  if (!file) {
+    alert('Please select a file');
+    return;
+  }
+  
+  if (!dataChannel || dataChannel.readyState !== 'open') {
+    alert('Data channel is not open');
+    return;
+  }
+  
+  // Send file metadata first
+  dataChannel.send(JSON.stringify({
+    type: 'file-metadata',
+    name: file.name,
+    size: file.size,
+    mimeType: file.type
+  }));
+  
+  // Read and send the file in chunks
+  const chunkSize = 16384; // 16KB chunks
+  const reader = new FileReader();
+  let offset = 0;
+  
+  reader.onload = event => {
+    if (dataChannel.readyState === 'open') {
+      dataChannel.send(event.target.result);
+      offset += event.target.result.byteLength;
+      
+      // Update progress
+      const progress = Math.min(100, Math.floor((offset / file.size) * 100));
+      document.getElementById('send-progress').style.width = `${progress}%`;
+      document.getElementById('send-progress-text').textContent = `${progress}%`;
+      
+      // Check if file has been completely sent
+      if (offset < file.size) {
+        readSlice(offset);
+      } else {
+        console.log('File sent successfully');
+        // Send end of file marker
+        dataChannel.send(JSON.stringify({ type: 'file-complete' }));
+      }
+    }
+  };
+  
+  function readSlice(o) {
+    const slice = file.slice(o, o + chunkSize);
+    reader.readAsArrayBuffer(slice);
+  }
+  
+  // Start reading the first slice
+  readSlice(0);
+}
+
+// Handle receiving files
+let receiveBuffer = [];
+let receivedSize = 0;
+let fileInfo = null;
+
+// Update data channel message handler for file reception
+channel.onmessage = event => {
+  const data = event.data;
+  
+  // Check if the message is text or file data
+  if (typeof data === 'string') {
+    try {
+      const message = JSON.parse(data);
+      
+      // Handle file metadata
+      if (message.type === 'file-metadata') {
+        console.log('Receiving file:', message.name);
+        fileInfo = message;
+        receiveBuffer = [];
+        receivedSize = 0;
+        
+        // Show file reception UI
+        document.getElementById('file-receive-name').textContent = message.name;
+        document.getElementById('file-receive-container').style.display = 'block';
+      }
+      
+      // Handle file completion
+      else if (message.type === 'file-complete') {
+        // Combine chunks into a single buffer
+        const received = new Blob(receiveBuffer, { type: fileInfo.mimeType });
+        receiveBuffer = [];
+        
+        // Create download link
+        const downloadLink = document.getElementById('download-link');
+        downloadLink.href = URL.createObjectURL(received);
+        downloadLink.download = fileInfo.name;
+        downloadLink.textContent = `Download ${fileInfo.name}`;
+        downloadLink.style.display = 'block';
+        
+        console.log(`File received successfully: ${fileInfo.name}`);
+      }
+      
+      // Handle regular chat messages
+      else {
+        displayChatMessage(message, false);
+      }
+    } catch (e) {
+      // Not JSON, treat as regular chat message
+      displayChatMessage(data, false);
+    }
+  }
+  // Handle binary data (file chunks)
+  else {
+    if (fileInfo) {
+      receiveBuffer.push(data);
+      receivedSize += data.byteLength;
+      
+      // Update progress
+      const progress = Math.min(100, Math.floor((receivedSize / fileInfo.size) * 100));
+      document.getElementById('receive-progress').style.width = `${progress}%`;
+      document.getElementById('receive-progress-text').textContent = `${progress}%`;
+    }
+  }
+};
+```
+
+**Advanced WebRTC Features:**
+
+1. **Screen Sharing:**
+
+```javascript
+async function startScreenSharing() {
+  try {
+    // Get screen sharing stream
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({
+      video: true
+    });
+    
+    // Replace video track
+    const videoTrack = screenStream.getVideoTracks()[0];
+    
+    // Find the video sender in the peer connection
+    const senders = peerConnection.getSenders();
+    const videoSender = senders.find(sender => 
+      sender.track && sender.track.kind === 'video'
+    );
+    
+    if (videoSender) {
+      await videoSender.replaceTrack(videoTrack);
+    }
+    
+    // Update local video display
+    document.getElementById('localVideo').srcObject = screenStream;
+    
+    // Handle the end of screen sharing
+    videoTrack.onended = async () => {
+      // Revert to camera
+      const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const cameraTrack = cameraStream.getVideoTracks()[0];
+      
+      await videoSender.replaceTrack(cameraTrack);
+      document.getElementById('localVideo').srcObject = cameraStream;
+    };
+    
+  } catch (error) {
+    console.error('Error starting screen sharing:', error);
+  }
+}
+```
+
+2. **Multi-Party Conferencing (Mesh Architecture):**
+
+```javascript
+// Simplified multi-party WebRTC (mesh architecture)
+const peers = {};
+
+// Handle new user connection
+socket.on('user-connected', userId => {
+  console.log('New user connected:', userId);
+  
+  // Create a new peer connection for this user
+  const peerConnection = createPeerConnection(userId);
+  peers[userId] = peerConnection;
+  
+  // Create and send offer
+  createAndSendOffer(userId, peerConnection);
+});
+
+// Create peer connection for a specific user
+function createPeerConnection(userId) {
+  const peerConnection = new RTCPeerConnection({
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' }
+    ]
+  });
+  
+  // Add local tracks
+  localStream.getTracks().forEach(track => {
+    peerConnection.addTrack(track, localStream);
+  });
+  
+  // Handle ICE candidates
+  peerConnection.onicecandidate = event => {
+    if (event.candidate) {
+      socket.emit('ice-candidate', {
+        target: userId,
+        candidate: event.candidate
+      });
+    }
+  };
+  
+  // Create video element for this peer
+  const videoElement = document.createElement('video');
+  videoElement.id = `video-${userId}`;
+  videoElement.autoplay = true;
+  videoElement.playsInline = true;
+  document.getElementById('videos-container').appendChild(videoElement);
+  
+  // Handle remote tracks
+  peerConnection.ontrack = event => {
+    videoElement.srcObject = event.streams[0];
+  };
+  
+  return peerConnection;
+}
+
+// Handle user disconnection
+socket.on('user-disconnected', userId => {
+  console.log('User disconnected:', userId);
+  
+  // Close peer connection
+  if (peers[userId]) {
+    peers[userId].close();
+    delete peers[userId];
+  }
+  
+  // Remove video element
+  const videoElement = document.getElementById(`video-${userId}`);
+  if (videoElement) {
+    videoElement.remove();
+  }
+});
+```
+
+**WebRTC Security Considerations:**
+
+1. **Encryption:**
+   - WebRTC media is encrypted by default using DTLS-SRTP
+   - Data channels are encrypted using DTLS
+
+2. **Permission Model:**
+   - Access to camera and microphone requires explicit user permission
+   - Screen sharing requires additional permission
+
+3. **Best Practices:**
+   - Always use HTTPS for your signaling server
+   - Implement proper authentication for your signaling mechanism
+   - Consider using a TURN server with authentication
+   - Validate all signaling messages before processing
+
+```javascript
+// Example of validating signaling messages
+socket.on('offer', async ({ from, offer }) => {
+  // Validate the offer structure before processing
+  if (!offer || !offer.type || !offer.sdp) {
+    console.error('Invalid offer received');
+    return;
+  }
+  
+  // Validate the sender identity (in a real app, this would be more robust)
+  if (!isValidUser(from)) {
+    console.error('Offer received from unknown user');
+    return;
+  }
+  
+  // Process the offer
+  try {
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+    // ... rest of the handler
+  } catch (error) {
+    console.error('Error handling offer:', error);
+  }
+});
+
+// Example function to validate user
+function isValidUser(userId) {
+  // In a real app, this would check against authenticated users
+  return Boolean(userId && typeof userId === 'string');
+}
+```
+
+**Browser Compatibility and Limitations:**
+
+1. **Feature Detection:**
+
+```javascript
+function checkWebRTCSupport() {
+  const support = {
+    webRTC: Boolean(window.RTCPeerConnection),
+    getUserMedia: Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+    screen: Boolean(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia),
+    dataChannel: Boolean(window.RTCPeerConnection && 'createDataChannel' in RTCPeerConnection.prototype)
+  };
+  
+  return support;
+}
+
+// Usage
+const rtcSupport = checkWebRTCSupport();
+if (!rtcSupport.webRTC) {
+  showFallbackInterface('Your browser does not support WebRTC');
+}
+```
+
+2. **Mobile Considerations:**
+   - Battery usage can be high with continuous video streaming
+   - Network transitions (WiFi to cellular) can disrupt connections
+   - Implement bandwidth adaptation for varying network conditions
+
+```javascript
+// Example of setting bandwidth constraints
+function limitBandwidth(peerConnection) {
+  // Get the video sender
+  const sender = peerConnection.getSenders().find(s => 
+    s.track && s.track.kind === 'video'
+  );
+  
+  if (sender) {
+    const parameters = sender.getParameters();
+    
+    // Check if encodings array exists
+    if (!parameters.encodings) {
+      parameters.encodings = [{}];
+    }
+    
+    // Set maximum bitrate (1.5 Mbps)
+    parameters.encodings[0].maxBitrate = 1500000;
+    
+    // Apply the changes
+    return sender.setParameters(parameters);
+  }
+  
+  return Promise.resolve();
+}
+```
+
+**Best Practices for WebRTC Applications:**
+
+1. **Connection Management:**
+   - Implement reconnection logic for dropped connections
+   - Handle ICE failures gracefully
+   - Monitor connection quality and adapt accordingly
+
+2. **User Experience:**
+   - Provide clear feedback on connection status
+   - Implement mute/unmute and video on/off controls
+   - Show network quality indicators
+
+```javascript
+// Example of connection quality monitoring
+peerConnection.oniceconnectionstatechange = () => {
+  const state = peerConnection.iceConnectionState;
+  const qualityIndicator = document.getElementById('connection-quality');
+  
+  switch (state) {
+    case 'checking':
+      qualityIndicator.className = 'quality-connecting';
+      qualityIndicator.textContent = 'Connecting...';
+      break;
+    case 'connected':
+    case 'completed':
+      qualityIndicator.className = 'quality-good';
+      qualityIndicator.textContent = 'Good Connection';
+      break;
+    case 'disconnected':
+      qualityIndicator.className = 'quality-poor';
+      qualityIndicator.textContent = 'Poor Connection';
+      attemptReconnection();
+      break;
+    case 'failed':
+      qualityIndicator.className = 'quality-failed';
+      qualityIndicator.textContent = 'Connection Failed';
+      handleConnectionFailure();
+      break;
+    case 'closed':
+      qualityIndicator.className = 'quality-closed';
+      qualityIndicator.textContent = 'Connection Closed';
+      break;
+  }
+};
+
+// Monitor media statistics
+function monitorConnectionStats() {
+  const statsInterval = setInterval(async () => {
+    if (!peerConnection) {
+      clearInterval(statsInterval);
+      return;
+    }
+    
+    try {
+      const stats = await peerConnection.getStats();
+      let videoBitrate = 0;
+      let videoPacketLoss = 0;
+      let audioPacketLoss = 0;
+      
+      stats.forEach(report => {
+        if (report.type === 'inbound-rtp' && report.kind === 'video') {
+          // Calculate video bitrate
+          if (report.bytesReceived && lastVideoStats && lastVideoStats.bytesReceived) {
+            const bitrate = 8 * (report.bytesReceived - lastVideoStats.bytesReceived) / 
+                           (report.timestamp - lastVideoStats.timestamp) * 1000;
+            videoBitrate = Math.round(bitrate);
+          }
+          
+          // Get packet loss
+          if (report.packetsLost !== undefined) {
+            videoPacketLoss = report.packetsLost;
+          }
+          
+          lastVideoStats = report;
+        }
+        
+        if (report.type === 'inbound-rtp' && report.kind === 'audio') {
+          // Get audio packet loss
+          if (report.packetsLost !== undefined) {
+            audioPacketLoss = report.packetsLost;
+          }
+        }
+      });
+      
+      // Update UI with stats
+      document.getElementById('video-bitrate').textContent = `${videoBitrate} kbps`;
+      document.getElementById('video-packet-loss').textContent = videoPacketLoss;
+      document.getElementById('audio-packet-loss').textContent = audioPacketLoss;
+      
+    } catch (error) {
+      console.error('Error getting stats:', error);
+    }
+  }, 1000);
+}
+```
+
+3. **Fallback Mechanisms:**
+   - Provide alternative communication methods when WebRTC fails
+   - Consider using a relay server for challenging network environments
+
+```javascript
+function handleConnectionFailure() {
+  // Show fallback UI
+  document.getElementById('webrtc-container').style.display = 'none';
+  document.getElementById('fallback-container').style.display = 'block';
+  
+  // Offer alternative communication method
+  document.getElementById('fallback-button').addEventListener('click', () => {
+    // Example: Redirect to a server-relayed video solution
+    window.location.href = `/fallback-video-chat?room=${roomId}&user=${userId}`;
+  });
+}
+```
+
+**Real-World Applications of WebRTC:**
+
+1. **Video Conferencing Systems**
+2. **Live Streaming Platforms**
+3. **Remote Assistance Applications**
+4. **Gaming and Interactive Entertainment**
+5. **IoT Device Communication**
+6. **Remote Healthcare Consultations**
+
+**Conclusion:**
+WebRTC represents a powerful technology for building real-time communication applications directly in the browser. By understanding its core components, signaling requirements, and best practices, developers can create robust peer-to-peer applications that deliver high-quality audio, video, and data sharing experiences with minimal latency.
+
+### Q8: Explain the Web Audio API and how to create advanced audio applications in the browser.
+**Difficulty: Hard**
+
+**Answer:**
+The Web Audio API is a powerful, high-level JavaScript API for processing and synthesizing audio in web applications. It provides a flexible system for controlling audio on the web, enabling developers to create complex audio applications like music synthesizers, audio visualizers, spatial audio systems, and sound effects processors directly in the browser.
+
+**Core Concepts of the Web Audio API:**
+
+1. **Audio Context**: The central object that manages and processes all audio operations
+2. **Audio Nodes**: Building blocks that process audio data (sources, effects, analyzers, destinations)
+3. **Audio Routing**: Connecting nodes together to create an audio processing graph
+4. **Modular Design**: Allows for complex audio processing chains with precise timing
+
+**Basic Audio Graph Architecture:**
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│             │     │             │     │             │     │             │
+│  Source     │────▶│  Effect     │────▶│  Analyzer   │────▶│ Destination │
+│  Nodes      │     │  Nodes      │     │  Nodes      │     │ (Speakers)  │
+│             │     │             │     │             │     │             │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+```
+
+**Creating a Basic Audio Application:**
+
+```javascript
+// 1. Create an Audio Context
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+const audioContext = new AudioContext();
+
+// 2. Create a simple oscillator (sound source)
+function playTone(frequency = 440, type = 'sine') {
+  // Create an oscillator node
+  const oscillator = audioContext.createOscillator();
+  
+  // Configure the oscillator
+  oscillator.type = type; // 'sine', 'square', 'sawtooth', 'triangle'
+  oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+  
+  // Create a gain node for volume control
+  const gainNode = audioContext.createGain();
+  gainNode.gain.setValueAtTime(0, audioContext.currentTime); // Start silent
+  gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.1); // Fade in
+  
+  // Connect the nodes: oscillator -> gain -> destination
+  oscillator.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  
+  // Start the oscillator
+  oscillator.start();
+  
+  // Stop the oscillator after 1 second with a fade out
+  gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
+  oscillator.stop(audioContext.currentTime + 1.1);
+  
+  return { oscillator, gainNode };
+}
+
+// Usage
+document.getElementById('play-button').addEventListener('click', () => {
+  // Resume audio context if it's suspended (needed for Chrome's autoplay policy)
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+  
+  // Play an A note (440Hz)
+  playTone(440, 'sine');
+});
+```
+
+**Loading and Playing Audio Files:**
+
+```javascript
+async function loadAndPlayAudio(url) {
+  try {
+    // Fetch the audio file
+    const response = await fetch(url);
+    const arrayBuffer = await response.arrayBuffer();
+    
+    // Decode the audio data
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    
+    // Create a buffer source node
+    const source = audioContext.createBufferSource();
+    source.buffer = audioBuffer;
+    
+    // Create a gain node for volume control
+    const gainNode = audioContext.createGain();
+    gainNode.gain.value = 0.5; // 50% volume
+    
+    // Connect the nodes
+    source.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Play the audio
+    source.start();
+    
+    return { source, gainNode };
+    
+  } catch (error) {
+    console.error('Error loading audio:', error);
+  }
+}
+
+// Usage
+document.getElementById('play-sample').addEventListener('click', () => {
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+  
+  loadAndPlayAudio('path/to/audio/file.mp3');
+});
+```
+
+**Creating an Audio Visualizer:**
+
+```javascript
+function createAudioVisualizer(audioElement) {
+  // Create an audio source from the HTML audio element
+  const source = audioContext.createMediaElementSource(audioElement);
+  
+  // Create an analyzer node
+  const analyser = audioContext.createAnalyser();
+  analyser.fftSize = 2048; // Must be a power of 2
+  const bufferLength = analyser.frequencyBinCount; // Half of fftSize
+  const dataArray = new Uint8Array(bufferLength);
+  
+  // Connect the source to the analyzer and the destination
+  source.connect(analyser);
+  analyser.connect(audioContext.destination);
+  
+  // Get the canvas and its context
+  const canvas = document.getElementById('visualizer');
+  const canvasCtx = canvas.getContext('2d');
+  
+  // Function to draw the visualization
+  function draw() {
+    // Request next animation frame
+    requestAnimationFrame(draw);
+    
+    // Get the frequency data
+    analyser.getByteFrequencyData(dataArray);
+    
+    // Clear the canvas
+    canvasCtx.fillStyle = 'rgb(0, 0, 0)';
+    canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw the frequency bars
+    const barWidth = (canvas.width / bufferLength) * 2.5;
+    let x = 0;
+    
+    for (let i = 0; i < bufferLength; i++) {
+      const barHeight = dataArray[i] / 2;
+      
+      // Use the frequency data to determine color
+      const r = dataArray[i] + 25;
+      const g = 250 - dataArray[i];
+      const b = 50;
+      
+      canvasCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+      canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+      
+      x += barWidth + 1;
+    }
+  }
+  
+  // Start the visualization
+  draw();
+  
+  return { source, analyser };
+}
+
+// Usage
+const audioElement = document.getElementById('audio-player');
+document.getElementById('start-visualizer').addEventListener('click', () => {
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+  
+  createAudioVisualizer(audioElement);
+  audioElement.play();
+});
+```
+
+**Creating a Simple Synthesizer:**
+
+```javascript
+class Synthesizer {
+  constructor() {
+    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    this.masterGain = this.audioContext.createGain();
+    this.masterGain.gain.value = 0.7;
+    this.masterGain.connect(this.audioContext.destination);
+    
+    // Add effects chain
+    this.compressor = this.audioContext.createDynamicsCompressor();
+    this.compressor.threshold.value = -24;
+    this.compressor.knee.value = 30;
+    this.compressor.ratio.value = 12;
+    this.compressor.attack.value = 0.003;
+    this.compressor.release.value = 0.25;
+    this.compressor.connect(this.masterGain);
+    
+    this.activeOscillators = {};
+  }
+  
+  playNote(note, octave = 4) {
+    // Resume audio context if suspended
+    if (this.audioContext.state === 'suspended') {
+      this.audioContext.resume();
+    }
+    
+    // Calculate frequency using equal temperament
+    // A4 = 440Hz, each semitone is a factor of 2^(1/12)
+    const notes = { 'C': -9, 'C#': -8, 'D': -7, 'D#': -6, 'E': -5, 'F': -4, 'F#': -3, 'G': -2, 'G#': -1, 'A': 0, 'A#': 1, 'B': 2 };
+    const semitoneOffset = notes[note];
+    const octaveOffset = octave - 4; // A4 is the reference
+    const frequency = 440 * Math.pow(2, (semitoneOffset / 12) + octaveOffset);
+    
+    // Create unique ID for this note
+    const noteId = `${note}${octave}`;
+    
+    // Create oscillator
+    const osc = this.audioContext.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+    
+    // Create envelope
+    const envelope = this.audioContext.createGain();
+    envelope.gain.setValueAtTime(0, this.audioContext.currentTime);
+    envelope.gain.linearRampToValueAtTime(1, this.audioContext.currentTime + 0.05); // Attack
+    
+    // Create filter
+    const filter = this.audioContext.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 1500;
+    filter.Q.value = 5;
+    
+    // Connect nodes: oscillator -> envelope -> filter -> compressor -> master
+    osc.connect(envelope);
+    envelope.connect(filter);
+    filter.connect(this.compressor);
+    
+    // Start oscillator
+    osc.start();
+    
+    // Store active oscillator and its envelope
+    this.activeOscillators[noteId] = { osc, envelope, filter };
+    
+    return noteId;
+  }
+  
+  releaseNote(noteId) {
+    if (this.activeOscillators[noteId]) {
+      const { osc, envelope } = this.activeOscillators[noteId];
+      
+      // Release envelope
+      const now = this.audioContext.currentTime;
+      envelope.gain.cancelScheduledValues(now);
+      envelope.gain.setValueAtTime(envelope.gain.value, now);
+      envelope.gain.exponentialRampToValueAtTime(0.001, now + 0.5); // Release time
+      
+      // Stop oscillator after release
+      osc.stop(now + 0.5);
+      
+      // Remove from active oscillators after release
+      setTimeout(() => {
+        delete this.activeOscillators[noteId];
+      }, 500);
+    }
+  }
+  
+  setFilterFrequency(value) {
+    // Update filter frequency for all active notes
+    const minFreq = 50;
+    const maxFreq = 15000;
+    const frequency = minFreq * Math.pow(maxFreq / minFreq, value);
+    
+    Object.values(this.activeOscillators).forEach(({ filter }) => {
+      filter.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+    });
+  }
+  
+  setFilterResonance(value) {
+    // Update filter Q for all active notes
+    const q = value * 30;
+    
+    Object.values(this.activeOscillators).forEach(({ filter }) => {
+      filter.Q.setValueAtTime(q, this.audioContext.currentTime);
+    });
+  }
+}
+
+// Usage
+const synth = new Synthesizer();
+
+// Map keyboard keys to notes
+const keyboardMapping = {
+  'a': { note: 'C', octave: 4 },
+  'w': { note: 'C#', octave: 4 },
+  's': { note: 'D', octave: 4 },
+  'e': { note: 'D#', octave: 4 },
+  'd': { note: 'E', octave: 4 },
+  'f': { note: 'F', octave: 4 },
+  't': { note: 'F#', octave: 4 },
+  'g': { note: 'G', octave: 4 },
+  'y': { note: 'G#', octave: 4 },
+  'h': { note: 'A', octave: 4 },
+  'u': { note: 'A#', octave: 4 },
+  'j': { note: 'B', octave: 4 },
+  'k': { note: 'C', octave: 5 },
+};
+
+// Keep track of pressed keys
+const pressedKeys = {};
+
+// Add event listeners for keyboard
+window.addEventListener('keydown', (event) => {
+  const key = event.key.toLowerCase();
+  
+  // Check if key is mapped and not already pressed
+  if (keyboardMapping[key] && !pressedKeys[key]) {
+    const { note, octave } = keyboardMapping[key];
+    const noteId = synth.playNote(note, octave);
+    pressedKeys[key] = noteId;
+    
+    // Highlight the key on the virtual keyboard
+    document.querySelector(`[data-note="${note}${octave}"]`)?.classList.add('active');
+  }
+});
+
+window.addEventListener('keyup', (event) => {
+  const key = event.key.toLowerCase();
+  
+  // Check if key is mapped and currently pressed
+  if (keyboardMapping[key] && pressedKeys[key]) {
+    const noteId = pressedKeys[key];
+    synth.releaseNote(noteId);
+    delete pressedKeys[key];
+    
+    // Remove highlight from the virtual keyboard
+    const { note, octave } = keyboardMapping[key];
+    document.querySelector(`[data-note="${note}${octave}"]`)?.classList.remove('active');
+  }
+});
+
+// Add event listeners for filter controls
+document.getElementById('filter-cutoff').addEventListener('input', (event) => {
+  synth.setFilterFrequency(event.target.value);
+});
+
+document.getElementById('filter-resonance').addEventListener('input', (event) => {
+  synth.setFilterResonance(event.target.value);
+});
+```
+
+**Creating 3D Spatial Audio:**
+
+```javascript
+function createSpatialAudio(audioUrl) {
+  // Create a listener (represents the user's position and orientation)
+  const listener = audioContext.listener;
+  
+  // Set listener position (if using an older browser API)
+  if (listener.positionX) {
+    listener.positionX.value = 0;
+    listener.positionY.value = 0;
+    listener.positionZ.value = 0;
+  } else {
+    listener.setPosition(0, 0, 0);
+  }
+  
+  // Set listener orientation (forward and up vectors)
+  if (listener.forwardX) {
+    listener.forwardX.value = 0;
+    listener.forwardY.value = 0;
+    listener.forwardZ.value = -1;
+    listener.upX.value = 0;
+    listener.upY.value = 1;
+    listener.upZ.value = 0;
+  } else {
+    listener.setOrientation(0, 0, -1, 0, 1, 0);
+  }
+  
+  // Load audio
+  return fetch(audioUrl)
+    .then(response => response.arrayBuffer())
+    .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+    .then(audioBuffer => {
+      // Create a panner node for 3D positioning
+      const panner = audioContext.createPanner();
+      panner.panningModel = 'HRTF'; // Head-related transfer function for realistic 3D audio
+      panner.distanceModel = 'inverse';
+      panner.refDistance = 1;
+      panner.maxDistance = 10000;
+      panner.rolloffFactor = 1;
+      
+      // Set initial position
+      if (panner.positionX) {
+        panner.positionX.value = 0;
+        panner.positionY.value = 0;
+        panner.positionZ.value = 0;
+      } else {
+        panner.setPosition(0, 0, 0);
+      }
+      
+      // Create a buffer source
+      const source = audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      
+      // Connect nodes: source -> panner -> destination
+      source.connect(panner);
+      panner.connect(audioContext.destination);
+      
+      return { source, panner };
+    });
+}
+
+// Usage: Create a sound that moves in 3D space
+let soundObject;
+
+document.getElementById('start-spatial').addEventListener('click', async () => {
+  if (audioContext.state === 'suspended') {
+    await audioContext.resume();
+  }
+  
+  soundObject = await createSpatialAudio('path/to/sound.mp3');
+  soundObject.source.loop = true;
+  soundObject.source.start();
+  
+  // Animate the sound position in a circle around the listener
+  let angle = 0;
+  function animateSound() {
+    // Calculate position on a circle
+    const radius = 5;
+    const x = Math.sin(angle) * radius;
+    const z = Math.cos(angle) * radius;
+    
+    // Update panner position
+    if (soundObject.panner.positionX) {
+      soundObject.panner.positionX.value = x;
+      soundObject.panner.positionZ.value = z;
+    } else {
+      soundObject.panner.setPosition(x, 0, z);
+    }
+    
+    // Increment angle
+    angle += 0.01;
+    
+    // Continue animation
+    requestAnimationFrame(animateSound);
+  }
+  
+  animateSound();
+});
+```
+
+**Creating an Audio Worklet for Custom Audio Processing:**
+
+Audio Worklets allow you to run custom audio processing code in a separate thread, providing low-latency audio processing capabilities.
+
+1. First, create a worklet processor file (e.g., `noise-processor.js`):
+
+```javascript
+// noise-processor.js
+class NoiseProcessor extends AudioWorkletProcessor {
+  constructor() {
+    super();
+    this.phase = 0;
+    this.phaseIncrement = 0.01;
+  }
+  
+  process(inputs, outputs, parameters) {
+    const output = outputs[0];
+    
+    for (let channel = 0; channel < output.length; ++channel) {
+      const outputChannel = output[channel];
+      
+      for (let i = 0; i < outputChannel.length; ++i) {
+        // Generate white noise
+        outputChannel[i] = Math.random() * 2 - 1;
+      }
+    }
+    
+    // Return true to keep the processor alive
+    return true;
+  }
+}
+
+registerProcessor('noise-processor', NoiseProcessor);
+```
+
+2. Then, use the worklet in your main code:
+
+```javascript
+async function setupNoiseGenerator() {
+  // Load and register the audio worklet
+  await audioContext.audioWorklet.addModule('noise-processor.js');
+  
+  // Create a worklet node
+  const noiseGenerator = new AudioWorkletNode(audioContext, 'noise-processor');
+  
+  // Create a gain node for volume control
+  const gainNode = audioContext.createGain();
+  gainNode.gain.value = 0.1; // Low volume
+  
+  // Connect nodes
+  noiseGenerator.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  
+  return { noiseGenerator, gainNode };
+}
+
+// Usage
+document.getElementById('start-noise').addEventListener('click', async () => {
+  if (audioContext.state === 'suspended') {
+    await audioContext.resume();
+  }
+  
+  const { gainNode } = await setupNoiseGenerator();
+  
+  // Add volume control
+  document.getElementById('noise-volume').addEventListener('input', (event) => {
+    gainNode.gain.value = event.target.value;
+  });
+});
+```
+
+**Creating a Multi-Track Recorder:**
+
+```javascript
+class AudioRecorder {
+  constructor(audioContext) {
+    this.audioContext = audioContext;
+    this.tracks = [];
+    this.isRecording = false;
+    this.startTime = 0;
+  }
+  
+  async createNewTrack() {
+    try {
+      // Get user media stream
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Create a media stream source
+      const source = this.audioContext.createMediaStreamSource(stream);
+      
+      // Create a recorder using MediaRecorder API
+      const mediaRecorder = new MediaRecorder(stream);
+      
+      // Create an analyzer for visualization
+      const analyzer = this.audioContext.createAnalyser();
+      analyzer.fftSize = 2048;
+      source.connect(analyzer);
+      
+      // Create a gain node for this track
+      const gainNode = this.audioContext.createGain();
+      gainNode.gain.value = 1.0;
+      
+      // Store recorded chunks
+      const audioChunks = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+      
+      mediaRecorder.onstop = async () => {
+        // Create a blob from the recorded chunks
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        
+        // Create an object URL for the blob
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        // Fetch and decode the audio data
+        const arrayBuffer = await audioBlob.arrayBuffer();
+        const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+        
+        // Update the track with the recorded buffer
+        const trackIndex = this.tracks.findIndex(t => t.mediaRecorder === mediaRecorder);
+        if (trackIndex !== -1) {
+          this.tracks[trackIndex].buffer = audioBuffer;
+          this.tracks[trackIndex].url = audioUrl;
+        }
+        
+        // Notify that recording is complete
+        this.onTrackRecorded && this.onTrackRecorded(trackIndex);
+      };
+      
+      // Create a new track object
+      const track = {
+        source,
+        mediaRecorder,
+        analyzer,
+        gainNode,
+        buffer: null,
+        url: null,
+        stream,
+        muted: false
+      };
+      
+      // Add the track to the tracks array
+      this.tracks.push(track);
+      
+      return this.tracks.length - 1; // Return the track index
+      
+    } catch (error) {
+      console.error('Error creating track:', error);
+      return -1;
+    }
+  }
+  
+  startRecording() {
+    if (this.isRecording) return;
+    
+    this.isRecording = true;
+    this.startTime = this.audioContext.currentTime;
+    
+    // Start recording on all tracks
+    this.tracks.forEach(track => {
+      if (track.mediaRecorder.state === 'inactive') {
+        track.mediaRecorder.start();
+      }
+    });
+  }
+  
+  stopRecording() {
+    if (!this.isRecording) return;
+    
+    this.isRecording = false;
+    
+    // Stop recording on all tracks
+    this.tracks.forEach(track => {
+      if (track.mediaRecorder.state === 'recording') {
+        track.mediaRecorder.stop();
+      }
+    });
+  }
+  
+  playAllTracks() {
+    // Create buffer sources for all tracks that have recorded audio
+    const currentTime = this.audioContext.currentTime;
+    
+    this.tracks.forEach(track => {
+      if (track.buffer) {
+        // Create a buffer source
+        const source = this.audioContext.createBufferSource();
+        source.buffer = track.buffer;
+        
+        // Connect through the track's gain node
+        source.connect(track.gainNode);
+        track.gainNode.connect(this.audioContext.destination);
+        
+        // Start playback
+        source.start(currentTime);
+        
+        // Store the source for potential stopping
+        track.playbackSource = source;
+      }
+    });
+  }
+  
+  stopAllPlayback() {
+    this.tracks.forEach(track => {
+      if (track.playbackSource) {
+        track.playbackSource.stop();
+        track.playbackSource = null;
+      }
+    });
+  }
+  
+  muteTrack(trackIndex, mute) {
+    if (trackIndex >= 0 && trackIndex < this.tracks.length) {
+      const track = this.tracks[trackIndex];
+      track.muted = mute;
+      track.gainNode.gain.value = mute ? 0 : 1;
+    }
+  }
+  
+  setTrackVolume(trackIndex, volume) {
+    if (trackIndex >= 0 && trackIndex < this.tracks.length) {
+      const track = this.tracks[trackIndex];
+      if (!track.muted) {
+        track.gainNode.gain.value = volume;
+      }
+    }
+  }
+  
+  exportMix() {
+    // Create an offline audio context for rendering
+    let maxDuration = 0;
+    
+    // Find the longest track duration
+    this.tracks.forEach(track => {
+      if (track.buffer && track.buffer.duration > maxDuration) {
+        maxDuration = track.buffer.duration;
+      }
+    });
+    
+    if (maxDuration === 0) return null;
+    
+    // Create an offline context with the max duration
+    const offlineContext = new OfflineAudioContext(
+      2, // stereo output
+      this.audioContext.sampleRate * maxDuration,
+      this.audioContext.sampleRate
+    );
+    
+    // Add all tracks to the offline context
+    this.tracks.forEach(track => {
+      if (track.buffer && !track.muted) {
+        const source = offlineContext.createBufferSource();
+        source.buffer = track.buffer;
+        
+        const gain = offlineContext.createGain();
+        gain.gain.value = track.gainNode.gain.value;
+        
+        source.connect(gain);
+        gain.connect(offlineContext.destination);
+        
+        source.start(0);
+      }
+    });
+    
+    // Render the audio
+    return offlineContext.startRendering().then(renderedBuffer => {
+      // Convert the rendered buffer to a WAV file
+      const wavBlob = this.bufferToWave(renderedBuffer);
+      return URL.createObjectURL(wavBlob);
+    });
+  }
+  
+  // Helper function to convert AudioBuffer to WAV Blob
+  bufferToWave(buffer) {
+    const numOfChannels = buffer.numberOfChannels;
+    const length = buffer.length * numOfChannels * 2;
+    const sampleRate = buffer.sampleRate;
+    
+    // Create the buffer for the WAV file
+    const arrayBuffer = new ArrayBuffer(44 + length);
+    const view = new DataView(arrayBuffer);
+    
+    // RIFF chunk descriptor
+    this.writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + length, true);
+    this.writeString(view, 8, 'WAVE');
+    
+    // FMT sub-chunk
+    this.writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true); // subchunk1size
+    view.setUint16(20, 1, true); // audio format (1 for PCM)
+    view.setUint16(22, numOfChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * numOfChannels * 2, true); // byte rate
+    view.setUint16(32, numOfChannels * 2, true); // block align
+    view.setUint16(34, 16, true); // bits per sample
+    
+    // Data sub-chunk
+    this.writeString(view, 36, 'data');
+    view.setUint32(40, length, true);
+    
+    // Write the PCM samples
+    const offset = 44;
+    let pos = 0;
+    
+    for (let i = 0; i < buffer.length; i++) {
+      for (let channel = 0; channel < numOfChannels; channel++) {
+        const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
+        const int16 = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+        view.setInt16(offset + pos, int16, true);
+        pos += 2;
+      }
+    }
+    
+    return new Blob([view], { type: 'audio/wav' });
+  }
+  
+  writeString(view, offset, string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  }
+}
+
+// Usage
+const recorder = new AudioRecorder(audioContext);
+
+// Create a new track
+document.getElementById('add-track').addEventListener('click', async () => {
+  if (audioContext.state === 'suspended') {
+    await audioContext.resume();
+  }
+  
+  const trackIndex = await recorder.createNewTrack();
+  if (trackIndex !== -1) {
+    // Create UI for the new track
+    createTrackUI(trackIndex);
+  }
+});
+
+// Start recording
+document.getElementById('start-recording').addEventListener('click', () => {
+  recorder.startRecording();
+  document.getElementById('start-recording').disabled = true;
+  document.getElementById('stop-recording').disabled = false;
+});
+
+// Stop recording
+document.getElementById('stop-recording').addEventListener('click', () => {
+  recorder.stopRecording();
+  document.getElementById('start-recording').disabled = false;
+  document.getElementById('stop-recording').disabled = true;
+});
+
+// Play all tracks
+document.getElementById('play-all').addEventListener('click', () => {
+  recorder.playAllTracks();
+});
+
+// Export mix
+document.getElementById('export-mix').addEventListener('click', async () => {
+  const mixUrl = await recorder.exportMix();
+  if (mixUrl) {
+    const downloadLink = document.getElementById('download-mix');
+    downloadLink.href = mixUrl;
+    downloadLink.download = 'mix.wav';
+    downloadLink.style.display = 'block';
+  }
+});
+
+// Helper function to create UI for a track
+function createTrackUI(trackIndex) {
+  const tracksContainer = document.getElementById('tracks-container');
+  
+  const trackDiv = document.createElement('div');
+  trackDiv.className = 'track';
+  trackDiv.dataset.trackIndex = trackIndex;
+  
+  // Create track controls
+  const muteButton = document.createElement('button');
+  muteButton.textContent = 'Mute';
+  muteButton.addEventListener('click', () => {
+    const isMuted = muteButton.classList.toggle('muted');
+    recorder.muteTrack(trackIndex, isMuted);
+    muteButton.textContent = isMuted ? 'Unmute' : 'Mute';
+  });
+  
+  const volumeSlider = document.createElement('input');
+  volumeSlider.type = 'range';
+  volumeSlider.min = '0';
+  volumeSlider.max = '1';
+  volumeSlider.step = '0.01';
+  volumeSlider.value = '1';
+  volumeSlider.addEventListener('input', () => {
+    recorder.setTrackVolume(trackIndex, parseFloat(volumeSlider.value));
+  });
+  
+  // Create canvas for visualization
+  const canvas = document.createElement('canvas');
+  canvas.width = 300;
+  canvas.height = 50;
+  
+  // Add elements to track div
+  trackDiv.appendChild(document.createTextNode(`Track ${trackIndex + 1}`));
+  trackDiv.appendChild(muteButton);
+  trackDiv.appendChild(volumeSlider);
+  trackDiv.appendChild(canvas);
+  
+  // Add track div to container
+  tracksContainer.appendChild(trackDiv);
+  
+  // Set up visualization
+  const canvasCtx = canvas.getContext('2d');
+  const analyzer = recorder.tracks[trackIndex].analyzer;
+  const bufferLength = analyzer.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+  
+  function drawVisualization() {
+    requestAnimationFrame(drawVisualization);
+    
+    analyzer.getByteTimeDomainData(dataArray);
+    
+    canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+    canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    canvasCtx.lineWidth = 2;
+    canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+    canvasCtx.beginPath();
+    
+    const sliceWidth = canvas.width / bufferLength;
+    let x = 0;
+    
+    for (let i = 0; i < bufferLength; i++) {
+      const v = dataArray[i] / 128.0;
+      const y = v * canvas.height / 2;
+      
+      if (i === 0) {
+        canvasCtx.moveTo(x, y);
+      } else {
+        canvasCtx.lineTo(x, y);
+      }
+      
+      x += sliceWidth;
+    }
+    
+    canvasCtx.lineTo(canvas.width, canvas.height / 2);
+    canvasCtx.stroke();
+  }
+  
+  drawVisualization();
+}
+
+// Set callback for when a track is recorded
+recorder.onTrackRecorded = (trackIndex) => {
+  console.log(`Track ${trackIndex + 1} recording complete`);
+};
+```
+
+**Advanced Audio Processing with Convolution Reverb:**
+
+```javascript
+async function createReverbEffect(impulseResponseUrl) {
+  // Fetch the impulse response file
+  const response = await fetch(impulseResponseUrl);
+  const arrayBuffer = await response.arrayBuffer();
+  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+  
+  // Create a convolver node
+  const convolver = audioContext.createConvolver();
+  convolver.buffer = audioBuffer;
+  
+  // Create a dry/wet mix control
+  const dryGain = audioContext.createGain();
+  const wetGain = audioContext.createGain();
+  
+  dryGain.gain.value = 0.5; // 50% dry signal
+  wetGain.gain.value = 0.5; // 50% wet (reverb) signal
+  
+  // Create input and output gain nodes
+  const inputGain = audioContext.createGain();
+  const outputGain = audioContext.createGain();
+  
+  // Connect the nodes
+  // Input -> inputGain -> [dryGain, convolver -> wetGain] -> outputGain -> Output
+  inputGain.connect(dryGain);
+  inputGain.connect(convolver);
+  convolver.connect(wetGain);
+  dryGain.connect(outputGain);
+  wetGain.connect(outputGain);
+  
+  return {
+    input: inputGain,
+    output: outputGain,
+    setDryWetRatio(dryWet) { // 0 = all dry, 1 = all wet
+      dryGain.gain.value = 1 - dryWet;
+      wetGain.gain.value = dryWet;
+    }
+  };
+}
+
+// Usage
+async function setupReverbDemo() {
+  // Create an oscillator for testing
+  const oscillator = audioContext.createOscillator();
+  oscillator.type = 'sawtooth';
+  oscillator.frequency.value = 220; // A3
+  
+  // Create an envelope
+  const envelope = audioContext.createGain();
+  envelope.gain.value = 0;
+  
+  // Create the reverb effect
+  const reverb = await createReverbEffect('path/to/concert-hall.wav');
+  
+  // Connect the nodes
+  oscillator.connect(envelope);
+  envelope.connect(reverb.input);
+  reverb.output.connect(audioContext.destination);
+  
+  // Start the oscillator
+  oscillator.start();
+  
+  // Function to trigger a note with reverb
+  function playNote() {
+    const now = audioContext.currentTime;
+    
+    // Attack
+    envelope.gain.cancelScheduledValues(now);
+    envelope.gain.setValueAtTime(0, now);
+    envelope.gain.linearRampToValueAtTime(0.5, now + 0.01);
+    
+    // Decay and sustain
+    envelope.gain.linearRampToValueAtTime(0.3, now + 0.3);
+    
+    // Release
+    envelope.gain.linearRampToValueAtTime(0, now + 2);
+  }
+  
+  // Add event listeners
+  document.getElementById('play-reverb').addEventListener('click', () => {
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+    
+    playNote();
+  });
+  
+  document.getElementById('reverb-amount').addEventListener('input', (event) => {
+    reverb.setDryWetRatio(parseFloat(event.target.value));
+  });
+  
+  return { oscillator, envelope, reverb };
+}
+
+// Initialize the reverb demo
+setupReverbDemo();
+```
+
+**Browser Compatibility and Limitations:**
+
+1. **Feature Detection:**
+
+```javascript
+function checkWebAudioSupport() {
+  const support = {
+    webAudio: Boolean(window.AudioContext || window.webkitAudioContext),
+    audioWorklet: Boolean(window.AudioContext && AudioContext.prototype.audioWorklet),
+    mediaRecorder: Boolean(window.MediaRecorder),
+    getUserMedia: Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
+  };
+  
+  return support;
+}
+
+// Usage
+const audioSupport = checkWebAudioSupport();
+if (!audioSupport.webAudio) {
+  showFallbackInterface('Your browser does not support Web Audio API');
+}
+```
+
+2. **Mobile Considerations:**
+   - Audio playback may require user interaction first (autoplay restrictions)
+   - Limited background audio processing on some mobile browsers
+   - Performance considerations for complex audio graphs
+
+```javascript
+// Example of handling autoplay restrictions
+document.addEventListener('click', function initAudioContext() {
+  if (audioContext.state === 'suspended') {
+    audioContext.resume().then(() => {
+      console.log('Audio context resumed successfully');
+    });
+  }
+  document.removeEventListener('click', initAudioContext);
+}, { once: true });
+```
+
+**Best Practices for Web Audio Applications:**
+
+1. **Performance Optimization:**
+   - Reuse audio nodes when possible instead of creating new ones
+   - Disconnect unused nodes to free up resources
+   - Use appropriate buffer sizes for different use cases
+   - Consider using AudioWorklet for intensive processing
+
+2. **User Experience:**
+   - Always provide visual feedback for audio operations
+   - Handle autoplay restrictions gracefully
+   - Implement proper volume controls and mute options
+   - Provide fallbacks for unsupported features
+
+3. **Memory Management:**
+
+```javascript
+function cleanupAudioResources() {
+  // Disconnect all nodes
+  source.disconnect();
+  gainNode.disconnect();
+  analyser.disconnect();
+  
+  // Release references
+  source = null;
+  gainNode = null;
+  analyser = null;
+  
+  // If you have any AudioBuffers, you can help GC by clearing references
+  audioBuffer = null;
+}
+```
+
+**Real-World Applications of Web Audio API:**
+
+1. **Music Production Applications**
+2. **Interactive Sound Installations**
+3. **Audio Visualization Tools**
+4. **Game Sound Engines**
+5. **Speech Recognition and Processing**
+6. **Virtual Instruments and Synthesizers**
+7. **Audio Editing and Mixing Tools**
+
+**Conclusion:**
+The Web Audio API provides a powerful platform for creating sophisticated audio applications directly in the browser. By understanding its core concepts, node-based architecture, and advanced features, developers can create immersive audio experiences ranging from simple sound players to complex digital audio workstations, all running natively in modern web browsers.
+
+### Q9: Explain IndexedDB and how to use it for client-side storage in web applications.
+**Difficulty: Medium**
+
+**Answer:**
+IndexedDB is a low-level, transactional, client-side storage API that allows web applications to store and retrieve significant amounts of structured data, including files and blobs. Unlike localStorage, which is limited to storing simple key-value pairs, IndexedDB provides a robust solution for storing complex data structures and performing advanced queries.
+
+**Core Concepts of IndexedDB:**
+
+1. **Object Store-Based**: Similar to tables in relational databases, but stores JavaScript objects
+2. **Schema-Free**: No predefined schema required, though you define object stores and indexes
+3. **Transactional**: All operations are part of a transaction, ensuring data integrity
+4. **Asynchronous API**: Non-blocking operations using promises or event callbacks
+5. **Same-Origin Policy**: Data is restricted to the domain that created it
+6. **Significant Storage Capacity**: Much larger than localStorage (typically several GB vs 5-10MB)
+
+**Basic IndexedDB Operations:**
+
+1. **Opening a Database:**
+
+```javascript
+function openDatabase() {
+  return new Promise((resolve, reject) => {
+    // Open (or create) the database
+    const request = indexedDB.open('MyAppDatabase', 1);
+    
+    // Handle database upgrade (runs if database doesn't exist or version changes)
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      
+      // Create an object store (similar to a table)
+      // If you want auto-incrementing IDs, pass { autoIncrement: true }
+      const store = db.createObjectStore('users', { keyPath: 'id' });
+      
+      // Create indexes for searching
+      store.createIndex('email', 'email', { unique: true });
+      store.createIndex('name', 'name', { unique: false });
+      
+      console.log('Database setup complete');
+    };
+    
+    // Handle success
+    request.onsuccess = (event) => {
+      const db = event.target.result;
+      resolve(db);
+    };
+    
+    // Handle errors
+    request.onerror = (event) => {
+      console.error('IndexedDB error:', event.target.error);
+      reject('Error opening database');
+    };
+  });
+}
+```
+
+2. **Adding Data:**
+
+```javascript
+async function addUser(user) {
+  try {
+    const db = await openDatabase();
+    
+    return new Promise((resolve, reject) => {
+      // Start a transaction
+      const transaction = db.transaction(['users'], 'readwrite');
+      const store = transaction.objectStore('users');
+      
+      // Add the user object to the store
+      const request = store.add(user);
+      
+      request.onsuccess = () => {
+        resolve(request.result); // Returns the key of the added object
+      };
+      
+      request.onerror = () => {
+        reject('Error adding user: ' + request.error);
+      };
+      
+      // Close the database when the transaction is complete
+      transaction.oncomplete = () => {
+        db.close();
+      };
+    });
+  } catch (error) {
+    console.error('Error in addUser:', error);
+    throw error;
+  }
+}
+
+// Usage
+addUser({
+  id: 1,
+  name: 'John Doe',
+  email: 'john@example.com',
+  age: 30
+}).then(key => {
+  console.log('User added with key:', key);
+}).catch(error => {
+  console.error(error);
+});
+```
+
+3. **Retrieving Data:**
+
+```javascript
+async function getUser(id) {
+  try {
+    const db = await openDatabase();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['users'], 'readonly');
+      const store = transaction.objectStore('users');
+      
+      // Get the user with the specified ID
+      const request = store.get(id);
+      
+      request.onsuccess = () => {
+        resolve(request.result); // Returns the user object or undefined
+      };
+      
+      request.onerror = () => {
+        reject('Error getting user: ' + request.error);
+      };
+      
+      transaction.oncomplete = () => {
+        db.close();
+      };
+    });
+  } catch (error) {
+    console.error('Error in getUser:', error);
+    throw error;
+  }
+}
+
+// Usage
+getUser(1).then(user => {
+  if (user) {
+    console.log('Found user:', user);
+  } else {
+    console.log('User not found');
+  }
+}).catch(error => {
+  console.error(error);
+});
+```
+
+4. **Updating Data:**
+
+```javascript
+async function updateUser(user) {
+  try {
+    const db = await openDatabase();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['users'], 'readwrite');
+      const store = transaction.objectStore('users');
+      
+      // Put will add the object if it doesn't exist, or update it if it does
+      const request = store.put(user);
+      
+      request.onsuccess = () => {
+        resolve(true);
+      };
+      
+      request.onerror = () => {
+        reject('Error updating user: ' + request.error);
+      };
+      
+      transaction.oncomplete = () => {
+        db.close();
+      };
+    });
+  } catch (error) {
+    console.error('Error in updateUser:', error);
+    throw error;
+  }
+}
+
+// Usage
+updateUser({
+  id: 1,
+  name: 'John Doe',
+  email: 'john@example.com',
+  age: 31 // Updated age
+}).then(() => {
+  console.log('User updated successfully');
+}).catch(error => {
+  console.error(error);
+});
+```
+
+5. **Deleting Data:**
+
+```javascript
+async function deleteUser(id) {
+  try {
+    const db = await openDatabase();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['users'], 'readwrite');
+      const store = transaction.objectStore('users');
+      
+      // Delete the user with the specified ID
+      const request = store.delete(id);
+      
+      request.onsuccess = () => {
+        resolve(true);
+      };
+      
+      request.onerror = () => {
+        reject('Error deleting user: ' + request.error);
+      };
+      
+      transaction.oncomplete = () => {
+        db.close();
+      };
+    });
+  } catch (error) {
+    console.error('Error in deleteUser:', error);
+    throw error;
+  }
+}
+
+// Usage
+deleteUser(1).then(() => {
+  console.log('User deleted successfully');
+}).catch(error => {
+  console.error(error);
+});
+```
+
+6. **Querying with Indexes:**
+
+```javascript
+async function getUserByEmail(email) {
+  try {
+    const db = await openDatabase();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['users'], 'readonly');
+      const store = transaction.objectStore('users');
+      
+      // Use the email index to find the user
+      const index = store.index('email');
+      const request = index.get(email);
+      
+      request.onsuccess = () => {
+        resolve(request.result); // Returns the user object or undefined
+      };
+      
+      request.onerror = () => {
+        reject('Error getting user by email: ' + request.error);
+      };
+      
+      transaction.oncomplete = () => {
+        db.close();
+      };
+    });
+  } catch (error) {
+    console.error('Error in getUserByEmail:', error);
+    throw error;
+  }
+}
+
+// Usage
+getUserByEmail('john@example.com').then(user => {
+  if (user) {
+    console.log('Found user:', user);
+  } else {
+    console.log('User not found');
+  }
+}).catch(error => {
+  console.error(error);
+});
+```
+
+7. **Getting All Records:**
+
+```javascript
+async function getAllUsers() {
+  try {
+    const db = await openDatabase();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['users'], 'readonly');
+      const store = transaction.objectStore('users');
+      
+      // Open a cursor to iterate through all records
+      const request = store.openCursor();
+      const users = [];
+      
+      request.onsuccess = (event) => {
+        const cursor = event.target.result;
+        
+        if (cursor) {
+          // Add the current user to our array
+          users.push(cursor.value);
+          
+          // Move to the next record
+          cursor.continue();
+        } else {
+          // No more records, resolve with the array of users
+          resolve(users);
+        }
+      };
+      
+      request.onerror = () => {
+        reject('Error getting all users: ' + request.error);
+      };
+      
+      transaction.oncomplete = () => {
+        db.close();
+      };
+    });
+  } catch (error) {
+    console.error('Error in getAllUsers:', error);
+    throw error;
+  }
+}
+
+// Usage
+getAllUsers().then(users => {
+  console.log('All users:', users);
+}).catch(error => {
+  console.error(error);
+});
+```
+
+8. **Using Range Queries:**
+
+```javascript
+async function getUsersByAgeRange(minAge, maxAge) {
+  try {
+    const db = await openDatabase();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['users'], 'readonly');
+      const store = transaction.objectStore('users');
+      
+      // Ensure we have an index on the age property
+      // This should be created in the onupgradeneeded event handler
+      // store.createIndex('age', 'age', { unique: false });
+      const index = store.index('age');
+      
+      // Create a range for the query
+      const range = IDBKeyRange.bound(minAge, maxAge);
+      
+      // Open a cursor with the range
+      const request = index.openCursor(range);
+      const users = [];
+      
+      request.onsuccess = (event) => {
+        const cursor = event.target.result;
+        
+        if (cursor) {
+          users.push(cursor.value);
+          cursor.continue();
+        } else {
+          resolve(users);
+        }
+      };
+      
+      request.onerror = () => {
+        reject('Error getting users by age range: ' + request.error);
+      };
+      
+      transaction.oncomplete = () => {
+        db.close();
+      };
+    });
+  } catch (error) {
+    console.error('Error in getUsersByAgeRange:', error);
+    throw error;
+  }
+}
+
+// Usage
+getUsersByAgeRange(25, 35).then(users => {
+  console.log('Users between 25 and 35:', users);
+}).catch(error => {
+  console.error(error);
+});
+```
+
+**Advanced IndexedDB Patterns:**
+
+1. **Using Promises with IndexedDB:**
+
+Creating a wrapper to make IndexedDB more ergonomic with Promises:
+
+```javascript
+class IndexedDBWrapper {
+  constructor(dbName, version) {
+    this.dbName = dbName;
+    this.version = version;
+    this.db = null;
+  }
+  
+  async open() {
+    if (this.db) return this.db;
+    
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, this.version);
+      
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        this.setupDatabase(db);
+      };
+      
+      request.onsuccess = (event) => {
+        this.db = event.target.result;
+        resolve(this.db);
+      };
+      
+      request.onerror = (event) => {
+        reject('Error opening database: ' + event.target.error);
+      };
+    });
+  }
+  
+  setupDatabase(db) {
+    // This method should be overridden by subclasses
+    // to define the database schema
+  }
+  
+  async transaction(storeNames, mode) {
+    const db = await this.open();
+    return db.transaction(storeNames, mode);
+  }
+  
+  async add(storeName, item) {
+    const tx = await this.transaction([storeName], 'readwrite');
+    const store = tx.objectStore(storeName);
+    
+    return new Promise((resolve, reject) => {
+      const request = store.add(item);
+      
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+      
+      tx.oncomplete = () => this.db.close();
+    });
+  }
+  
+  async get(storeName, key) {
+    const tx = await this.transaction([storeName], 'readonly');
+    const store = tx.objectStore(storeName);
+    
+    return new Promise((resolve, reject) => {
+      const request = store.get(key);
+      
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+      
+      tx.oncomplete = () => this.db.close();
+    });
+  }
+  
+  async getAll(storeName) {
+    const tx = await this.transaction([storeName], 'readonly');
+    const store = tx.objectStore(storeName);
+    
+    return new Promise((resolve, reject) => {
+      const request = store.getAll();
+      
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+      
+      tx.oncomplete = () => this.db.close();
+    });
+  }
+  
+  async put(storeName, item) {
+    const tx = await this.transaction([storeName], 'readwrite');
+    const store = tx.objectStore(storeName);
+    
+    return new Promise((resolve, reject) => {
+      const request = store.put(item);
+      
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+      
+      tx.oncomplete = () => this.db.close();
+    });
+  }
+  
+  async delete(storeName, key) {
+    const tx = await this.transaction([storeName], 'readwrite');
+    const store = tx.objectStore(storeName);
+    
+    return new Promise((resolve, reject) => {
+      const request = store.delete(key);
+      
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+      
+      tx.oncomplete = () => this.db.close();
+    });
+  }
+  
+  async clear(storeName) {
+    const tx = await this.transaction([storeName], 'readwrite');
+    const store = tx.objectStore(storeName);
+    
+    return new Promise((resolve, reject) => {
+      const request = store.clear();
+      
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+      
+      tx.oncomplete = () => this.db.close();
+    });
+  }
+}
+
+// Usage example
+class UserDatabase extends IndexedDBWrapper {
+  constructor() {
+    super('UserDB', 1);
+  }
+  
+  setupDatabase(db) {
+    const store = db.createObjectStore('users', { keyPath: 'id' });
+    store.createIndex('email', 'email', { unique: true });
+    store.createIndex('name', 'name', { unique: false });
+    store.createIndex('age', 'age', { unique: false });
+  }
+  
+  async addUser(user) {
+    return this.add('users', user);
+  }
+  
+  async getUser(id) {
+    return this.get('users', id);
+  }
+  
+  async getAllUsers() {
+    return this.getAll('users');
+  }
+  
+  async updateUser(user) {
+    return this.put('users', user);
+  }
+  
+  async deleteUser(id) {
+    return this.delete('users', id);
+  }
+}
+
+// Using the wrapper
+const userDB = new UserDatabase();
+
+// Add a user
+userDB.addUser({
+  id: 1,
+  name: 'Jane Smith',
+  email: 'jane@example.com',
+  age: 28
+}).then(id => {
+  console.log('Added user with ID:', id);
+  
+  // Get all users
+  return userDB.getAllUsers();
+}).then(users => {
+  console.log('All users:', users);
+}).catch(error => {
+  console.error('Error:', error);
+});
+```
+
+2. **Storing and Retrieving Binary Data (Blobs/Files):**
+
+```javascript
+async function storeFile(file) {
+  try {
+    const db = await openDatabase();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['files'], 'readwrite');
+      const store = transaction.objectStore('files');
+      
+      // Create a file object with metadata
+      const fileObj = {
+        id: Date.now(), // Using timestamp as ID
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified,
+        content: file // Store the actual File/Blob object
+      };
+      
+      const request = store.add(fileObj);
+      
+      request.onsuccess = () => {
+        resolve(request.result);
+      };
+      
+      request.onerror = () => {
+        reject('Error storing file: ' + request.error);
+      };
+      
+      transaction.oncomplete = () => {
+        db.close();
+      };
+    });
+  } catch (error) {
+    console.error('Error in storeFile:', error);
+    throw error;
+  }
+}
+
+async function retrieveFile(id) {
+  try {
+    const db = await openDatabase();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['files'], 'readonly');
+      const store = transaction.objectStore('files');
+      
+      const request = store.get(id);
+      
+      request.onsuccess = () => {
+        if (request.result) {
+          // Create a URL for the blob that can be used in an <img>, <audio>, etc.
+          const url = URL.createObjectURL(request.result.content);
+          resolve({
+            metadata: {
+              name: request.result.name,
+              type: request.result.type,
+              size: request.result.size,
+              lastModified: request.result.lastModified
+            },
+            blob: request.result.content,
+            url: url
+          });
+        } else {
+          resolve(null);
+        }
+      };
+      
+      request.onerror = () => {
+        reject('Error retrieving file: ' + request.error);
+      };
+      
+      transaction.oncomplete = () => {
+        db.close();
+      };
+    });
+  } catch (error) {
+    console.error('Error in retrieveFile:', error);
+    throw error;
+  }
+}
+
+// Usage with file input
+document.getElementById('fileInput').addEventListener('change', async (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    try {
+      const fileId = await storeFile(file);
+      console.log('File stored with ID:', fileId);
+      
+      // Retrieve and display the file
+      const fileData = await retrieveFile(fileId);
+      
+      if (fileData) {
+        // Display image if it's an image
+        if (fileData.metadata.type.startsWith('image/')) {
+          const img = document.createElement('img');
+          img.src = fileData.url;
+          document.body.appendChild(img);
+        }
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.href = fileData.url;
+        link.download = fileData.metadata.name;
+        link.textContent = `Download ${fileData.metadata.name}`;
+        document.body.appendChild(link);
+      }
+    } catch (error) {
+      console.error('Error handling file:', error);
+    }
+  }
+});
+```
+
+3. **Implementing Versioned Database Migrations:**
+
+```javascript
+class DatabaseMigration {
+  constructor() {
+    this.dbName = 'AppDatabase';
+    this.migrations = [
+      // Version 1: Initial schema
+      {
+        version: 1,
+        migrate: (db) => {
+          const userStore = db.createObjectStore('users', { keyPath: 'id' });
+          userStore.createIndex('email', 'email', { unique: true });
+        }
+      },
+      // Version 2: Add tasks store
+      {
+        version: 2,
+        migrate: (db) => {
+          const taskStore = db.createObjectStore('tasks', { keyPath: 'id', autoIncrement: true });
+          taskStore.createIndex('userId', 'userId', { unique: false });
+          taskStore.createIndex('completed', 'completed', { unique: false });
+        }
+      },
+      // Version 3: Add name index to users
+      {
+        version: 3,
+        migrate: (db) => {
+          const userStore = db.transaction.objectStore('users');
+          userStore.createIndex('name', 'name', { unique: false });
+        }
+      },
+      // Version 4: Add settings store
+      {
+        version: 4,
+        migrate: (db) => {
+          db.createObjectStore('settings', { keyPath: 'key' });
+        }
+      }
+    ];
+  }
+  
+  get currentVersion() {
+    return this.migrations.length;
+  }
+  
+  async openDatabase() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, this.currentVersion);
+      
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        const oldVersion = event.oldVersion;
+        
+        // Apply all migrations that are newer than the old version
+        for (const migration of this.migrations) {
+          if (migration.version > oldVersion) {
+            console.log(`Applying migration to version ${migration.version}`);
+            migration.migrate(db);
+          }
+        }
+      };
+      
+      request.onsuccess = (event) => {
+        resolve(event.target.result);
+      };
+      
+      request.onerror = (event) => {
+        reject('Error opening database: ' + event.target.error);
+      };
+    });
+  }
+}
+
+// Usage
+const dbMigration = new DatabaseMigration();
+dbMigration.openDatabase().then(db => {
+  console.log('Database opened successfully with version:', db.version);
+  // Use the database...
+}).catch(error => {
+  console.error('Error opening database:', error);
+});
+```
+
+**Practical Use Cases for IndexedDB:**
+
+1. **Offline Web Applications:**
+   - Store application data locally for offline use
+   - Sync with server when connection is restored
+
+2. **Caching API Responses:**
+   - Store API responses to reduce network requests
+   - Implement a cache-first strategy for faster loading
+
+3. **Large Dataset Management:**
+   - Handle datasets too large for memory or localStorage
+   - Implement pagination and filtering on client-side data
+
+4. **File Storage and Management:**
+   - Store user-uploaded files before sending to server
+   - Create browser-based file managers or media libraries
+
+5. **Progressive Web Apps (PWAs):**
+   - Store application state and user data
+   - Enable full offline functionality
+
+**Example: Building a Simple Offline-Capable Todo App:**
+
+```javascript
+class TodoApp {
+  constructor() {
+    this.dbName = 'TodoApp';
+    this.dbVersion = 1;
+    this.db = null;
+    this.initUI();
+    this.openDatabase().then(() => {
+      this.loadTodos();
+    });
+  }
+  
+  async openDatabase() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, this.dbVersion);
+      
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        
+        // Create todos store with auto-incrementing ID
+        const store = db.createObjectStore('todos', { keyPath: 'id', autoIncrement: true });
+        store.createIndex('completed', 'completed', { unique: false });
+        store.createIndex('createdAt', 'createdAt', { unique: false });
+      };
+      
+      request.onsuccess = (event) => {
+        this.db = event.target.result;
+        resolve();
+      };
+      
+      request.onerror = (event) => {
+        console.error('Error opening database:', event.target.error);
+        reject(event.target.error);
+      };
+    });
+  }
+  
+  initUI() {
+    // Create UI elements
+    this.todoList = document.getElementById('todo-list');
+    this.todoForm = document.getElementById('todo-form');
+    this.todoInput = document.getElementById('todo-input');
+    
+    // Add event listeners
+    this.todoForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.addTodo();
+    });
+    
+    // Add sync status indicator
+    this.syncStatus = document.getElementById('sync-status');
+    window.addEventListener('online', () => this.updateSyncStatus());
+    window.addEventListener('offline', () => this.updateSyncStatus());
+    this.updateSyncStatus();
+  }
+  
+  updateSyncStatus() {
+    if (navigator.onLine) {
+      this.syncStatus.textContent = 'Online - Changes will sync';
+      this.syncStatus.className = 'online';
+      this.syncWithServer();
+    } else {
+      this.syncStatus.textContent = 'Offline - Changes saved locally';
+      this.syncStatus.className = 'offline';
+    }
+  }
+  
+  async addTodo() {
+    const text = this.todoInput.value.trim();
+    if (!text) return;
+    
+    const todo = {
+      text: text,
+      completed: false,
+      createdAt: new Date().toISOString(),
+      synced: false
+    };
+    
+    try {
+      const id = await this.saveTodo(todo);
+      todo.id = id;
+      this.renderTodo(todo);
+      this.todoInput.value = '';
+      
+      // Try to sync if online
+      if (navigator.onLine) {
+        this.syncWithServer();
+      }
+    } catch (error) {
+      console.error('Error adding todo:', error);
+    }
+  }
+  
+  async saveTodo(todo) {
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction(['todos'], 'readwrite');
+      const store = transaction.objectStore('todos');
+      
+      const request = store.add(todo);
+      
+      request.onsuccess = () => {
+        resolve(request.result);
+      };
+      
+      request.onerror = () => {
+        reject(request.error);
+      };
+    });
+  }
+  
+  async updateTodo(id, updates) {
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction(['todos'], 'readwrite');
+      const store = transaction.objectStore('todos');
+      
+      // First get the current todo
+      const getRequest = store.get(id);
+      
+      getRequest.onsuccess = () => {
+        const todo = getRequest.result;
+        if (!todo) {
+          reject(new Error('Todo not found'));
+          return;
+        }
+        
+        // Apply updates
+        Object.assign(todo, updates, { synced: false });
+        
+        // Save the updated todo
+        const updateRequest = store.put(todo);
+        
+        updateRequest.onsuccess = () => {
+          resolve(todo);
+        };
+        
+        updateRequest.onerror = () => {
+          reject(updateRequest.error);
+        };
+      };
+      
+      getRequest.onerror = () => {
+        reject(getRequest.error);
+      };
+    });
+  }
+  
+  async deleteTodo(id) {
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction(['todos'], 'readwrite');
+      const store = transaction.objectStore('todos');
+      
+      const request = store.delete(id);
+      
+      request.onsuccess = () => {
+        resolve();
+      };
+      
+      request.onerror = () => {
+        reject(request.error);
+      };
+    });
+  }
+  
+  async loadTodos() {
+    try {
+      const todos = await this.getAllTodos();
+      this.todoList.innerHTML = '';
+      todos.forEach(todo => {
+        this.renderTodo(todo);
+      });
+    } catch (error) {
+      console.error('Error loading todos:', error);
+    }
+  }
+  
+  async getAllTodos() {
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction(['todos'], 'readonly');
+      const store = transaction.objectStore('todos');
+      const index = store.index('createdAt');
+      
+      const request = index.openCursor(null, 'prev'); // Get newest first
+      const todos = [];
+      
+      request.onsuccess = (event) => {
+        const cursor = event.target.result;
+        if (cursor) {
+          todos.push(cursor.value);
+          cursor.continue();
+        } else {
+          resolve(todos);
+        }
+      };
+      
+      request.onerror = () => {
+        reject(request.error);
+      };
+    });
+  }
+  
+  renderTodo(todo) {
+    const li = document.createElement('li');
+    li.dataset.id = todo.id;
+    li.className = todo.completed ? 'completed' : '';
+    
+    // Create checkbox
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = todo.completed;
+    checkbox.addEventListener('change', () => {
+      this.toggleTodoCompleted(todo.id, checkbox.checked);
+    });
+    
+    // Create text span
+    const span = document.createElement('span');
+    span.textContent = todo.text;
+    
+    // Create delete button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', () => {
+      this.removeTodo(todo.id);
+    });
+    
+    // Create sync indicator
+    const syncIndicator = document.createElement('span');
+    syncIndicator.className = `sync-indicator ${todo.synced ? 'synced' : 'not-synced'}`;
+    syncIndicator.title = todo.synced ? 'Synced with server' : 'Not yet synced';
+    
+    // Append elements
+    li.appendChild(checkbox);
+    li.appendChild(span);
+    li.appendChild(deleteBtn);
+    li.appendChild(syncIndicator);
+    
+    this.todoList.appendChild(li);
+  }
+  
+  async toggleTodoCompleted(id, completed) {
+    try {
+      const todo = await this.updateTodo(id, { completed });
+      
+      // Update UI
+      const li = this.todoList.querySelector(`li[data-id="${id}"]`);
+      if (li) {
+        li.className = completed ? 'completed' : '';
+        const syncIndicator = li.querySelector('.sync-indicator');
+        syncIndicator.className = 'sync-indicator not-synced';
+        syncIndicator.title = 'Not yet synced';
+      }
+      
+      // Try to sync if online
+      if (navigator.onLine) {
+        this.syncWithServer();
+      }
+    } catch (error) {
+      console.error('Error toggling todo:', error);
+    }
+  }
+  
+  async removeTodo(id) {
+    try {
+      await this.deleteTodo(id);
+      
+      // Update UI
+      const li = this.todoList.querySelector(`li[data-id="${id}"]`);
+      if (li) {
+        li.remove();
+      }
+      
+      // If online, sync the deletion with server
+      if (navigator.onLine) {
+        // In a real app, you would send a DELETE request to the server
+        console.log('Syncing deletion with server for todo ID:', id);
+      }
+    } catch (error) {
+      console.error('Error removing todo:', error);
+    }
+  }
+  
+  async syncWithServer() {
+    try {
+      // Get all unsynced todos
+      const unsyncedTodos = await this.getUnsyncedTodos();
+      
+      if (unsyncedTodos.length === 0) return;
+      
+      console.log('Syncing todos with server:', unsyncedTodos);
+      
+      // In a real app, you would send these to your server API
+      // For this example, we'll simulate a successful sync
+      for (const todo of unsyncedTodos) {
+        // Simulate API call
+        await this.simulateApiSync(todo);
+        
+        // Mark as synced in local DB
+        await this.updateTodo(todo.id, { synced: true });
+        
+        // Update UI
+        const li = this.todoList.querySelector(`li[data-id="${todo.id}"]`);
+        if (li) {
+          const syncIndicator = li.querySelector('.sync-indicator');
+          syncIndicator.className = 'sync-indicator synced';
+          syncIndicator.title = 'Synced with server';
+        }
+      }
+      
+      console.log('Sync complete');
+    } catch (error) {
+      console.error('Error syncing with server:', error);
+    }
+  }
+  
+  async getUnsyncedTodos() {
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction(['todos'], 'readonly');
+      const store = transaction.objectStore('todos');
+      
+      const request = store.openCursor();
+      const unsyncedTodos = [];
+      
+      request.onsuccess = (event) => {
+        const cursor = event.target.result;
+        if (cursor) {
+          if (!cursor.value.synced) {
+            unsyncedTodos.push(cursor.value);
+          }
+          cursor.continue();
+        } else {
+          resolve(unsyncedTodos);
+        }
+      };
+      
+      request.onerror = () => {
+        reject(request.error);
+      };
+    });
+  }
+  
+  // Simulate API call to sync a todo
+  async simulateApiSync(todo) {
+    return new Promise(resolve => {
+      // Simulate network delay
+      setTimeout(() => {
+        console.log('Todo synced with server:', todo);
+        resolve({ success: true });
+      }, 500);
+    });
+  }
+}
+
+// Initialize the app when the DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  new TodoApp();
+});
+```
+
+**Browser Compatibility and Limitations:**
+
+1. **Browser Support:**
+   - Supported in all modern browsers (Chrome, Firefox, Safari, Edge)
+   - Limited support in older browsers
+   - Mobile browsers generally have good support
+
+2. **Storage Limits:**
+   - Storage limits vary by browser and device
+   - Chrome and Firefox typically allow several GB per origin
+   - Safari has stricter limits (often around 1GB)
+   - Mobile browsers may have lower limits
+
+3. **Performance Considerations:**
+   - Avoid storing very large objects in a single record
+   - Use indexes for frequently queried properties
+   - Be mindful of transaction scope and duration
+   - Consider using web workers for intensive operations
+
+**Best Practices for Using IndexedDB:**
+
+1. **Error Handling:**
+   - Always implement proper error handling for all database operations
+   - Provide fallbacks for browsers that don't support IndexedDB
+
+2. **Transaction Management:**
+   - Keep transactions short-lived
+   - Don't mix async operations with transactions
+   - Use separate transactions for unrelated operations
+
+3. **Schema Design:**
+   - Plan for future schema migrations
+   - Use appropriate indexes for query patterns
+   - Consider data access patterns when designing object stores
+
+4. **Security Considerations:**
+   - Never store sensitive data unencrypted
+   - Remember that IndexedDB is subject to same-origin policy
+   - Clear sensitive data when no longer needed
+
+5. **Offline Synchronization:**
+   - Implement a robust sync strategy for offline-first applications
+   - Use a queue for pending server operations
+   - Handle conflict resolution between local and server data
+
+**Conclusion:**
+IndexedDB provides a powerful solution for client-side storage in web applications, enabling complex data management, offline capabilities, and improved performance. By understanding its asynchronous nature, transaction model, and proper usage patterns, developers can create robust web applications that work reliably regardless of network connectivity.
+
+---
+
+## Security
+
+### Q1: Explain common JavaScript security vulnerabilities and how to prevent them.
+**Difficulty: Hard**
+
+**Answer:**
+JavaScript security is critical for protecting web applications from various attacks. Understanding common vulnerabilities and implementing proper defenses is essential for any senior developer.
+
+**1. Cross-Site Scripting (XSS):**
+
+XSS attacks occur when attackers inject malicious scripts into web pages viewed by other users.
+
+**Types of XSS:**
+- **Reflected XSS**: Malicious script comes from the current HTTP request
+- **Stored XSS**: Malicious script is stored on the server and delivered later
+- **DOM-based XSS**: Vulnerability exists in client-side code
+
+**Example Vulnerability:**
+```javascript
+// Dangerous: Directly inserting user input into the DOM
+function displayComment(comment) {
+  const commentSection = document.getElementById('comments');
+  commentSection.innerHTML += `<div class="comment">${comment}</div>`; // Vulnerable to XSS
+}
+
+// User input: <img src="x" onerror="alert(document.cookie)">
+```
+
+**Prevention:**
+```javascript
+// 1. Output Encoding
+function escapeHTML(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function displayComment(comment) {
+  const commentSection = document.getElementById('comments');
+  commentSection.innerHTML += `<div class="comment">${escapeHTML(comment)}</div>`;
+}
+
+// 2. Using safe DOM methods instead of innerHTML
+function displayCommentSafely(comment) {
+  const commentSection = document.getElementById('comments');
+  const commentDiv = document.createElement('div');
+  commentDiv.className = 'comment';
+  commentDiv.textContent = comment; // Automatically escapes HTML
+  commentSection.appendChild(commentDiv);
+}
+
+// 3. Using DOMPurify library for sanitization
+import DOMPurify from 'dompurify';
+
+function displayFormattedComment(comment) {
+  const commentSection = document.getElementById('comments');
+  // Sanitize HTML but allow some formatting
+  const sanitized = DOMPurify.sanitize(comment, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a'],
+    ALLOWED_ATTR: ['href']
+  });
+  commentSection.innerHTML += `<div class="comment">${sanitized}</div>`;
+}
+```
+
+**2. Cross-Site Request Forgery (CSRF):**
+
+CSRF attacks trick users into performing unwanted actions on a site they're authenticated to.
+
+**Example Vulnerability:**
+```html
+<!-- Malicious site with hidden form -->
+<form id="csrf-form" action="https://bank.com/transfer" method="POST" style="display:none">
+  <input type="hidden" name="recipient" value="attacker" />
+  <input type="hidden" name="amount" value="1000" />
+</form>
+<script>
+  document.getElementById('csrf-form').submit();
+</script>
+```
+
+**Prevention:**
+```javascript
+// 1. CSRF Tokens
+function setupCSRFProtection() {
+  // Get CSRF token from meta tag
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  
+  // Add to all fetch/XHR requests
+  const originalFetch = window.fetch;
+  window.fetch = function(url, options = {}) {
+    options.headers = options.headers || {};
+    options.headers['X-CSRF-Token'] = csrfToken;
+    return originalFetch(url, options);
+  };
+  
+  // For XMLHttpRequest
+  const originalOpen = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function() {
+    const method = arguments[0];
+    const xhr = this;
+    
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method.toUpperCase())) {
+      xhr.addEventListener('readystatechange', function() {
+        if (xhr.readyState === 1) { // OPENED
+          xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+        }
+      });
+    }
+    
+    return originalOpen.apply(this, arguments);
+  };
+}
+
+// 2. SameSite Cookies
+// Set in your server response headers:
+// Set-Cookie: sessionid=abc123; SameSite=Strict; Secure; HttpOnly
+```
+
+**3. Content Security Policy (CSP):**
+
+CSP helps prevent XSS and data injection attacks by controlling which resources can be loaded.
+
+**Implementation:**
+```javascript
+// Add CSP meta tag
+function addCSPMetaTag() {
+  const meta = document.createElement('meta');
+  meta.httpEquiv = 'Content-Security-Policy';
+  meta.content = "default-src 'self'; script-src 'self' https://trusted-cdn.com; style-src 'self' https://trusted-cdn.com; img-src 'self' https://trusted-images.com data:; connect-src 'self' https://api.myservice.com;";
+  document.head.appendChild(meta);
+}
+
+// Better approach: Set CSP via HTTP header on the server
+// Content-Security-Policy: default-src 'self'; script-src 'self' https://trusted-cdn.com;
+```
+
+**4. JSON Injection:**
+
+**Example Vulnerability:**
+```javascript
+// Dangerous: Parsing JSON with embedded JavaScript
+function processUserData(jsonString) {
+  const userData = eval('(' + jsonString + ')'); // Extremely dangerous!
+  return userData;
+}
+```
+
+**Prevention:**
+```javascript
+// Always use JSON.parse instead of eval
+function processUserData(jsonString) {
+  try {
+    const userData = JSON.parse(jsonString);
+    return userData;
+  } catch (e) {
+    console.error('Invalid JSON:', e);
+    return null;
+  }
+}
+```
+
+**5. Prototype Pollution:**
+
+Prototype pollution occurs when an attacker is able to modify JavaScript's Object prototype.
+
+**Example Vulnerability:**
+```javascript
+function mergeDeep(target, source) {
+  for (const key in source) {
+    if (source[key] && typeof source[key] === 'object') {
+      if (!target[key]) target[key] = {};
+      mergeDeep(target[key], source[key]);
+    } else {
+      target[key] = source[key];
+    }
+  }
+  return target;
+}
+
+// Attacker input: { "__proto__": { "isAdmin": true } }
+// Now every object will have isAdmin=true!
+```
+
+**Prevention:**
+```javascript
+function mergeDeepSafely(target, source) {
+  for (const key in source) {
+    // Prevent prototype pollution
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+      continue;
+    }
+    
+    if (source[key] && typeof source[key] === 'object') {
+      if (!target[key]) target[key] = {};
+      mergeDeepSafely(target[key], source[key]);
+    } else {
+      target[key] = source[key];
+    }
+  }
+  return target;
+}
+
+// Using Object.create(null) for safer objects
+function createSafeObject() {
+  return Object.create(null); // No prototype, no pollution
+}
+```
+
+**6. Insecure Direct Object References (IDOR):**
+
+**Example Vulnerability:**
+```javascript
+// Client-side code that doesn't validate authorization
+async function getUserData(userId) {
+  const response = await fetch(`/api/users/${userId}`);
+  return response.json();
+}
+
+// Attacker can simply change userId to access other users' data
+```
+
+**Prevention:**
+```javascript
+// Always validate on the server side
+// Client-side should also implement checks
+async function getUserData(userId) {
+  // Ensure userId belongs to current user
+  if (userId !== currentUser.id && !currentUser.isAdmin) {
+    throw new Error('Unauthorized access attempt');
+  }
+  
+  const response = await fetch(`/api/users/${userId}`, {
+    headers: {
+      'Authorization': `Bearer ${getAuthToken()}`
+    }
+  });
+  
+  if (!response.ok) {
+    throw new Error('Access denied');
+  }
+  
+  return response.json();
+}
+```
+
+**7. Sensitive Data Exposure:**
+
+**Example Vulnerability:**
+```javascript
+// Logging sensitive data
+function processPayment(creditCard) {
+  console.log('Processing payment for card:', creditCard);
+  // Card number now in browser logs, network logs, etc.
+}
+
+// Storing sensitive data in localStorage
+localStorage.setItem('authToken', token);
+localStorage.setItem('userDetails', JSON.stringify(userDetails));
+```
+
+**Prevention:**
+```javascript
+// Mask sensitive data before logging
+function processPayment(creditCard) {
+  const maskedCard = maskCreditCard(creditCard);
+  console.log('Processing payment for card:', maskedCard);
+}
+
+function maskCreditCard(cardNumber) {
+  return cardNumber.slice(-4).padStart(cardNumber.length, '*');
+}
+
+// Use secure storage options
+function storeAuthData(token, expiry) {
+  // Use sessionStorage for short-lived sensitive data
+  sessionStorage.setItem('authToken', token);
+  
+  // Set expiry
+  const expiryTime = expiry || Date.now() + 3600000; // 1 hour default
+  sessionStorage.setItem('tokenExpiry', expiryTime);
+  
+  // For longer sessions, consider httpOnly cookies set by the server
+}
+```
+
+**8. Insecure Randomness:**
+
+**Example Vulnerability:**
+```javascript
+// Using Math.random() for security purposes
+function generateSessionId() {
+  return Math.random().toString(36).substring(2);
+}
+```
+
+**Prevention:**
+```javascript
+// Use Crypto API for secure random values
+function generateSecureToken(length = 32) {
+  const array = new Uint8Array(length);
+  window.crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+```
+
+**9. Third-Party Library Vulnerabilities:**
+
+**Prevention:**
+```javascript
+// Regular security audits
+function auditDependencies() {
+  // Use tools like npm audit, Snyk, or OWASP Dependency Check
+  const { execSync } = require('child_process');
+  try {
+    const output = execSync('npm audit --json');
+    const results = JSON.parse(output);
+    return results;
+  } catch (e) {
+    console.error('Dependency audit failed:', e);
+    return null;
+  }
+}
+
+// Subresource Integrity for CDN resources
+function addScriptWithIntegrity(url, integrity) {
+  const script = document.createElement('script');
+  script.src = url;
+  script.integrity = integrity;
+  script.crossOrigin = 'anonymous';
+  document.head.appendChild(script);
+}
+```
+
+**10. Server-Side JavaScript Injection (for Node.js):**
+
+**Example Vulnerability:**
+```javascript
+// Using eval with user input in Node.js
+app.get('/calculate', (req, res) => {
+  const { formula } = req.query;
+  try {
+    const result = eval(formula); // Extremely dangerous!
+    res.send({ result });
+  } catch (e) {
+    res.status(400).send({ error: 'Invalid formula' });
+  }
+});
+```
+
+**Prevention:**
+```javascript
+// Use a safe math evaluation library
+const { evaluate } = require('mathjs');
+
+app.get('/calculate', (req, res) => {
+  const { formula } = req.query;
+  try {
+    // Configure mathjs for safety
+    const safeEvaluate = evaluate.limited({
+      upper: 1000000 // Limit computation size
+    });
+    
+    const result = safeEvaluate(formula);
+    res.send({ result });
+  } catch (e) {
+    res.status(400).send({ error: 'Invalid formula' });
+  }
+});
+```
+
+**Security Best Practices Summary:**
+
+1. **Input Validation**: Validate all input on both client and server sides
+2. **Output Encoding**: Always encode output when displaying user-generated content
+3. **Use Safe Methods**: Prefer `textContent` over `innerHTML`
+4. **Content Security Policy**: Implement strict CSP headers
+5. **HTTPS Everywhere**: Use secure connections for all traffic
+6. **Secure Cookies**: Use `Secure`, `HttpOnly`, and `SameSite` flags
+7. **Principle of Least Privilege**: Limit what your JavaScript can access
+8. **Keep Dependencies Updated**: Regularly audit and update libraries
+9. **Implement CSRF Protection**: Use tokens and SameSite cookies
+10. **Avoid Dangerous Functions**: Never use `eval()`, `Function()`, `document.write()`, etc.
+11. **Sanitize HTML**: Use libraries like DOMPurify for user-generated HTML
+12. **Secure Storage**: Be careful what you store in localStorage/sessionStorage
+13. **Use Modern APIs**: Prefer modern, secure APIs like Fetch over older alternatives
+14. **Error Handling**: Don't expose sensitive information in error messages
+15. **Regular Security Testing**: Perform security audits and penetration testing
 
 ---
 

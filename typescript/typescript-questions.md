@@ -4541,3 +4541,487 @@ class AuditLogger {
 ```
 
 This enhanced TypeScript guide now includes cutting-edge type manipulation techniques, advanced metaprogramming patterns, sophisticated state management solutions, type-safe API integration, robust error handling patterns, modern decorators with metadata reflection, TypeScript 5.0+ const assertions and satisfies operator, advanced dependency injection patterns, and reactive programming patterns essential for building enterprise-grade TypeScript applications.
+
+### Q20: How do you use TypeScript with React for type-safe component development?
+**Difficulty: Medium**
+
+**Answer:**
+TypeScript provides excellent integration with React, enabling type-safe component development, props validation, state management, and hooks usage. Here's a comprehensive guide to using TypeScript with React effectively:
+
+**1. Setting Up a TypeScript React Project:**
+
+```bash
+# Using Create React App
+npx create-react-app my-app --template typescript
+
+# Using Vite
+npm create vite@latest my-app -- --template react-ts
+```
+
+**2. Typing Component Props:**
+
+```tsx
+// Using interfaces (preferred for public APIs)
+interface ButtonProps {
+  text: string;
+  onClick: () => void;
+  variant?: 'primary' | 'secondary' | 'danger';
+  disabled?: boolean;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+// Using type aliases (good for unions or more complex types)
+type ButtonSize = 'small' | 'medium' | 'large';
+
+type ExtendedButtonProps = ButtonProps & {
+  size?: ButtonSize;
+  isLoading?: boolean;
+};
+
+// Function component with typed props
+const Button: React.FC<ExtendedButtonProps> = ({
+  text,
+  onClick,
+  variant = 'primary',
+  disabled = false,
+  size = 'medium',
+  isLoading = false,
+  className = '',
+  children
+}) => {
+  return (
+    <button
+      className={`btn btn-${variant} btn-${size} ${className}`}
+      onClick={onClick}
+      disabled={disabled || isLoading}
+    >
+      {isLoading ? 'Loading...' : text}
+      {children}
+    </button>
+  );
+};
+
+// Usage
+<Button 
+  text="Submit" 
+  onClick={() => console.log('clicked')} 
+  variant="primary" 
+  size="large" 
+/>
+```
+
+**3. Typing Component State:**
+
+```tsx
+interface UserState {
+  user: {
+    id: number;
+    name: string;
+    email: string;
+  } | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+const UserProfile: React.FC = () => {
+  const [state, setState] = React.useState<UserState>({
+    user: null,
+    isLoading: true,
+    error: null
+  });
+  
+  // Type-safe state updates
+  const updateUser = (userData: UserState['user']) => {
+    setState(prevState => ({
+      ...prevState,
+      user: userData,
+      isLoading: false
+    }));
+  };
+  
+  // Rest of component
+  return (
+    <div>
+      {state.isLoading && <p>Loading...</p>}
+      {state.error && <p>Error: {state.error}</p>}
+      {state.user && (
+        <div>
+          <h2>{state.user.name}</h2>
+          <p>{state.user.email}</p>
+        </div>
+      )}
+    </div>
+  );
+};
+```
+
+**4. Typing React Hooks:**
+
+```tsx
+// useState with type inference
+const [count, setCount] = useState(0); // inferred as number
+const [user, setUser] = useState<User | null>(null); // explicit type
+
+// useReducer with typed actions
+type CounterAction = 
+  | { type: 'INCREMENT'; payload: number }
+  | { type: 'DECREMENT'; payload: number }
+  | { type: 'RESET' };
+
+interface CounterState {
+  count: number;
+  lastAction: string | null;
+}
+
+const counterReducer = (state: CounterState, action: CounterAction): CounterState => {
+  switch (action.type) {
+    case 'INCREMENT':
+      return { count: state.count + action.payload, lastAction: 'increment' };
+    case 'DECREMENT':
+      return { count: state.count - action.payload, lastAction: 'decrement' };
+    case 'RESET':
+      return { count: 0, lastAction: 'reset' };
+    default:
+      return state;
+  }
+};
+
+const Counter: React.FC = () => {
+  const [state, dispatch] = useReducer(counterReducer, { count: 0, lastAction: null });
+  
+  return (
+    <div>
+      <p>Count: {state.count}</p>
+      <p>Last action: {state.lastAction || 'none'}</p>
+      <button onClick={() => dispatch({ type: 'INCREMENT', payload: 1 })}>+1</button>
+      <button onClick={() => dispatch({ type: 'DECREMENT', payload: 1 })}>-1</button>
+      <button onClick={() => dispatch({ type: 'RESET' })}>Reset</button>
+    </div>
+  );
+};
+
+// useRef with TypeScript
+const inputRef = useRef<HTMLInputElement>(null);
+
+// useEffect with proper typing
+useEffect(() => {
+  // Type-safe DOM access
+  if (inputRef.current) {
+    inputRef.current.focus();
+  }
+}, []);
+```
+
+**5. Creating Custom Hooks:**
+
+```tsx
+// Custom hook with TypeScript
+interface UseApiOptions<T> {
+  initialData?: T;
+  onSuccess?: (data: T) => void;
+  onError?: (error: Error) => void;
+}
+
+interface UseApiResult<T> {
+  data: T | null;
+  loading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+}
+
+function useApi<T>(url: string, options: UseApiOptions<T> = {}): UseApiResult<T> {
+  const [data, setData] = useState<T | null>(options.initialData || null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
+  
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const result = await response.json() as T;
+      setData(result);
+      options.onSuccess?.(result);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      setError(error);
+      options.onError?.(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    fetchData();
+  }, [url]);
+  
+  return { data, loading, error, refetch: fetchData };
+}
+
+// Usage
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+const UserComponent: React.FC = () => {
+  const { data, loading, error } = useApi<User[]>('/api/users');
+  
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
+  
+  return (
+    <ul>
+      {data?.map(user => (
+        <li key={user.id}>{user.name} ({user.email})</li>
+      ))}
+    </ul>
+  );
+};
+```
+
+**6. Type-Safe Event Handling:**
+
+```tsx
+// Form events
+const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  event.preventDefault();
+  // Form submission logic
+};
+
+// Input events with typed target
+const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const { name, value } = event.target;
+  // Type-safe access to input properties
+};
+
+// Mouse events
+const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  // Access to mouse coordinates and button properties
+  console.log(`Clicked at: ${event.clientX}, ${event.clientY}`);
+};
+
+// Keyboard events
+const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  if (event.key === 'Enter') {
+    // Handle enter key
+  }
+};
+```
+
+**7. Working with Context API:**
+
+```tsx
+interface ThemeContextType {
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+}
+
+// Create context with a default value
+const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined);
+
+// Provider component
+const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  
+  const toggleTheme = () => {
+    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+  };
+  
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+
+// Custom hook for consuming the context
+const useTheme = (): ThemeContextType => {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+};
+
+// Usage
+const ThemedButton: React.FC = () => {
+  const { theme, toggleTheme } = useTheme();
+  
+  return (
+    <button 
+      onClick={toggleTheme}
+      style={{ 
+        backgroundColor: theme === 'light' ? '#fff' : '#333',
+        color: theme === 'light' ? '#333' : '#fff'
+      }}
+    >
+      Toggle Theme
+    </button>
+  );
+};
+```
+
+**8. Advanced Component Patterns:**
+
+```tsx
+// Generic components
+interface ListProps<T> {
+  items: T[];
+  renderItem: (item: T) => React.ReactNode;
+  keyExtractor: (item: T) => string | number;
+}
+
+function List<T>({ items, renderItem, keyExtractor }: ListProps<T>) {
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={keyExtractor(item)}>
+          {renderItem(item)}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// Usage
+<List
+  items={[{ id: 1, name: 'Item 1' }, { id: 2, name: 'Item 2' }]}
+  renderItem={item => <span>{item.name}</span>}
+  keyExtractor={item => item.id}
+/>
+
+// Render props with TypeScript
+interface DataFetcherProps<T> {
+  url: string;
+  children: (state: {
+    data: T | null;
+    loading: boolean;
+    error: Error | null;
+  }) => React.ReactNode;
+}
+
+function DataFetcher<T>({ url, children }: DataFetcherProps<T>) {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
+  
+  useEffect(() => {
+    // Fetch logic
+  }, [url]);
+  
+  return <>{children({ data, loading, error })}</>;
+}
+
+// Usage
+<DataFetcher<User[]> url="/api/users">
+  {({ data, loading, error }) => {
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p>Error: {error.message}</p>;
+    return (
+      <ul>
+        {data?.map(user => <li key={user.id}>{user.name}</li>)}
+      </ul>
+    );
+  }}
+</DataFetcher>
+```
+
+**9. Type-Safe Redux with TypeScript:**
+
+```tsx
+// Action types
+const ADD_TODO = 'ADD_TODO';
+const TOGGLE_TODO = 'TOGGLE_TODO';
+
+interface Todo {
+  id: number;
+  text: string;
+  completed: boolean;
+}
+
+interface AddTodoAction {
+  type: typeof ADD_TODO;
+  payload: {
+    text: string;
+  };
+}
+
+interface ToggleTodoAction {
+  type: typeof TOGGLE_TODO;
+  payload: {
+    id: number;
+  };
+}
+
+type TodoActionTypes = AddTodoAction | ToggleTodoAction;
+
+// Action creators
+const addTodo = (text: string): AddTodoAction => ({
+  type: ADD_TODO,
+  payload: { text }
+});
+
+const toggleTodo = (id: number): ToggleTodoAction => ({
+  type: TOGGLE_TODO,
+  payload: { id }
+});
+
+// State type
+interface TodoState {
+  todos: Todo[];
+}
+
+const initialState: TodoState = {
+  todos: []
+};
+
+// Reducer
+const todoReducer = (state = initialState, action: TodoActionTypes): TodoState => {
+  switch (action.type) {
+    case ADD_TODO:
+      return {
+        todos: [
+          ...state.todos,
+          {
+            id: Date.now(),
+            text: action.payload.text,
+            completed: false
+          }
+        ]
+      };
+    case TOGGLE_TODO:
+      return {
+        todos: state.todos.map(todo =>
+          todo.id === action.payload.id
+            ? { ...todo, completed: !todo.completed }
+            : todo
+        )
+      };
+    default:
+      return state;
+  }
+};
+```
+
+**10. Best Practices for TypeScript with React:**
+
+- Use interfaces for props and state definitions
+- Leverage TypeScript's type inference when possible
+- Create reusable type definitions in separate files
+- Use discriminated unions for complex state management
+- Properly type event handlers and callbacks
+- Use generics for reusable components
+- Add proper return types for functions and components
+- Use the `as const` assertion for literal values
+- Avoid using `any` type; use `unknown` when type is truly unknown
+- Use type guards for runtime type checking
+
+By following these patterns and practices, you can build robust, type-safe React applications that leverage TypeScript's powerful type system to catch errors at compile time rather than runtime.

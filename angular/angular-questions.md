@@ -11588,6 +11588,355 @@ export class SearchComponent {
 **Answer:**
 Angular 17+ provides enhanced SSR capabilities with improved hydration, streaming, and performance optimizations.
 
+### Q26: Compare Angular Signals with RxJS Observables and explain when to use each.
+**Difficulty: Hard**
+
+**Answer:**
+Angular Signals and RxJS Observables are both reactive programming primitives, but they serve different purposes and have distinct characteristics that make them suitable for different scenarios.
+
+**Key Differences:**
+
+| Feature | Angular Signals | RxJS Observables |
+|---------|----------------|-------------------|
+| **Purpose** | Fine-grained reactivity within components | Handling asynchronous events and data streams |
+| **Complexity** | Simpler, more direct API | More powerful but complex API |
+| **Execution** | Synchronous, pull-based | Can be synchronous or asynchronous, push-based |
+| **Operators** | Limited built-in transformations | Rich ecosystem of operators |
+| **Lifecycle** | Tied to component lifecycle | Independent lifecycle requiring manual subscription management |
+| **Memory** | Automatic cleanup with component | Requires explicit unsubscription to prevent leaks |
+| **Use Cases** | UI state, derived values, component reactivity | HTTP requests, event handling, complex data transformations |
+
+**1. Basic Implementation Comparison:**
+
+```typescript
+// Using Signals
+import { Component, signal, computed, effect } from '@angular/core';
+
+@Component({
+  selector: 'app-counter-signal',
+  template: `
+    <div>
+      <h2>Count: {{ count() }}</h2>
+      <h3>Doubled: {{ doubled() }}</h3>
+      <button (click)="increment()">Increment</button>
+    </div>
+  `
+})
+export class CounterSignalComponent {
+  // Create a signal with initial value
+  count = signal(0);
+  
+  // Create a computed signal that depends on another signal
+  doubled = computed(() => this.count() * 2);
+  
+  constructor() {
+    // Create an effect that runs when dependencies change
+    effect(() => {
+      console.log(`Count changed to: ${this.count()}, doubled: ${this.doubled()}`);
+    });
+  }
+  
+  increment() {
+    // Update the signal value
+    this.count.update(val => val + 1);
+  }
+}
+
+// Using RxJS
+import { Component } from '@angular/core';
+import { BehaviorSubject, map } from 'rxjs';
+
+@Component({
+  selector: 'app-counter-rxjs',
+  template: `
+    <div>
+      <h2>Count: {{ count$ | async }}</h2>
+      <h3>Doubled: {{ doubled$ | async }}</h3>
+      <button (click)="increment()">Increment</button>
+    </div>
+  `
+})
+export class CounterRxjsComponent implements OnDestroy {
+  // Create a subject with initial value
+  private countSubject = new BehaviorSubject<number>(0);
+  
+  // Expose as observable
+  count$ = this.countSubject.asObservable();
+  
+  // Create a derived observable
+  doubled$ = this.count$.pipe(
+    map(count => count * 2)
+  );
+  
+  // Subscription for side effects
+  private subscription = this.count$.subscribe(count => {
+    console.log(`Count changed to: ${count}`);
+  });
+  
+  increment() {
+    // Update the subject value
+    this.countSubject.next(this.countSubject.value + 1);
+  }
+  
+  ngOnDestroy() {
+    // Clean up subscription
+    this.subscription.unsubscribe();
+  }
+}
+```
+
+**2. When to Use Signals:**
+
+* **Component-Specific State**: When state is tightly coupled to a component
+* **UI Reactivity**: For reactive UI updates based on state changes
+* **Derived Values**: When you need computed values based on other state
+* **Performance Critical UI**: When you need fine-grained updates for better performance
+* **Simple State Transformations**: When you don't need complex operators
+
+```typescript
+@Component({
+  selector: 'app-product-card',
+  template: `
+    <div class="card" [class.discounted]="isDiscounted()">
+      <h3>{{ product().name }}</h3>
+      <p>{{ formattedPrice() }}</p>
+      <button [disabled]="isOutOfStock()" (click)="addToCart()">
+        {{ buttonText() }}
+      </button>
+    </div>
+  `
+})
+export class ProductCardComponent {
+  // Input as signal
+  product = input.required<Product>();
+  quantity = signal(1);
+  
+  // Computed values
+  isDiscounted = computed(() => this.product().discount > 0);
+  isOutOfStock = computed(() => this.product().stock === 0);
+  
+  formattedPrice = computed(() => {
+    const p = this.product();
+    return p.discount > 0
+      ? `$${p.price - p.discount} (Save $${p.discount})`
+      : `$${p.price}`;
+  });
+  
+  buttonText = computed(() => {
+    if (this.isOutOfStock()) return 'Out of Stock';
+    return `Add to Cart ($${this.product().price * this.quantity()})`;  
+  });
+  
+  addToCart() {
+    if (!this.isOutOfStock()) {
+      // Implementation
+    }
+  }
+}
+```
+
+**3. When to Use RxJS Observables:**
+
+* **Asynchronous Operations**: HTTP requests, WebSockets, timers
+* **Event Streams**: User input events, system notifications
+* **Complex Data Transformations**: When you need operators like debounce, switchMap, etc.
+* **Cancellable Operations**: When you need to cancel in-flight requests
+* **Combining Multiple Data Sources**: When you need to merge or join multiple streams
+* **Global State Management**: For state shared across multiple components
+
+```typescript
+@Component({
+  selector: 'app-search',
+  template: `
+    <input [formControl]="searchControl" placeholder="Search...">
+    
+    <div *ngIf="loading$ | async" class="loader">Loading...</div>
+    
+    <div *ngIf="error$ | async as error" class="error">
+      {{ error }}
+    </div>
+    
+    <div *ngFor="let result of results$ | async">
+      {{ result.title }}
+    </div>
+  `
+})
+export class SearchComponent implements OnInit, OnDestroy {
+  searchControl = new FormControl('');
+  
+  loading$ = new BehaviorSubject<boolean>(false);
+  error$ = new BehaviorSubject<string | null>(null);
+  results$ = new BehaviorSubject<SearchResult[]>([]);
+  
+  private destroy$ = new Subject<void>();
+  
+  constructor(private searchService: SearchService) {}
+  
+  ngOnInit() {
+    // Complex stream processing
+    this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      filter(term => term !== null && term.length >= 2),
+      tap(() => {
+        this.loading$.next(true);
+        this.error$.next(null);
+      }),
+      switchMap(term => this.searchService.search(term).pipe(
+        catchError(err => {
+          this.error$.next('Search failed. Please try again.');
+          return of([]);
+        }),
+        finalize(() => this.loading$.next(false))
+      )),
+      takeUntil(this.destroy$)
+    ).subscribe(results => {
+      this.results$.next(results);
+    });
+  }
+  
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+}
+```
+
+**4. Integrating Signals with RxJS:**
+
+You can combine the strengths of both approaches:
+
+```typescript
+@Component({
+  selector: 'app-hybrid-approach',
+  template: `
+    <input [formControl]="searchControl" placeholder="Search...">
+    
+    <div *ngIf="loading()" class="loader">Loading...</div>
+    
+    <div *ngIf="error()" class="error">
+      {{ error() }}
+    </div>
+    
+    <div *ngFor="let result of results()">
+      {{ result.title }}
+    </div>
+  `
+})
+export class HybridApproachComponent implements OnInit, OnDestroy {
+  // Form control for RxJS stream
+  searchControl = new FormControl('');
+  
+  // Signals for UI state
+  loading = signal(false);
+  error = signal<string | null>(null);
+  results = signal<SearchResult[]>([]);
+  
+  private destroy$ = new Subject<void>();
+  
+  constructor(private searchService: SearchService) {}
+  
+  ngOnInit() {
+    // RxJS for async operations and complex transformations
+    this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      filter(term => term !== null && term.length >= 2),
+      tap(() => {
+        // Update signals
+        this.loading.set(true);
+        this.error.set(null);
+      }),
+      switchMap(term => this.searchService.search(term).pipe(
+        catchError(err => {
+          // Update signal on error
+          this.error.set('Search failed. Please try again.');
+          return of([]);
+        })
+      )),
+      takeUntil(this.destroy$)
+    ).subscribe(results => {
+      // Update signals with results
+      this.results.set(results);
+      this.loading.set(false);
+    });
+  }
+  
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+}
+```
+
+**5. Best Practices for Using Signals and RxJS Together:**
+
+* **Use Signals for UI State**: Component-local state, derived values, and UI reactivity
+* **Use RxJS for Async Operations**: HTTP requests, WebSockets, timers, and complex event streams
+* **Convert RxJS to Signals at Component Boundaries**: Subscribe to observables and update signals
+* **Use toSignal() and toObservable()**: Leverage Angular's built-in conversion utilities
+
+```typescript
+// Converting between Signals and Observables
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
+
+@Component({
+  selector: 'app-conversion-example',
+  template: `
+    <div>Count from signal: {{ count() }}</div>
+    <div>Doubled from observable: {{ doubled$ | async }}</div>
+  `
+})
+export class ConversionExampleComponent {
+  // Create a signal
+  count = signal(0);
+  
+  // Convert signal to observable
+  count$ = toObservable(this.count);
+  
+  // Transform with RxJS operators
+  doubled$ = this.count$.pipe(
+    map(count => count * 2)
+  );
+  
+  // Convert observable back to signal
+  doubledSignal = toSignal(this.doubled$, { initialValue: 0 });
+  
+  // HTTP data as signal
+  users = toSignal(
+    this.http.get<User[]>('/api/users').pipe(
+      catchError(() => of([]))
+    ),
+    { initialValue: [] as User[] }
+  );
+  
+  constructor(private http: HttpClient) {}
+  
+  increment() {
+    this.count.update(val => val + 1);
+  }
+}
+```
+
+**6. Performance Considerations:**
+
+* **Signals** are optimized for UI updates and have less overhead for simple state changes
+* **RxJS** has more overhead but provides powerful composition for complex async workflows
+* **Memory Usage**: Signals have automatic cleanup, while RxJS requires manual subscription management
+* **Bundle Size**: Signals are included in Angular core, while RxJS adds additional bundle size
+
+**7. Migration Strategy:**
+
+When migrating from RxJS-heavy code to Signals:
+
+1. Start with component-local state
+2. Use toSignal() to convert existing observables
+3. Replace simple BehaviorSubjects with signals
+4. Keep using RxJS for complex async operations
+5. Gradually adopt more signals as the Angular signals ecosystem matures
+
+In conclusion, Signals and RxJS complement each other rather than compete. Signals excel at fine-grained reactivity within components, while RxJS remains the tool of choice for complex asynchronous operations and data transformations. The best Angular applications will likely use both, leveraging each for their strengths.
+
 **1. Advanced SSR Configuration:**
 ```typescript
 // app.config.server.ts

@@ -1615,3 +1615,230 @@ function UserDashboard() {
 ---
 
 This comprehensive guide covers the fundamental concepts of React.js with detailed explanations and practical examples. Each answer includes real-world scenarios and best practices to help developers understand not just the "how" but also the "why" behind React patterns.
+
+### Q7: Explain React Server Components and how they differ from traditional React components.
+**Difficulty: Hard**
+
+**Answer:**
+React Server Components (RSC) represent a paradigm shift in how React applications are built, allowing components to render on the server without requiring JavaScript to be sent to the client. This feature was introduced as part of React 18 and is a key part of the React architecture moving forward, especially in frameworks like Next.js 13+ and Remix.
+
+**Key Characteristics of Server Components:**
+
+1. **Server-Only Rendering**: Server Components execute and render entirely on the server, with only their output HTML sent to the client.
+
+2. **Zero JavaScript Footprint**: They don't increase your client-side JavaScript bundle size because they don't get shipped to the client.
+
+3. **Direct Backend Access**: They can directly access backend resources like databases, file systems, and internal services without API layers.
+
+4. **Automatic Code Splitting**: They naturally split your application code between server and client.
+
+5. **Progressive Enhancement**: They work well with traditional client components for interactive features.
+
+**Server Components vs. Client Components:**
+
+```jsx
+// Server Component (saved as Page.server.jsx in some implementations)
+// or using the 'use server' directive in Next.js
+import db from '../database'; // Direct database access
+
+async function UserProfile({ userId }) {
+  // Direct database query without an API layer
+  const user = await db.users.findById(userId);
+  const userPosts = await db.posts.findByAuthor(userId);
+  
+  return (
+    <div className="profile">
+      <h1>{user.name}</h1>
+      <ProfileDetails user={user} />
+      <PostList posts={userPosts} />
+    </div>
+  );
+}
+
+// Client Component (saved as Counter.client.jsx in some implementations)
+// or using the 'use client' directive in Next.js
+'use client';
+
+import { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  );
+}
+```
+
+**How Server Components Work:**
+
+1. **Initial Request**: When a user visits a page, the server renders the Server Components.
+
+2. **Streaming HTML**: The server streams HTML to the client, which can be displayed immediately.
+
+3. **Hydration**: Any Client Components within the page are then hydrated, making them interactive.
+
+4. **Subsequent Updates**: When data changes, only the affected components are re-rendered, not the entire page.
+
+**Benefits of Server Components:**
+
+1. **Improved Performance**:
+   - Reduced JavaScript bundle size
+   - Faster initial page load
+   - Improved Time to First Byte (TTFB)
+   - Better Core Web Vitals scores
+
+2. **Enhanced Developer Experience**:
+   - Simplified data fetching
+   - No need for separate API endpoints
+   - Automatic code splitting
+   - Reduced prop drilling
+
+3. **Better Security**:
+   - Sensitive code and data stays on the server
+   - API keys and secrets never exposed to the client
+   - Reduced attack surface
+
+**Implementation in Next.js 13+:**
+
+```jsx
+// app/page.js - Server Component by default
+async function HomePage() {
+  const products = await fetchProducts(); // Direct server-side data fetching
+  
+  return (
+    <main>
+      <h1>Welcome to our store</h1>
+      <ProductGrid products={products} />
+      <ClientSideCart /> {/* This is a Client Component */}
+    </main>
+  );
+}
+
+export default HomePage;
+
+// app/components/client-side-cart.js
+'use client'; // This directive marks it as a Client Component
+
+import { useState } from 'react';
+
+export default function ClientSideCart() {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <div className="cart">
+      <button onClick={() => setIsOpen(!isOpen)}>
+        {isOpen ? 'Close' : 'Open'} Cart
+      </button>
+      {isOpen && <CartContents />}
+    </div>
+  );
+}
+```
+
+**Patterns and Best Practices:**
+
+1. **Component Splitting Strategy**:
+   - Use Server Components for data fetching, access control, and static content
+   - Use Client Components for interactive elements, state management, and event handling
+
+2. **Data Fetching Pattern**:
+```jsx
+// Server Component with parallel data fetching
+async function Dashboard() {
+  // These requests run in parallel
+  const userPromise = fetchUser();
+  const postsPromise = fetchPosts();
+  const analyticsPromise = fetchAnalytics();
+  
+  // Wait for all data to be available
+  const [user, posts, analytics] = await Promise.all([
+    userPromise,
+    postsPromise,
+    analyticsPromise
+  ]);
+  
+  return (
+    <div>
+      <UserHeader user={user} />
+      <PostList posts={posts} />
+      <AnalyticsDashboard data={analytics} />
+    </div>
+  );
+}
+```
+
+3. **Interleaving Server and Client Components**:
+```jsx
+// Server Component
+async function ProductPage({ productId }) {
+  const product = await fetchProduct(productId);
+  
+  return (
+    <div>
+      <h1>{product.name}</h1>
+      <ProductDetails product={product} />
+      {/* Client Component embedded within Server Component */}
+      <AddToCartButton productId={product.id} /> 
+      {/* Another Server Component */}
+      <RelatedProducts categoryId={product.categoryId} />
+    </div>
+  );
+}
+
+// Client Component
+'use client';
+function AddToCartButton({ productId }) {
+  const [isAdded, setIsAdded] = useState(false);
+  
+  const handleAddToCart = async () => {
+    await addToCart(productId);
+    setIsAdded(true);
+  };
+  
+  return (
+    <button 
+      onClick={handleAddToCart}
+      disabled={isAdded}
+    >
+      {isAdded ? 'Added to Cart' : 'Add to Cart'}
+    </button>
+  );
+}
+```
+
+4. **Progressive Loading with Suspense**:
+```jsx
+import { Suspense } from 'react';
+
+function ProductPage({ productId }) {
+  return (
+    <div>
+      <ProductHeader productId={productId} />
+      <Suspense fallback={<p>Loading details...</p>}>
+        <ProductDetails productId={productId} />
+      </Suspense>
+      <Suspense fallback={<p>Loading reviews...</p>}>
+        <ProductReviews productId={productId} />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+**Limitations and Considerations:**
+
+1. **No Browser APIs**: Server Components cannot access browser-specific APIs like `window`, `document`, or browser events.
+
+2. **No React Hooks**: Server Components cannot use React hooks like `useState` or `useEffect`.
+
+3. **No Event Handlers**: Server Components cannot include event handlers like `onClick` or `onChange`.
+
+4. **Framework Dependency**: Full RSC implementation currently requires a framework like Next.js or a specialized bundler setup.
+
+5. **Learning Curve**: Developers need to understand the mental model of which code runs where and how to structure applications accordingly.
+
+Server Components represent a significant evolution in React's architecture, enabling developers to build more performant applications with simplified data access patterns while maintaining React's component model and composition benefits.
