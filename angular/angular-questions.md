@@ -1540,7 +1540,7 @@ export class TruncatePipe implements PipeTransform {
 
 ---
 
-### Q3: What is dependency injection in Angular and how does it work?
+### Q11: What is dependency injection in Angular and how does it work?
 **Difficulty: Medium**
 
 **Answer:**
@@ -1701,7 +1701,7 @@ export class MyComponent {
 
 ---
 
-### Q4: Explain Angular component lifecycle hooks.
+### Q12: Explain Angular component lifecycle hooks.
 **Difficulty: Medium**
 
 **Answer:**
@@ -1936,7 +1936,7 @@ export class SearchComponent implements OnChanges {
 
 ---
 
-### Q5: What are Angular directives and what are the different types?
+### Q13: What are Angular directives and what are the different types?
 **Difficulty: Medium**
 
 **Answer:**
@@ -2246,7 +2246,7 @@ export class LazyLoadDirective implements OnInit {
 
 ## Routing & Navigation
 
-### Q6: Explain Angular routing and how to implement lazy loading.
+### Q14: Explain Angular routing and how to implement lazy loading.
 **Difficulty: Medium**
 
 **Answer:**
@@ -2551,7 +2551,7 @@ export class CustomPreloadingStrategy implements PreloadingStrategy {
 
 ---
 
-### Q7: What are Angular Forms and explain the difference between Template-driven and Reactive forms?
+### Q15: What are Angular Forms and explain the difference between Template-driven and Reactive forms?
 **Difficulty: Medium**
 
 **Answer:**
@@ -2977,7 +2977,7 @@ export class CustomValidators {
 
 ---
 
-### Q8: Explain Angular HTTP Client and how to handle HTTP requests.
+### Q16: Explain Angular HTTP Client and how to handle HTTP requests.
 **Difficulty: Medium**
 
 **Answer:**
@@ -3523,7 +3523,7 @@ export class UserListComponent implements OnInit, OnDestroy {
 
 ---
 
-### Q9: What is Change Detection in Angular and how does it work?
+### Q17: What is Change Detection in Angular and how does it work?
 **Difficulty: Medium-Hard**
 
 **Answer:**
@@ -3989,7 +3989,7 @@ export class ImpureFilterPipe implements PipeTransform {
 
 ---
 
-### Q10: Explain Angular Pipes and create custom pipes with examples.
+### Q18: Explain Angular Pipes and create custom pipes with examples.
 **Difficulty: Medium**
 
 **Answer:**
@@ -4533,7 +4533,7 @@ describe('TruncatePipe', () => {
 
 ---
 
-### Q11: What is Angular Testing and how do you implement unit and integration tests?
+### Q19: What is Angular Testing and how do you implement unit and integration tests?
 **Difficulty: Medium-Hard**
 
 **Answer:**
@@ -5261,7 +5261,7 @@ describe('AsyncComponent', () => {
 
 ---
 
-### Q12: What is Angular Security and how do you implement security best practices?
+### Q20: What is Angular Security and how do you implement security best practices?
 **Difficulty: Medium-Hard**
 
 **Answer:**
@@ -5811,7 +5811,7 @@ export class CspService {
 
 ---
 
-### Q13: What is NgRx and how do you implement state management in Angular?
+### Q21: What is NgRx and how do you implement state management in Angular?
 **Difficulty: Hard**
 
 **Answer:**
@@ -6593,7 +6593,7 @@ export class AppModule {}
 
 ---
 
-### Q14: What are Angular 14 specific features and improvements?
+### Q22: What are Angular 14 specific features and improvements?
 **Difficulty: Medium-Hard**
 
 **Answer:**
@@ -7170,7 +7170,7 @@ export class TypedFormsComponent {
 
 ---
 
-### Q15: How do you optimize Angular application performance?
+### Q23: How do you optimize Angular application performance?
 **Difficulty: Hard**
 
 **Answer:**
@@ -8023,7 +8023,7 @@ export class PerformanceMonitorService {
 
 ---
 
-### Q16: How do you implement comprehensive error handling in Angular?
+### Q24: How do you implement comprehensive error handling in Angular?
 **Difficulty: Hard**
 
 **Answer:**
@@ -8873,7 +8873,7 @@ export class ErrorService {
 
 ---
 
-### Q17: How do you implement advanced Angular architecture patterns?
+### Q25: How do you implement advanced Angular architecture patterns?
 
 **Answer:**
 Advanced Angular architecture involves implementing scalable patterns that promote maintainability, testability, and performance.
@@ -9253,7 +9253,7 @@ export const selectUsersPaginated = createSelector(
 );
 ```
 
-### Q18: How do you implement advanced performance optimization techniques?
+### Q26: How do you implement advanced performance optimization techniques?
 
 **Answer:**
 Advanced performance optimization in Angular involves multiple strategies from bundle optimization to runtime performance.
@@ -9542,7 +9542,7 @@ export class VirtualListComponent {
 }
 ```
 
-### Q19: How do you implement advanced testing strategies?
+### Q27: How do you implement advanced testing strategies?
 
 **Answer:**
 Advanced testing in Angular involves comprehensive strategies covering unit tests, integration tests, and end-to-end testing.
@@ -9863,7 +9863,7 @@ This comprehensive Angular guide now covers advanced architecture patterns, perf
 
 ## Angular 15+ Modern Features and Patterns
 
-### Q20: How do you implement standalone components and the new Angular architecture?
+### Q28: How do you implement standalone components and the new Angular architecture?
 **Difficulty: Advanced**
 
 **Answer:**
@@ -10451,7 +10451,7 @@ This enhanced Angular guide now includes the latest Angular 15+ features includi
 
 ## Advanced Angular Architecture and Patterns
 
-### Q21: How do you implement micro-frontends with Angular and Module Federation?
+### Q29: How do you implement micro-frontends with Angular and Module Federation?
 **Difficulty: Expert**
 
 **Answer:**
@@ -11116,7 +11116,7 @@ export class AdvancedCacheService {
 
 ## Angular 15+ Advanced Features and Enterprise Patterns
 
-### Q22: How do you implement Angular 15+ Image Optimization and new directives?
+### Q30: How do you implement Angular 15+ Image Optimization and new directives?
 **Difficulty: Advanced**
 
 **Answer:**
@@ -11243,7 +11243,7 @@ export class ImageOptimizationService {
 
 ---
 
-### Q23: How do you implement Angular 15+ Standalone APIs and bootstrapping?
+### Q31: How do you implement Angular 15+ Standalone APIs and bootstrapping?
 **Difficulty: Advanced**
 
 **Answer:**
@@ -11363,7 +11363,7 @@ export const routes: Routes = [
 
 ---
 
-### Q24: How do you implement Angular 16+ Signals and reactive programming patterns?
+### Q32: How do you implement Angular 16+ Signals and reactive programming patterns?
 **Difficulty: Expert**
 
 **Answer:**
@@ -11582,13 +11582,13 @@ export class SearchComponent {
 
 ---
 
-### Q25: How do you implement Angular 17+ SSR and hydration optimization?
+### Q33: How do you implement Angular 17+ SSR and hydration optimization?
 **Difficulty: Expert**
 
 **Answer:**
 Angular 17+ provides enhanced SSR capabilities with improved hydration, streaming, and performance optimizations.
 
-### Q26: Compare Angular Signals with RxJS Observables and explain when to use each.
+### Q34: Compare Angular Signals with RxJS Observables and explain when to use each.
 **Difficulty: Hard**
 
 **Answer:**
@@ -12155,7 +12155,7 @@ export class AnalyticsWidgetComponent {
 
 ---
 
-### Q15: How do you implement Angular 18+ Material 3 Design System and advanced theming?
+### Q35: How do you implement Angular 18+ Material 3 Design System and advanced theming?
 
 **Answer:**
 Angular 18+ introduces Material 3 (Material You) design system with dynamic theming, improved accessibility, and advanced customization capabilities.
@@ -12693,7 +12693,7 @@ export class AdvancedCardComponent {
 
 ---
 
-### Q16: How do you implement advanced Angular 18+ performance optimization with new control flow and deferrable views?
+### Q36: How do you implement advanced Angular 18+ performance optimization with new control flow and deferrable views?
 
 **Answer:**
 Angular 18+ introduces advanced performance optimization techniques including new control flow syntax, deferrable views, and intelligent loading strategies.

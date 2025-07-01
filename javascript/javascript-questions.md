@@ -3473,7 +3473,7 @@ export default function calculator(operation, a, b) {
 
 ## Advanced JavaScript Patterns and Modern Features
 
-### Q50: What are JavaScript Generators and how do they work? Provide advanced examples.
+### Q19: What are JavaScript Generators and how do they work? Provide advanced examples.
 **Difficulty: Hard**
 
 **Answer:**
@@ -3604,7 +3604,7 @@ console.log('BFS:', [...tree.breadthFirstTraversal()]);
 
 ---
 
-### Q51: Explain Proxy and Reflect in JavaScript with practical examples.
+### Q20: Explain Proxy and Reflect in JavaScript with practical examples.
 **Difficulty: Hard**
 
 **Answer:**
@@ -3787,7 +3787,7 @@ console.log(loggedCalculator.add(5, 3)); // Logs method call and execution time
 
 ---
 
-### Q52: What are WeakMap and WeakSet? When should you use them?
+### Q21: What are WeakMap and WeakSet? When should you use them?
 **Difficulty: Medium-Hard**
 
 **Answer:**
@@ -3988,7 +3988,7 @@ emitter.emit(component, 'update', { value: 42 });
 
 ---
 
-### Q53: Explain Symbol and its use cases in JavaScript.
+### Q22: Explain Symbol and its use cases in JavaScript.
 **Difficulty: Medium-Hard**
 
 **Answer:**
@@ -4273,7 +4273,7 @@ saveEntity(entity);
 
 ## Modern JavaScript Best Practices and Patterns
 
-### Q54: What are the best practices for error handling in modern JavaScript?
+### Q23: What are the best practices for error handling in modern JavaScript?
 **Difficulty: Medium-Hard**
 
 **Answer:**
@@ -4882,7 +4882,7 @@ if (process.env.NODE_ENV === 'development') {
 
 ---
 
-### Q19: Explain error handling in JavaScript with try-catch, custom errors, and async error handling.
+### Q24: Explain error handling in JavaScript with try-catch, custom errors, and async error handling.
 **Difficulty: Medium**
 
 **Answer:**
@@ -5227,7 +5227,7 @@ function logError(error) {
 
 ---
 
-### Q20: What is the difference between `call`, `apply`, and `bind` methods?
+### Q25: What is the difference between `call`, `apply`, and `bind` methods?
 **Difficulty: Medium**
 
 **Answer:**
@@ -5520,7 +5520,7 @@ console.timeEnd('bind');
 
 ## Advanced JavaScript Concepts
 
-### Q1: Explain JavaScript Design Patterns with practical examples.
+### Q26: Explain JavaScript Design Patterns with practical examples.
 **Difficulty: Hard**
 
 **Answer:**
@@ -5721,7 +5721,7 @@ console.log(admin.getPermissions()); // ['read', 'write', 'delete', 'admin']
 
 ---
 
-### Q2: Explain JavaScript Prototypes and Prototype Chain in detail.
+### Q27: Explain JavaScript Prototypes and Prototype Chain in detail.
 **Difficulty: Medium**
 
 **Answer:**
@@ -5833,7 +5833,7 @@ console.log(developer.getAgeGroup()); // Inherited method
 
 ---
 
-### Q3: Explain Advanced Array Methods and their practical use cases.
+### Q28: Explain Advanced Array Methods and their practical use cases.
 **Difficulty: Medium**
 
 **Answer:**
@@ -6011,7 +6011,7 @@ const expensiveElectronics = filterProducts(products, {
 
 ---
 
-### Q4: Explain Web APIs and Browser Features with practical examples.
+### Q29: Explain Web APIs and Browser Features with practical examples.
 **Difficulty: Medium**
 
 **Answer:**
@@ -6319,7 +6319,7 @@ NotificationService.showNotification('New Message', {
 
 ---
 
-### Q5: Explain Modern JavaScript Features (ES2020+) with examples.
+### Q30: Explain Modern JavaScript Features (ES2020+) with examples.
 **Difficulty: Medium**
 
 **Answer:**
@@ -6664,7 +6664,7 @@ console.log(logEntries);
 
 ## Modern JavaScript Features (ES2020-2023+)
 
-### Q1: What are the latest JavaScript features and how do you use them?
+### Q31: What are the latest JavaScript features and how do you use them?
 **Difficulty: Advanced**
 
 **Answer:**
@@ -6918,7 +6918,7 @@ class TodoList {
 
 ## Advanced JavaScript Patterns
 
-### Q2: What are some advanced JavaScript design patterns and when should you use them?
+### Q32: What are some advanced JavaScript design patterns and when should you use them?
 **Difficulty: Advanced**
 
 **Answer:**
@@ -7297,7 +7297,7 @@ console.log(result);
 
 ## Memory Management
 
-### Q1: Explain JavaScript memory management and garbage collection. How can you prevent memory leaks?
+### Q33: Explain JavaScript memory management and garbage collection. How can you prevent memory leaks?
 **Difficulty: Hard**
 
 **Answer:**
@@ -7581,7 +7581,7 @@ function processLargeDataIncrementally(data, chunkSize = 1000) {
 
 ## Performance Optimization
 
-### Q3: How do you optimize JavaScript performance and manage memory effectively?
+### Q34: How do you optimize JavaScript performance and manage memory effectively?
 **Difficulty: Advanced**
 
 **Answer:**
@@ -8175,7 +8175,7 @@ This comprehensive JavaScript guide now covers modern ES2020-2023+ features, adv
 
 ## Browser APIs
 
-### Q1: Explain the Intersection Observer API and how it can be used for performance optimization.
+### Q35: Explain the Intersection Observer API and how it can be used for performance optimization.
 **Difficulty: Hard**
 
 **Answer:**
@@ -8521,7 +8521,7 @@ if (!('IntersectionObserver' in window)) {
 5. Use a polyfill for older browsers if needed
 6. Combine with other performance techniques like debouncing and throttling for optimal results
 
-### Q2: Explain Web Workers in JavaScript and how they can improve application performance.
+### Q36: Explain Web Workers in JavaScript and how they can improve application performance.
 **Difficulty: Hard**
 
 **Answer:**
@@ -8980,7 +8980,7 @@ worker.postMessage({ data: [1, 2, 3, 4, 5] });
    - Be cautious with data passed to workers
    - Validate all messages between threads
 
-### Q3: Explain the Fetch API and how it compares to XMLHttpRequest.
+### Q37: Explain the Fetch API and how it compares to XMLHttpRequest.
 **Difficulty: Medium**
 
 **Answer:**
@@ -9394,7 +9394,7 @@ async function getUserData(userId) {
 }
 ```
 
-### Q4: Explain Service Workers and how they enable Progressive Web Applications (PWAs).
+### Q38: Explain Service Workers and how they enable Progressive Web Applications (PWAs).
 **Difficulty: Hard**
 
 **Answer:**
@@ -10050,7 +10050,7 @@ A Web App Manifest is a JSON file that provides information about a web applicat
    - Running in a separate thread makes debugging more complex
    - Cache-related issues can be difficult to diagnose
 
-### Q5: Explain the History API and how it enables client-side routing in single-page applications.
+### Q39: Explain the History API and how it enables client-side routing in single-page applications.
 **Difficulty: Medium**
 
 **Answer:**
@@ -10575,7 +10575,7 @@ When using the History API for client-side routing, the server must be configure
    }
    ```
 
-### Q6: Explain the Geolocation API and how to implement location-based features in web applications.
+### Q40: Explain the Geolocation API and how to implement location-based features in web applications.
 **Difficulty: Medium**
 
 **Answer:**
@@ -11249,7 +11249,7 @@ function formatPace(minPerKm) {
 }
 ```
 
-### Q7: Explain WebRTC (Web Real-Time Communication) and how to implement peer-to-peer communication in web applications.
+### Q41: Explain WebRTC (Web Real-Time Communication) and how to implement peer-to-peer communication in web applications.
 **Difficulty: Hard**
 
 **Answer:**
@@ -12182,7 +12182,7 @@ function handleConnectionFailure() {
 **Conclusion:**
 WebRTC represents a powerful technology for building real-time communication applications directly in the browser. By understanding its core components, signaling requirements, and best practices, developers can create robust peer-to-peer applications that deliver high-quality audio, video, and data sharing experiences with minimal latency.
 
-### Q8: Explain the Web Audio API and how to create advanced audio applications in the browser.
+### Q42: Explain the Web Audio API and how to create advanced audio applications in the browser.
 **Difficulty: Hard**
 
 **Answer:**
@@ -13286,7 +13286,7 @@ function cleanupAudioResources() {
 **Conclusion:**
 The Web Audio API provides a powerful platform for creating sophisticated audio applications directly in the browser. By understanding its core concepts, node-based architecture, and advanced features, developers can create immersive audio experiences ranging from simple sound players to complex digital audio workstations, all running natively in modern web browsers.
 
-### Q9: Explain IndexedDB and how to use it for client-side storage in web applications.
+### Q43: Explain IndexedDB and how to use it for client-side storage in web applications.
 **Difficulty: Medium**
 
 **Answer:**
@@ -14490,7 +14490,7 @@ IndexedDB provides a powerful solution for client-side storage in web applicatio
 
 ## Security
 
-### Q1: Explain common JavaScript security vulnerabilities and how to prevent them.
+### Q44: Explain common JavaScript security vulnerabilities and how to prevent them.
 **Difficulty: Hard**
 
 **Answer:**
@@ -14884,7 +14884,7 @@ app.get('/calculate', (req, res) => {
 
 ## Modern JavaScript ES2024+ Features and Advanced Patterns
 
-### Q1: How do you implement advanced functional programming patterns in modern JavaScript?
+### Q45: How do you implement advanced functional programming patterns in modern JavaScript?
 **Difficulty: Expert**
 
 **Answer:**
@@ -15434,7 +15434,7 @@ rateLimitedAPI(() => reliableAPI())
   .catch(error => console.error('API error:', error));
 ```
 
-### Q2: How do you implement advanced state management patterns in vanilla JavaScript?
+### Q46: How do you implement advanced state management patterns in vanilla JavaScript?
 **Difficulty: Expert**
 
 **Answer:**
@@ -15962,7 +15962,7 @@ function updateUI() {
 
 ---
 
-### Q3: How do you implement advanced JavaScript metaprogramming and reflection patterns?
+### Q47: How do you implement advanced JavaScript metaprogramming and reflection patterns?
 **Difficulty: Expert**
 
 **Answer:**
@@ -16118,7 +16118,7 @@ class UserService {
 
 ---
 
-### Q4: How do you implement advanced JavaScript performance optimization and memory management?
+### Q48: How do you implement advanced JavaScript performance optimization and memory management?
 **Difficulty: Expert**
 
 **Answer:**
@@ -16319,7 +16319,7 @@ const expensiveCalculation = memoizer.memoize((x, y, options) => {
 
 ---
 
-### Q15: How do you implement advanced JavaScript ES2024+ features including Records, Tuples, and Pattern Matching?
+### Q49: How do you implement advanced JavaScript ES2024+ features including Records, Tuples, and Pattern Matching?
 
 **Answer:**
 ES2024+ introduces powerful new features like Records and Tuples for immutable data structures, pattern matching for complex conditional logic, and enhanced temporal APIs for better date/time handling.
@@ -16701,7 +16701,7 @@ class OrderStateMachine {
 
 ---
 
-### Q16: How do you implement advanced JavaScript temporal APIs and modern asynchronous patterns with AbortController and Structured Concurrency?
+### Q50: How do you implement advanced JavaScript temporal APIs and modern asynchronous patterns with AbortController and Structured Concurrency?
 
 **Answer:**
 Modern JavaScript provides powerful temporal APIs for precise date/time handling and advanced asynchronous patterns with AbortController for cancellation and structured concurrency for better async flow control.
