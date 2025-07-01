@@ -1,0 +1,46 @@
+{
+  "name": "Interview Guide",
+  "short_name": "InterviewGuide",
+  "description": "A comprehensive guide for technical interview preparation",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#e53935",
+  "icons": [
+    {
+      "src": "/assets/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "orientation": "any",
+  "categories": ["education", "productivity"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Angular Questions",
+      "short_name": "Angular",
+      "description": "View Angular interview questions",
+      "url": "/?content=angular/angular-questions.md"
+    },
+    {
+      "name": "React Questions",
+      "short_name": "React",
+      "description": "View React interview questions",
+      "url": "/?content=react/react-questions.md"
+    },
+    {
+      "name": "Next.js Questions",
+      "short_name": "Next.js",
+      "description": "View Next.js interview questions",
+      "url": "/?content=nextjs/nextjs-questions.md"
+    }
+  ]
+}
