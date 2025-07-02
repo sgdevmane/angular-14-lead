@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # Main application service (Production)
@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
       args:
         NGINX_CONFIG: nginx-prod.conf
-    container_name: angular-interview-guide
+    container_name: interview-prep-guide
     ports:
       - "8080:80"
     environment:
@@ -16,15 +16,23 @@ services:
       - TZ=UTC
     volumes:
       # Mount content for development (optional)
-      - ./angular:/usr/share/nginx/html/angular:ro
-      - ./javascript:/usr/share/nginx/html/javascript:ro
-      - ./css:/usr/share/nginx/html/css:ro
-      - ./html:/usr/share/nginx/html/html:ro
-      - ./typescript:/usr/share/nginx/html/typescript:ro
-      - ./ngrx:/usr/share/nginx/html/ngrx:ro
-      - ./performance:/usr/share/nginx/html/performance:ro
-      - ./security:/usr/share/nginx/html/security:ro
-      - ./integration:/usr/share/nginx/html/integration:ro
+      - ./markdowns/javascript:/usr/share/nginx/html/javascript:ro
+      - ./markdowns/react:/usr/share/nginx/html/react:ro
+      - ./markdowns/css:/usr/share/nginx/html/css:ro
+      - ./markdowns/html:/usr/share/nginx/html/html:ro
+      - ./markdowns/typescript:/usr/share/nginx/html/typescript:ro
+      - ./markdowns/ngrx:/usr/share/nginx/html/ngrx:ro
+      - ./markdowns/performance:/usr/share/nginx/html/performance:ro
+      - ./markdowns/security:/usr/share/nginx/html/security:ro
+      - ./markdowns/integration:/usr/share/nginx/html/integration:ro
+      - ./markdowns/angular:/usr/share/nginx/html/angular:ro
+      - ./markdowns/database:/usr/share/nginx/html/lead:ro
+      - ./markdowns/tailwin-bootstrap:/usr/share/nginx/html/lead:ro
+      - ./markdowns/vue:/usr/share/nginx/html/lead:ro
+      - ./markdowns/react-native:/usr/share/nginx/html/lead:ro
+      - ./markdowns/python:/usr/share/nginx/html/python:ro
+      - ./markdowns/nodejs:/usr/share/nginx/html/nodejs:ro
+      - ./markdowns/kubernetes:/usr/share/nginx/html/kubernetes:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
@@ -42,7 +50,7 @@ services:
   # Development service with live reload
   interview-guide-dev:
     image: nginx:alpine
-    container_name: angular-interview-guide-dev
+    container_name: interview-prep-guide-dev
     ports:
       - "3000:80"
     volumes:
@@ -69,7 +77,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8081:8080"  # Traefik dashboard
+      - "8081:8080" # Traefik dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
@@ -87,12 +95,12 @@ services:
       - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=200h'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--storage.tsdb.retention.time=200h"
+      - "--web.enable-lifecycle"
     networks:
       - interview-guide-network
     profiles:
@@ -123,21 +131,20 @@ volumes:
     driver: local
   grafana_data:
     driver: local
-
 # Override configurations for different environments
 # Usage examples:
-# 
+#
 # Production:
 # docker-compose up -d interview-guide
-# 
+#
 # Development with live reload:
 # docker-compose --profile development up -d interview-guide-dev
-# 
+#
 # With Traefik reverse proxy:
 # docker-compose --profile traefik up -d
-# 
+#
 # With monitoring:
 # docker-compose --profile monitoring up -d
-# 
+#
 # Full stack:
 # docker-compose --profile development --profile traefik --profile monitoring up -d

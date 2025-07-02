@@ -62,10 +62,10 @@ WORKDIR /usr/share/nginx/html
 CMD ["/docker-entrypoint.sh"]
 
 # Labels for better container management
-LABEL maintainer="Lead Developer Guide" \
-      description="Comprehensive Lead Developer Interview Guide" \
+LABEL maintainer="Interview Preparation Guide" \
+      description="Comprehensive Interview Preparation Guide" \
       version="1.0.0" \
-      org.opencontainers.image.title="Angular 14 Interview Guide" \
-      org.opencontainers.image.description="Interactive web application with Angular 14, JavaScript, HTML5, CSS3, NgRx, Performance, and Security interview questions" \
+      org.opencontainers.image.title="Interview Preparation Guide" \
+      org.opencontainers.image.description="Interactive web application with Angular 14, React.js, Next.js, Node.js, JavaScript/Typesscript, HTML5, CSS3, NgRx, Performance, and Security interview questions" \
       org.opencontainers.image.vendor="Interview Guide Project" \
       org.opencontainers.image.version="1.0.0"

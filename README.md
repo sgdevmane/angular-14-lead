@@ -83,13 +83,18 @@ angular-14-lead/
 
 ### 🎨 Interactive HTML Format
 
-- **📱 Responsive Design**: Works perfectly on desktop, tablet, and mobile devices
+- **📱 Responsive Design**: Works perfectly on desktop, tablet, and mobile devices with enhanced mobile debugging
 - **🎯 Syntax Highlighting**: Code examples with proper syntax highlighting for multiple languages
 - **🧭 Advanced Navigation**: Easy-to-use table of contents and cross-section navigation
 - **🖨️ Print Optimization**: Clean, professional formatting for printing and PDF generation
 - **🌓 Dark/Light Theme**: Automatic theme detection based on system preferences
 - **🔍 Search Functionality**: Quick search across all question categories
 - **📊 Progress Tracking**: Track your preparation progress across different topics
+- **🐛 Mobile Debugging**: Comprehensive mobile layout debugging and error tracking
+- **✨ Enhanced UX**: Shimmer effects on control buttons and improved mobile navigation
+- **📱 Mobile-First**: Optimized mobile experience with touch-friendly controls and debugging
+- **⚡ Fast Loading**: Cached content and optimized performance
+- **🔄 Auto-Save**: Remembers your preferences and last viewed content
 
 ## 🚀 Getting Started
 
@@ -633,6 +638,37 @@ open http://localhost:8000
 - **Docker Compose**: Multi-container orchestration and environment management
 - **CI/CD**: GitHub Actions, automated testing, and deployment pipelines
 - **Git**: Version control, collaboration, and modern development workflows
+
+## 🐛 Troubleshooting
+
+### Mobile Issues
+
+If you experience blank pages or display issues on mobile devices:
+
+1. **Check Browser Console**: Open developer tools and check for JavaScript errors
+2. **Mobile Debugging**: The app includes comprehensive mobile debugging that logs:
+   - Viewport dimensions and device info
+   - DOM element visibility and positioning
+   - Content loading status
+   - Layout debugging information
+
+3. **Common Fixes**:
+   - Ensure JavaScript is enabled
+   - Clear browser cache and reload
+   - Check network connectivity for content loading
+   - Verify viewport meta tag is present
+
+4. **Browser Compatibility**: Tested on:
+   - iOS Safari 14+
+   - Chrome Mobile 90+
+   - Firefox Mobile 88+
+   - Samsung Internet 14+
+
+### Performance Issues
+
+- Content is cached after first load for better performance
+- Service worker provides offline capabilities
+- Images and assets are optimized for mobile networks
 
 ## 🤝 Contributing
 
