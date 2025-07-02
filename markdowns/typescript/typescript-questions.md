@@ -7,13 +7,11 @@
 3. [Advanced Types](#advanced-types)
 4. [Utility Types](#utility-types)
 5. [Generics](#generics)
-6. [Decorators](#decorators)
-7. [Modules and Namespaces](#modules-and-namespaces)
-8. [Configuration and Compilation](#configuration-and-compilation)
-9. [Best Practices](#best-practices)
-10. [Advanced Patterns](#advanced-patterns)
-11. [Performance Optimization](#performance-optimization)
-12. [Modern TypeScript Features](#modern-typescript-features)
+6. [Modern TypeScript Features](#modern-typescript-features)
+7. [Decorators](#decorators)
+8. [Best Practices](#best-practices)
+9. [Performance Optimization](#performance-optimization)
+10. [Advanced TypeScript 5.0+ Features and Patterns](#advanced-typescript-50-features-and-patterns)
 
 ---
 

@@ -8,7 +8,17 @@
 5. [State Management](#state-management)
 6. [Vue Router](#vue-router)
 7. [Performance Optimization](#performance-optimization)
-8. [Advanced Vue Patterns](#advanced-vue-patterns)
+8. [Testing](#testing)
+9. [Advanced Vue Features](#advanced-vue-features)
+10. [Server-Side Rendering](#server-side-rendering)
+11. [Advanced Vue Patterns](#advanced-vue-patterns)
+12. [TypeScript Integration](#typescript-integration)
+13. [Deployment](#deployment)
+14. [Vue 3 Migration](#vue-3-migration)
+15. [Micro-frontends](#micro-frontends)
+16. [Modern Development Tools](#modern-development-tools)
+17. [Internationalization and Accessibility](#internationalization-and-accessibility)
+18. [Enterprise Patterns](#enterprise-patterns)
 
 ---
 
@@ -590,6 +600,8 @@ export default {
 
 ---
 
+## Components and Templates
+
 ### Q3: What are Vue directives and how do you create custom directives?
 **Difficulty: Medium**
 
@@ -957,6 +969,8 @@ app.directive('my-directive', {
 
 ---
 
+## Reactivity System
+
 ### Q4: How do you implement Vue 3 reactivity system and what are the key differences from Vue 2?
 **Difficulty: Medium**
 
@@ -1252,6 +1266,8 @@ const updateMultiple = async () => {
 ```
 
 ---
+
+## Vue Router
 
 ### Q5: How do you implement Vue Router for SPA navigation and what are the advanced routing patterns?
 **Difficulty: Medium**
@@ -1727,6 +1743,8 @@ const routes = [
 ```
 
 ---
+
+## State Management
 
 ### Q6: How do you implement state management with Pinia (Vue 3) and what are the differences from Vuex?
 **Difficulty: Medium**
@@ -2256,6 +2274,8 @@ export function useWebSocket(url) {
 | **Composables** | Shared reactive logic | Reusable, testable | Requires good organization |
 
 ---
+
+## Performance Optimization
 
 ### Q8: How do you implement Vue.js performance optimization techniques?
 **Difficulty: Hard**
@@ -2866,6 +2886,8 @@ export function usePerformanceMonitor() {
 
 ---
 
+## Testing
+
 ### Q9: How do you implement testing in Vue.js applications?
 **Difficulty: Medium**
 
@@ -3444,6 +3466,8 @@ test.describe('User Management', () => {
 
 ---
 
+## Advanced Vue Features
+
 ### Q10: How do you implement Vue 3 Teleport and Suspense features?
 **Difficulty: Medium**
 
@@ -4019,6 +4043,8 @@ export function useAsyncData(key, fetcher) {
 
 ---
 
+## Server-Side Rendering
+
 ### Q11: How do you implement Server-Side Rendering (SSR) with Vue.js?
 **Difficulty: Advanced**
 
@@ -4593,6 +4619,8 @@ export const useProductStore = defineStore('products', () => {
 10. **Test thoroughly** on both server and client
 
 ---
+
+## Advanced Vue Patterns
 
 ### Q12: How do you implement advanced Vue.js patterns and best practices?
 **Difficulty: Advanced**
@@ -5186,6 +5214,8 @@ const { state: users, isLoading, error, execute: refetchUsers } = useAsyncState(
 10. **Test advanced patterns** thoroughly
 
 ---
+
+## TypeScript Integration
 
 ### Q13: How do you implement Vue.js with TypeScript?
 **Difficulty: Intermediate**
@@ -5867,6 +5897,8 @@ export default router
 
 ---
 
+## Deployment
+
 ### Q14: How do you deploy Vue.js applications?
 **Difficulty: Intermediate**
 
@@ -6309,6 +6341,8 @@ export default defineConfig({
 10. **Implement proper error pages** and fallbacks
 
 ---
+
+## Vue 3 Migration
 
 ### Q15: How do you migrate from Vue 2 to Vue 3?
 **Difficulty: Advanced**
@@ -6866,6 +6900,8 @@ export default {
 10. **Plan for rollback strategy** in case of issues
 
 ---
+
+## Micro-frontends
 
 ### Q16: How do you implement micro-frontends with Vue.js?
 **Difficulty: Advanced**
@@ -8350,6 +8386,8 @@ export function useToast() {
 
 ---
 
+## Modern Development Tools
+
 ### Q18: How do you implement Vue.js with modern development tools and workflows?
 **Difficulty: Advanced**
 
@@ -8878,6 +8916,8 @@ VITE_ENABLE_ANALYTICS=true
    - Code review processes
 
 ---
+
+## Internationalization and Accessibility
 
 ### Q19: How do you implement Vue.js with internationalization (i18n) and accessibility?
 **Difficulty: Advanced**
@@ -9928,6 +9968,8 @@ const announceToScreenReader = (message) => {
    - Test with different languages
 
 ---
+
+## Enterprise Patterns
 
 ### Q20: How do you implement Vue.js enterprise patterns and architecture?
 **Difficulty: Expert**

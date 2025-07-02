@@ -7,12 +7,16 @@
 4. [ES6+ Features](#es6-features)
 5. [Advanced Concepts](#advanced-concepts)
 6. [Event Handling](#event-handling)
-7. [Performance and Optimization](#performance-and-optimization)
-8. [Design Patterns](#design-patterns)
-9. [Memory Management](#memory-management)
-10. [Browser APIs](#browser-apis)
-11. [Security](#security)
-12. [Guess the Output](#guess-the-output)
+7. [Advanced JavaScript Patterns and Modern Features](#advanced-javascript-patterns-and-modern-features)
+8. [Modern JavaScript Best Practices and Patterns](#modern-javascript-best-practices-and-patterns)
+9. [Advanced JavaScript Concepts](#advanced-javascript-concepts)
+10. [Modern JavaScript Features (ES2020-2023+)](#modern-javascript-features-es2020-2023)
+11. [Advanced JavaScript Patterns](#advanced-javascript-patterns)
+12. [Memory Management](#memory-management)
+13. [Performance Optimization](#performance-optimization)
+14. [Browser APIs](#browser-apis)
+15. [Security](#security)
+16. [Modern JavaScript ES2024+ Features and Advanced Patterns](#modern-javascript-es2024-features-and-advanced-patterns)
 
 ---
 

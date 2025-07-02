@@ -5,9 +5,8 @@
 2. [Routing & Navigation](#routing--navigation)
 3. [API Routes & Server-Side](#api-routes--server-side)
 4. [SSR, SSG & ISR](#ssr-ssg--isr)
-5. [Performance & Optimization](#performance--optimization)
-6. [Advanced Patterns](#advanced-patterns)
-7. [Deployment & Production](#deployment--production)
+5. [Advanced Patterns](#advanced-patterns)
+6. [Performance & Optimization](#performance--optimization)
 
 ---
 

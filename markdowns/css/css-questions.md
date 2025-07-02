@@ -11,6 +11,8 @@
 8. [CSS Architecture and Methodologies](#css-architecture-and-methodologies)
 9. [Performance Optimization](#performance-optimization)
 10. [Modern CSS Features](#modern-css-features)
+11. [Advanced CSS Concepts](#advanced-css-concepts)
+12. [Advanced CSS Architecture and Modern Patterns](#advanced-css-architecture-and-modern-patterns)
 
 ---
 

@@ -267,6 +267,8 @@ ORDER BY e1.salary DESC;
 
 ---
 
+## Transactions and ACID
+
 ### Q7: Explain database transactions, ACID properties, and isolation levels with practical examples.
 **Difficulty: Advanced**
 
@@ -1292,6 +1294,8 @@ fi
 
 ---
 
+## Database Security
+
 ### Q10: How do you implement database security best practices and access control?
 **Difficulty: Advanced**
 
@@ -1818,6 +1822,8 @@ iptables-save > /etc/iptables/rules.v4
 8. **Network Segmentation**: Isolate database servers
 
 ---
+
+## Replication and Scaling
 
 ### Q11: How do you implement database replication and high availability strategies?
 **Difficulty: Advanced**
@@ -2375,6 +2381,8 @@ if __name__ == "__main__":
 8. **Capacity Planning**: Monitor resource usage and plan for growth
 
 ---
+
+## Advanced Topics
 
 ### Q12: How do you implement database performance monitoring and optimization?
 **Difficulty: Advanced**

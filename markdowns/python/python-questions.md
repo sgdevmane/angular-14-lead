@@ -492,6 +492,8 @@ if __name__ == '__main__':
 
 ---
 
+## Object-Oriented Programming
+
 ### Q2: What are Python decorators and how are they used in web development?
 
 **Difficulty: Medium**
@@ -972,6 +974,8 @@ This comprehensive guide demonstrates how Python's decorator feature provides el
 
 ---
 
+## Data Structures and Algorithms
+
 ### Q3: Explain Python's memory management and garbage collection.
 
 **Difficulty: Medium**
@@ -1263,6 +1267,8 @@ if __name__ == '__main__':
 - Profile memory usage regularly
 
 ---
+
+## Django Framework
 
 ### Q4: What are Python context managers and how do you implement them?
 
@@ -1682,6 +1688,8 @@ if __name__ == '__main__':
 - Cache management
 
 ---
+
+## Django REST Framework
 
 ### Q5: Explain Python's asyncio and asynchronous programming for web development.
 
@@ -2153,6 +2161,8 @@ if __name__ == '__main__':
 - Monitor and profile async performance
 
 ---
+
+## Database Integration
 
 ### Q6: How do you implement custom Django middleware and what are common use cases?
 
@@ -3441,6 +3451,8 @@ def demonstrate_orm_patterns():
 
 ---
 
+## Testing and Debugging
+
 ### Q8: How do you implement comprehensive testing in Python web applications?
 
 **Difficulty: Advanced**
@@ -4082,6 +4094,8 @@ if __name__ == '__main__':
 8. **Continuous Integration**: Automated testing in CI/CD pipeline
 
 ---
+
+## Performance and Optimization
 
 ### Q9: Explain Python web security best practices and common vulnerabilities.
 

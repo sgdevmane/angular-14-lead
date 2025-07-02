@@ -81,6 +81,8 @@ export class HelloComponent {
 
 ---
 
+## Components & Templates
+
 ### Q2: Explain the Angular architecture and its building blocks.
 **Difficulty: Medium**
 
@@ -437,6 +439,8 @@ export class CustomPreloadingStrategy implements PreloadingStrategy {
 ```
 
 ---
+
+## Services & Dependency Injection
 
 ### Q6: Explain RxJS operators commonly used in Angular applications.
 **Difficulty: Hard**

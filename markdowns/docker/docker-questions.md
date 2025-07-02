@@ -2,13 +2,17 @@
 
 ## Table of Contents
 1. [Docker Fundamentals](#docker-fundamentals)
-2. [Docker Images and Containers](#docker-images-and-containers)
-3. [Dockerfile Best Practices](#dockerfile-best-practices)
-4. [Docker Compose](#docker-compose)
-5. [Container Orchestration](#container-orchestration)
-6. [Docker Networking](#docker-networking)
-7. [Security and Production](#security-and-production)
-8. [CI/CD Integration](#cicd-integration)
+2. [Image Security](#image-security)
+3. [Container Security](#container-security)
+4. [Network Security](#network-security)
+5. [Host Security](#host-security)
+6. [Secrets Management](#secrets-management)
+7. [Monitoring and Compliance](#monitoring-and-compliance)
+8. [Image Analysis](#image-analysis)
+9. [Layer Analysis](#layer-analysis)
+10. [Security Scan Results](#security-scan-results)
+11. [Optimization Recommendations](#optimization-recommendations)
+12. [Performance Metrics](#performance-metrics)
 
 ---
 

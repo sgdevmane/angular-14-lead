@@ -544,6 +544,8 @@ if (cluster.isMaster) {
 
 ### Q3: Explain the Node.js Event Loop and how it works.
 
+## Streams and I/O
+
 ### Q4: What are Streams in Node.js and how do you use them?
 **Difficulty: Medium**
 
@@ -1400,6 +1402,8 @@ demonstrateBestPractices().catch(console.error);
 - Implement backpressure for high-load scenarios
 
 ---
+
+## Security
 
 ### Q5: How do you implement security best practices in Node.js applications?
 **Difficulty: Hard**

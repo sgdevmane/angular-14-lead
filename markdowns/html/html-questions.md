@@ -8,9 +8,11 @@
 5. [Accessibility (a11y)](#accessibility-a11y)
 6. [SEO and Meta Tags](#seo-and-meta-tags)
 7. [HTML Performance](#html-performance)
-8. [HTML Best Practices](#html-best-practices)
-9. [HTML5 Media Elements](#html5-media-elements)
-10. [HTML Validation and Standards](#html-validation-and-standards)
+8. [HTML5 Media Elements](#html5-media-elements)
+9. [HTML Best Practices](#html-best-practices)
+10. [Advanced HTML Concepts](#advanced-html-concepts)
+11. [Modern HTML Features and Web Standards](#modern-html-features-and-web-standards)
+12. [Modern HTML5 Advanced Features and Web Components](#modern-html5-advanced-features-and-web-components)
 
 ---
 
