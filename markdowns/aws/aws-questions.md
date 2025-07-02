@@ -1,14 +1,26 @@
 # AWS Cloud Interview Questions
 
 ## Table of Contents
-1. [AWS Fundamentals](#aws-fundamentals)
-2. [Compute Services](#compute-services)
-3. [Storage Services](#storage-services)
-4. [Database Services](#database-services)
-5. [Networking and Security](#networking-and-security)
-6. [Serverless and Containers](#serverless-and-containers)
-7. [DevOps and CI/CD](#devops-and-cicd)
-8. [Monitoring and Cost Optimization](#monitoring-and-cost-optimization)
+1. [Q1: Explain AWS Global Infrastructure and its components.](#q1-explain-aws-global-infrastructure-and-its-components)
+2. [Q2: What is the difference between AWS Regions and Availability Zones?](#q2-what-is-the-difference-between-aws-regions-and-availability-zones)
+3. [Q3: Explain the AWS Shared Responsibility Model.](#q3-explain-the-aws-shared-responsibility-model)
+4. [Q4: Compare EC2, Lambda, and Fargate. When would you use each?](#q4-compare-ec2-lambda-and-fargate-when-would-you-use-each)
+5. [Q5: How do you implement Auto Scaling in AWS?](#q5-how-do-you-implement-auto-scaling-in-aws)
+6. [Q6: Compare S3 storage classes and their use cases.](#q6-compare-s3-storage-classes-and-their-use-cases)
+7. [Q7: How do you implement cross-region replication in S3?](#q7-how-do-you-implement-cross-region-replication-in-s3)
+8. [Q8: Compare RDS, DynamoDB, and Aurora. When would you use each?](#q8-compare-rds-dynamodb-and-aurora-when-would-you-use-each)
+9. [Q9: How do you implement VPC networking with public and private subnets?](#q9-how-do-you-implement-vpc-networking-with-public-and-private-subnets)
+10. [Q10: How do you implement IAM policies and roles for least privilege access?](#q10-how-do-you-implement-iam-policies-and-roles-for-least-privilege-access)
+11. [Q11: How do you implement AWS WAF for web application security?](#q11-how-do-you-implement-aws-waf-for-web-application-security)
+12. [Q12: How do you build a serverless application with Lambda, API Gateway, and DynamoDB?](#q12-how-do-you-build-a-serverless-application-with-lambda-api-gateway-and-dynamodb)
+13. [Q13: How do you implement ECS with Fargate for containerized applications?](#q13-how-do-you-implement-ecs-with-fargate-for-containerized-applications)
+14. [Q14: How do you implement CI/CD pipeline using CodePipeline, CodeBuild, and CodeDeploy?](#q14-how-do-you-implement-cicd-pipeline-using-codepipeline-codebuild-and-codedeploy)
+15. [Q15: How do you implement Infrastructure as Code using CloudFormation and CDK?](#q15-how-do-you-implement-infrastructure-as-code-using-cloudformation-and-cdk)
+16. [Q16: How do you implement comprehensive monitoring with CloudWatch, X-Ray, and AWS Config?](#q16-how-do-you-implement-comprehensive-monitoring-with-cloudwatch-x-ray-and-aws-config)
+17. [Q17: How do you implement cost optimization strategies in AWS?](#q17-how-do-you-implement-cost-optimization-strategies-in-aws)
+18. [Q18: How do you implement disaster recovery and backup strategies in AWS?](#q18-how-do-you-implement-disaster-recovery-and-backup-strategies-in-aws)
+19. [Q19: How do you implement advanced security with AWS WAF, GuardDuty, and Security Hub?](#q19-how-do-you-implement-advanced-security-with-aws-waf-guardduty-and-security-hub)
+20. [Q20: How do you implement multi-account governance with AWS Organizations and Control Tower?](#q20-how-do-you-implement-multi-account-governance-with-aws-organizations-and-control-tower)
 
 ---
 

@@ -2,14 +2,22 @@
 
 ## Table of Contents
 
-1. [Python Fundamentals](#python-fundamentals)
-2. [Object-Oriented Programming](#object-oriented-programming)
-3. [Data Structures and Algorithms](#data-structures-and-algorithms)
-4. [Django Framework](#django-framework)
-5. [Django REST Framework](#django-rest-framework)
-6. [Database Integration](#database-integration)
-7. [Testing and Debugging](#testing-and-debugging)
-8. [Performance and Optimization](#performance-and-optimization)
+1. [Q1: Explain Python's key features and why it's popular for web development.](#q1-explain-pythons-key-features-and-why-its-popular-for-web-development)
+2. [Q2: What are Python decorators and how are they used in web development?](#q2-what-are-python-decorators-and-how-are-they-used-in-web-development)
+3. [Q3: Explain Python's memory management and garbage collection.](#q3-explain-pythons-memory-management-and-garbage-collection)
+4. [Q4: What are Python context managers and how do you implement them?](#q4-what-are-python-context-managers-and-how-do-you-implement-them)
+5. [Q5: Explain Python's asyncio and asynchronous programming for web development.](#q5-explain-pythons-asyncio-and-asynchronous-programming-for-web-development)
+6. [Q6: How do you implement custom Django middleware and what are common use cases?](#q6-how-do-you-implement-custom-django-middleware-and-what-are-common-use-cases)
+7. [Q7: Explain Python's ORM patterns and Django model relationships.](#q7-explain-pythons-orm-patterns-and-django-model-relationships)
+8. [Q8: How do you implement comprehensive testing in Python web applications?](#q8-how-do-you-implement-comprehensive-testing-in-python-web-applications)
+9. [Q9: Explain Python web security best practices and common vulnerabilities.](#q9-explain-python-web-security-best-practices-and-common-vulnerabilities)
+10. [Q10: How do you implement caching strategies in Python web applications?](#q10-how-do-you-implement-caching-strategies-in-python-web-applications)
+11. [Q11: Explain Python's Global Interpreter Lock (GIL) and its impact on web applications.](#q11-explain-pythons-global-interpreter-lock-gil-and-its-impact-on-web-applications)
+12. [Q12: How do you implement proper logging and monitoring in Python web applications?](#q12-how-do-you-implement-proper-logging-and-monitoring-in-python-web-applications)
+13. [Q13: Explain Python's data structures and their performance characteristics for web applications.](#q13-explain-pythons-data-structures-and-their-performance-characteristics-for-web-applications)
+14. [Q14: How do you implement effective error handling and exception management in Python web applications?](#q14-how-do-you-implement-effective-error-handling-and-exception-management-in-python-web-applications)
+15. [Q15: Explain Python deployment strategies and containerization for web applications.](#q15-explain-python-deployment-strategies-and-containerization-for-web-applications)
+16. [Q16: How do you implement performance optimization and profiling in Python web applications?](#q16-how-do-you-implement-performance-optimization-and-profiling-in-python-web-applications)
 
 ---
 

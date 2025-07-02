@@ -1,16 +1,14 @@
 # Web Security Interview Questions
 
 ## Table of Contents
-1. [Security Fundamentals](#security-fundamentals)
-2. [Authentication & Authorization](#authentication--authorization)
-3. [Cross-Site Scripting (XSS)](#cross-site-scripting-xss)
-4. [Cross-Site Request Forgery (CSRF)](#cross-site-request-forgery-csrf)
-5. [Content Security Policy (CSP)](#content-security-policy-csp)
-6. [HTTPS & TLS](#https--tls)
-7. [Input Validation & Sanitization](#input-validation--sanitization)
-8. [Session Management](#session-management)
-9. [API Security](#api-security)
-10. [Security Headers](#security-headers)
+
+1. [What are the OWASP Top 10 security vulnerabilities?](#q1-what-are-the-owasp-top-10-security-vulnerabilities)
+2. [How do you implement secure authentication and authorization?](#q2-how-do-you-implement-secure-authentication-and-authorization)
+3. [How do you prevent XSS attacks?](#q3-how-do-you-prevent-xss-attacks)
+4. [How do you implement advanced authentication and authorization patterns?](#q4-how-do-you-implement-advanced-authentication-and-authorization-patterns)
+5. [How do you implement advanced threat detection and security monitoring?](#q5-how-do-you-implement-advanced-threat-detection-and-security-monitoring)
+6. [How do you implement advanced security monitoring and incident response automation?](#q6-how-do-you-implement-advanced-security-monitoring-and-incident-response-automation)
+7. [How do you implement comprehensive security compliance and audit frameworks?](#q7-how-do-you-implement-comprehensive-security-compliance-and-audit-frameworks)
 
 ---
 

@@ -1,14 +1,27 @@
 # React.js Interview Questions
 
 ## Table of Contents
-1. [React Fundamentals](#react-fundamentals)
-2. [Components and JSX](#components-and-jsx)
-3. [State Management](#state-management)
-4. [Hooks](#hooks)
-5. [Performance Optimization](#performance-optimization)
-6. [Advanced React Patterns](#advanced-react-patterns)
-7. [Testing](#testing)
-8. [Modern React Features](#modern-react-features)
+1. [Q1: What is React and what are its key features?](#q1-what-is-react-and-what-are-its-key-features)
+2. [Q2: Explain the difference between functional and class components.](#q2-explain-the-difference-between-functional-and-class-components)
+3. [Q3: What is JSX and how does it work?](#q3-what-is-jsx-and-how-does-it-work)
+4. [Q4: How do you pass data between components?](#q4-how-do-you-pass-data-between-components)
+5. [Q5: Explain useState and how to manage state in functional components.](#q5-explain-usestate-and-how-to-manage-state-in-functional-components)
+6. [Q6: Explain useEffect and its use cases.](#q6-explain-useeffect-and-its-use-cases)
+7. [Q7: Explain React Server Components and how they differ from traditional React components.](#q7-explain-react-server-components-and-how-they-differ-from-traditional-react-components)
+8. [Q8: How do you optimize React application performance using React.memo, useMemo, and useCallback?](#q8-how-do-you-optimize-react-application-performance-using-reactmemo-usememo-and-usecallback)
+9. [Q9: How do you implement error boundaries and error handling in React applications?](#q9-how-do-you-implement-error-boundaries-and-error-handling-in-react-applications)
+10. [Q10: Explain React Context API and when to use it over prop drilling.](#q10-explain-react-context-api-and-when-to-use-it-over-prop-drilling)
+11. [Q11: What are Higher-Order Components (HOCs) and how do you implement them?](#q11-what-are-higher-order-components-hocs-and-how-do-you-implement-them)
+12. [Q12: How do you test React components using Jest and React Testing Library?](#q12-how-do-you-test-react-components-using-jest-and-react-testing-library)
+13. [Q13: How do you implement and test React Router navigation?](#q13-how-do-you-implement-and-test-react-router-navigation)
+14. [Q14: How do you implement React Suspense and Concurrent Features?](#q14-how-do-you-implement-react-suspense-and-concurrent-features)
+15. [Q15: How do you implement custom React hooks for complex state management?](#q15-how-do-you-implement-custom-react-hooks-for-complex-state-management)
+16. [Q16: How do you implement React Server Components and streaming SSR?](#q16-how-do-you-implement-react-server-components-and-streaming-ssr)
+17. [Q17: How do you implement advanced React patterns like Compound Components and Render Props?](#q17-how-do-you-implement-advanced-react-patterns-like-compound-components-and-render-props)
+18. [Q18: How do you implement micro-frontends with React and Module Federation?](#q18-how-do-you-implement-micro-frontends-with-react-and-module-federation)
+19. [Q19: How do you implement advanced React performance optimization techniques?](#q19-how-do-you-implement-advanced-react-performance-optimization-techniques)
+20. [Q20: How do you implement React 18+ concurrent features and automatic batching?](#q20-how-do-you-implement-react-18-concurrent-features-and-automatic-batching)
+21. [Q21: How do you implement React Server Components and modern full-stack React architecture?](#q21-how-do-you-implement-react-server-components-and-modern-full-stack-react-architecture)
 
 ---
 

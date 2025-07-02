@@ -1,18 +1,26 @@
 # Docker & DevOps Interview Questions
 
 ## Table of Contents
-1. [Docker Fundamentals](#docker-fundamentals)
-2. [Image Security](#image-security)
-3. [Container Security](#container-security)
-4. [Network Security](#network-security)
-5. [Host Security](#host-security)
-6. [Secrets Management](#secrets-management)
-7. [Monitoring and Compliance](#monitoring-and-compliance)
-8. [Image Analysis](#image-analysis)
-9. [Layer Analysis](#layer-analysis)
-10. [Security Scan Results](#security-scan-results)
-11. [Optimization Recommendations](#optimization-recommendations)
-12. [Performance Metrics](#performance-metrics)
+1. [Q1: What is Docker and how does it differ from virtual machines?](#q1-what-is-docker-and-how-does-it-differ-from-virtual-machines)
+2. [Q2: Explain Docker networking and how containers communicate.](#q2-explain-docker-networking-and-how-containers-communicate)
+3. [Q3: How do you create and optimize Dockerfiles for production?](#q3-how-do-you-create-and-optimize-dockerfiles-for-production)
+4. [Q4: How do you implement Docker Compose for multi-container applications?](#q4-how-do-you-implement-docker-compose-for-multi-container-applications)
+5. [Q5: How do you implement Docker security best practices?](#q5-how-do-you-implement-docker-security-best-practices)
+6. [Q6: How do you implement Docker container orchestration and scaling?](#q6-how-do-you-implement-docker-container-orchestration-and-scaling)
+7. [Q7: How do you implement Docker monitoring and logging?](#q7-how-do-you-implement-docker-monitoring-and-logging)
+8. [Q9: How do you troubleshoot Docker container issues?](#q9-how-do-you-troubleshoot-docker-container-issues)
+9. [Q10: How do you optimize Docker performance and resource usage?](#q10-how-do-you-optimize-docker-performance-and-resource-usage)
+10. [Q11: How do you implement Docker Swarm for container orchestration?](#q11-how-do-you-implement-docker-swarm-for-container-orchestration)
+11. [Q12: How do you integrate Docker with Kubernetes?](#q12-how-do-you-integrate-docker-with-kubernetes)
+12. [Q13: How do you implement Docker multi-platform builds and deployment?](#q13-how-do-you-implement-docker-multi-platform-builds-and-deployment)
+13. [Q14: How do you implement Docker enterprise patterns and best practices?](#q14-how-do-you-implement-docker-enterprise-patterns-and-best-practices)
+14. [Q15: How do you implement Docker development workflows and debugging?](#q15-how-do-you-implement-docker-development-workflows-and-debugging)
+15. [Q16: How do you implement Docker container backup and disaster recovery?](#q16-how-do-you-implement-docker-container-backup-and-disaster-recovery)
+16. [Q17: How do you implement Docker image optimization and security scanning?](#q17-how-do-you-implement-docker-image-optimization-and-security-scanning)
+17. [Q15: How do you implement Docker CI/CD integration?](#q15-how-do-you-implement-docker-cicd-integration)
+18. [Q18: How do you implement Docker in production environments with high availability and scalability?](#q18-how-do-you-implement-docker-in-production-environments-with-high-availability-and-scalability)
+19. [Q19: How do you implement Docker registry management and image lifecycle?](#q19-how-do-you-implement-docker-registry-management-and-image-lifecycle)
+20. [Q20: How do you implement Docker ecosystem integration with modern DevOps tools?](#q20-how-do-you-implement-docker-ecosystem-integration-with-modern-devops-tools)
 
 ---
 

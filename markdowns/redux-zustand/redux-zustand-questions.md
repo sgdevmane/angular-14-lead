@@ -1,13 +1,18 @@
 # Redux + Zustand Interview Questions & Answers
 
 ## Table of Contents
-1. [Redux Fundamentals](#redux-fundamentals)
-2. [Redux Toolkit (RTK)](#redux-toolkit-rtk)
-3. [Redux Middleware & Async](#redux-middleware--async)
-4. [Zustand Fundamentals](#zustand-fundamentals)
-5. [Advanced Zustand Patterns](#advanced-zustand-patterns)
-6. [Redux vs Zustand Comparison](#redux-vs-zustand-comparison)
-7. [Performance & Best Practices](#performance--best-practices)
+1. [What is Redux and what are its core principles?](#1-what-is-redux-and-what-are-its-core-principles)
+2. [How do you handle complex state with multiple reducers?](#2-how-do-you-handle-complex-state-with-multiple-reducers)
+3. [How does Redux Toolkit simplify Redux development?](#3-how-does-redux-toolkit-simplify-redux-development)
+4. [How do you handle async operations with RTK Query?](#4-how-do-you-handle-async-operations-with-rtk-query)
+5. [How do you create custom middleware in Redux?](#5-how-do-you-create-custom-middleware-in-redux)
+6. [What is Zustand and how does it differ from Redux?](#6-what-is-zustand-and-how-does-it-differ-from-redux)
+7. [How do you implement middleware and persistence in Zustand?](#7-how-do-you-implement-middleware-and-persistence-in-zustand)
+8. [How do you implement complex state patterns with Zustand?](#8-how-do-you-implement-complex-state-patterns-with-zustand)
+9. [When should you choose Redux over Zustand and vice versa?](#9-when-should-you-choose-redux-over-zustand-and-vice-versa)
+10. [How do you migrate from Redux to Zustand?](#10-how-do-you-migrate-from-redux-to-zustand)
+11. [How do you optimize performance in Redux and Zustand?](#11-how-do-you-optimize-performance-in-redux-and-zustand)
+12. [What are the best practices for testing Redux and Zustand stores?](#12-what-are-the-best-practices-for-testing-redux-and-zustand-stores)
 
 ---
 

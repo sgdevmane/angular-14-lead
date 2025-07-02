@@ -2,16 +2,26 @@
 
 ## Table of Contents
 
-1. [TypeScript Fundamentals](#typescript-fundamentals)
-2. [Type System](#type-system)
-3. [Advanced Types](#advanced-types)
-4. [Utility Types](#utility-types)
-5. [Generics](#generics)
-6. [Modern TypeScript Features](#modern-typescript-features)
-7. [Decorators](#decorators)
-8. [Best Practices](#best-practices)
-9. [Performance Optimization](#performance-optimization)
-10. [Advanced TypeScript 5.0+ Features and Patterns](#advanced-typescript-50-features-and-patterns)
+1. [Q1: What is TypeScript and what are its key benefits?](#q1-what-is-typescript-and-what-are-its-key-benefits)
+2. [Q2: Explain TypeScript's type inference and when to use explicit typing.](#q2-explain-typescripts-type-inference-and-when-to-use-explicit-typing)
+3. [Q3: Explain TypeScript's structural typing system.](#q3-explain-typescripts-structural-typing-system)
+4. [Q4: What are union types, intersection types, and discriminated unions?](#q4-what-are-union-types-intersection-types-and-discriminated-unions)
+5. [Q5: Explain conditional types and their practical applications.](#q5-explain-conditional-types-and-their-practical-applications)
+6. [Q6: What are mapped types and how do you create custom utility types?](#q6-what-are-mapped-types-and-how-do-you-create-custom-utility-types)
+7. [Q7: Explain the built-in utility types and create advanced custom ones.](#q7-explain-the-built-in-utility-types-and-create-advanced-custom-ones)
+8. [Q8: Explain TypeScript generics with advanced patterns and constraints.](#q8-explain-typescript-generics-with-advanced-patterns-and-constraints)
+9. [Q9: Explain template literal types and their advanced use cases.](#q9-explain-template-literal-types-and-their-advanced-use-cases)
+10. [Q10: Explain TypeScript decorators and their practical applications.](#q10-explain-typescript-decorators-and-their-practical-applications)
+11. [Q11: What are TypeScript best practices for large-scale applications?](#q11-what-are-typescript-best-practices-for-large-scale-applications)
+12. [Q12: How do you optimize TypeScript compilation and runtime performance?](#q12-how-do-you-optimize-typescript-compilation-and-runtime-performance)
+13. [Q13: What are the latest TypeScript features and how do you use them?](#q13-what-are-the-latest-typescript-features-and-how-do-you-use-them)
+14. [Q14: How do you implement advanced type manipulation and metaprogramming in TypeScript?](#q14-how-do-you-implement-advanced-type-manipulation-and-metaprogramming-in-typescript)
+15. [Q15: How do you implement advanced type-safe patterns for modern applications?](#q15-how-do-you-implement-advanced-type-safe-patterns-for-modern-applications)
+16. [Q16: How do you implement TypeScript 5.0+ decorators and metadata reflection?](#q16-how-do-you-implement-typescript-50-decorators-and-metadata-reflection)
+17. [Q17: How do you implement advanced TypeScript patterns for reactive programming?](#q17-how-do-you-implement-advanced-typescript-patterns-for-reactive-programming)
+18. [Q18: How do you implement TypeScript 5.0+ const assertions and satisfies operator for advanced type safety?](#q18-how-do-you-implement-typescript-50-const-assertions-and-satisfies-operator-for-advanced-type-safety)
+19. [Q19: How do you implement advanced TypeScript 5.0+ decorators and metadata reflection for enterprise applications?](#q19-how-do-you-implement-advanced-typescript-50-decorators-and-metadata-reflection-for-enterprise-applications)
+20. [Q20: How do you use TypeScript with React for type-safe component development?](#q20-how-do-you-use-typescript-with-react-for-type-safe-component-development)
 
 ---
 

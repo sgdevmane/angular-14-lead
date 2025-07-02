@@ -1,16 +1,15 @@
 # Angular 14 Integration Interview Questions
 
 ## Table of Contents
-1. [Angular 14 New Features](#angular-14-new-features)
-2. [Standalone Components](#standalone-components)
-3. [Angular CLI Auto-completion](#angular-cli-auto-completion)
-4. [Optional Injectors](#optional-injectors)
-5. [Extended Developer Diagnostics](#extended-developer-diagnostics)
-6. [Angular DevKit](#angular-devkit)
-7. [Third-Party Integration](#third-party-integration)
-8. [Micro-frontend Architecture](#micro-frontend-architecture)
-9. [State Management Integration](#state-management-integration)
-10. [Testing Integration](#testing-integration)
+1. [What are the key new features introduced in Angular 14?](#q1-what-are-the-key-new-features-introduced-in-angular-14)
+2. [How do you migrate from NgModules to Standalone Components?](#q2-how-do-you-migrate-from-ngmodules-to-standalone-components)
+3. [How do you set up and use Angular CLI auto-completion?](#q3-how-do-you-set-up-and-use-angular-cli-auto-completion)
+4. [How do you use optional injectors in embedded views?](#q4-how-do-you-use-optional-injectors-in-embedded-views)
+5. [How do you implement micro-frontend architecture with Angular 14?](#q5-how-do-you-implement-micro-frontend-architecture-with-angular-14)
+6. [How do you implement advanced state sharing between Angular 14 applications?](#q6-how-do-you-implement-advanced-state-sharing-between-angular-14-applications)
+7. [How do you implement real-time collaboration features in Angular 14?](#q7-how-do-you-implement-real-time-collaboration-features-in-angular-14)
+8. [How would you implement advanced Angular 14+ integration with modern development tools and CI/CD pipelines?](#q8-how-would-you-implement-advanced-angular-14-integration-with-modern-development-tools-and-cicd-pipelines)
+9. [How would you implement advanced Angular 14+ integration with modern monitoring, analytics, and observability tools?](#q9-how-would-you-implement-advanced-angular-14-integration-with-modern-monitoring-analytics-and-observability-tools)
 
 ---
 

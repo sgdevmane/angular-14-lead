@@ -1,15 +1,18 @@
 # React Native Interview Questions and Answers
 
 ## Table of Contents
-1. [React Native Fundamentals](#react-native-fundamentals)
-2. [Navigation](#navigation)
-3. [State Management](#state-management)
-4. [Native Modules and APIs](#native-modules-and-apis)
-5. [Performance Optimization](#performance-optimization)
-6. [Platform-Specific Development](#platform-specific-development)
-7. [Testing](#testing)
-8. [Deployment and Distribution](#deployment-and-distribution)
-9. [Advanced Patterns](#advanced-patterns)
+1. [What is React Native and how does it differ from React?](#1-what-is-react-native-and-how-does-it-differ-from-react)
+2. [How do you handle styling in React Native?](#2-how-do-you-handle-styling-in-react-native)
+3. [How do you manage component lifecycle in React Native?](#3-how-do-you-manage-component-lifecycle-in-react-native)
+4. [How do you handle forms and user input in React Native?](#4-how-do-you-handle-forms-and-user-input-in-react-native)
+5. [How do you implement navigation in React Native?](#5-how-do-you-implement-navigation-in-react-native)
+6. [How do you manage state in React Native applications?](#6-how-do-you-manage-state-in-react-native-applications)
+7. [How do you handle data persistence in React Native?](#7-how-do-you-handle-data-persistence-in-react-native)
+8. [How do you access native device features in React Native?](#8-how-do-you-access-native-device-features-in-react-native)
+9. [How do you optimize performance in React Native applications?](#9-how-do-you-optimize-performance-in-react-native-applications)
+10. [How do you test React Native applications?](#10-how-do-you-test-react-native-applications)
+11. [How do you configure and deploy React Native applications for different platforms?](#11-how-do-you-configure-and-deploy-react-native-applications-for-different-platforms)
+12. [How do you handle different screen sizes and orientations in React Native?](#12-how-do-you-handle-different-screen-sizes-and-orientations-in-react-native)
 
 ---
 

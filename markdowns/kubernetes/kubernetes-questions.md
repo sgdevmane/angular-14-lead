@@ -1,22 +1,22 @@
 # Kubernetes Interview Questions
 
 ## Table of Contents
-1. [Kubernetes Fundamentals](#kubernetes-fundamentals)
-2. [Pods and Containers](#pods-and-containers)
-3. [Services and Networking](#services-and-networking)
-4. [ConfigMaps and Secrets](#configmaps-and-secrets)
-5. [Deployments and ReplicaSets](#deployments-and-replicasets)
-6. [Persistent Volumes](#persistent-volumes)
-7. [Ingress and Load Balancing](#ingress-and-load-balancing)
-8. [Monitoring and Logging](#monitoring-and-logging)
-9. [Security](#security)
-10. [Autoscaling](#autoscaling)
-11. [CI/CD Pipelines](#cicd-pipelines)
-12. [Disaster Recovery](#disaster-recovery)
-13. [Operators and Custom Resources](#operators-and-custom-resources)
-14. [Multi-cluster Management](#multi-cluster-management)
-15. [Resource Management](#resource-management)
-16. [Troubleshooting and Debugging](#troubleshooting-and-debugging)
+1. [What is Kubernetes and explain its architecture?](#q1-what-is-kubernetes-and-explain-its-architecture)
+2. [Explain Kubernetes Pods and their lifecycle management?](#q2-explain-kubernetes-pods-and-their-lifecycle-management)
+3. [What are Kubernetes Services and how do they enable service discovery?](#q3-what-are-kubernetes-services-and-how-do-they-enable-service-discovery)
+4. [How do you manage configuration and secrets in Kubernetes?](#q4-how-do-you-manage-configuration-and-secrets-in-kubernetes)
+5. [What are Kubernetes Deployments and how do they manage application rollouts?](#q5-what-are-kubernetes-deployments-and-how-do-they-manage-application-rollouts)
+6. [How do you implement persistent storage in Kubernetes using Persistent Volumes and Persistent Volume Claims?](#q6-how-do-you-implement-persistent-storage-in-kubernetes-using-persistent-volumes-and-persistent-volume-claims)
+7. [How do you implement networking and ingress in Kubernetes?](#q7-how-do-you-implement-networking-and-ingress-in-kubernetes)
+8. [How do you implement monitoring and observability in Kubernetes?](#q8-how-do-you-implement-monitoring-and-observability-in-kubernetes)
+9. [How do you implement security in Kubernetes clusters?](#q9-how-do-you-implement-security-in-kubernetes-clusters)
+10. [How do you implement autoscaling in Kubernetes?](#q10-how-do-you-implement-autoscaling-in-kubernetes)
+11. [How do you implement CI/CD pipelines for Kubernetes applications?](#q11-how-do-you-implement-cicd-pipelines-for-kubernetes-applications)
+12. [How do you implement disaster recovery and backup strategies for Kubernetes clusters?](#q12-how-do-you-implement-disaster-recovery-and-backup-strategies-for-kubernetes-clusters)
+13. [How do you implement and manage Kubernetes operators and custom resources?](#q13-how-do-you-implement-and-manage-kubernetes-operators-and-custom-resources)
+14. [How do you implement multi-cluster Kubernetes management and federation?](#q14-how-do-you-implement-multi-cluster-kubernetes-management-and-federation)
+15. [How do you implement resource management and optimization in Kubernetes?](#q15-how-do-you-implement-resource-management-and-optimization-in-kubernetes)
+16. [How do you implement advanced Kubernetes troubleshooting and debugging?](#q16-how-do-you-implement-advanced-kubernetes-troubleshooting-and-debugging)
 
 ---
 

@@ -4,17 +4,16 @@ A comprehensive guide covering Redux and Zustand state management libraries, the
 
 ## Table of Contents
 
-- [Redux + Zustand Interview Questions and Answers](#redux--zustand-interview-questions-and-answers)
-  - [Table of Contents](#table-of-contents)
-    - [Q1: What are the key differences between Redux and Zustand, and when should you use each?](#q1-what-are-the-key-differences-between-redux-and-zustand-and-when-should-you-use-each)
-  - [Q2: How do you implement middleware in Redux and Zustand?](#q2-how-do-you-implement-middleware-in-redux-and-zustand)
-  - [Q3: How do you handle async operations and side effects in Redux vs Zustand?](#q3-how-do-you-handle-async-operations-and-side-effects-in-redux-vs-zustand)
-  - [Q4: How do you implement testing strategies for Redux and Zustand stores?](#q4-how-do-you-implement-testing-strategies-for-redux-and-zustand-stores)
-  - [Q5: How do you optimize performance in Redux and Zustand applications?](#q5-how-do-you-optimize-performance-in-redux-and-zustand-applications)
-  - [Q6: How do you integrate Redux and Zustand with DevTools and debugging?](#q6-how-do-you-integrate-redux-and-zustand-with-devtools-and-debugging)
-  - [Q8: How do you implement real-time updates and synchronization in Redux and Zustand?](#q8-how-do-you-implement-real-time-updates-and-synchronization-in-redux-and-zustand)
-  - [Q9: How do you implement undo/redo functionality in Redux and Zustand?](#q9-how-do-you-implement-undoredo-functionality-in-redux-and-zustand)
-  - [Q10: How do you implement data persistence and hydration in Redux and Zustand?](#q10-how-do-you-implement-data-persistence-and-hydration-in-redux-and-zustand)
+1. [What are the key differences between Redux and Zustand, and when should you use each?](#q1-what-are-the-key-differences-between-redux-and-zustand-and-when-should-you-use-each)
+2. [How do you implement middleware in Redux and Zustand?](#q2-how-do-you-implement-middleware-in-redux-and-zustand)
+3. [How do you handle async operations and side effects in Redux vs Zustand?](#q3-how-do-you-handle-async-operations-and-side-effects-in-redux-vs-zustand)
+4. [How do you implement testing strategies for Redux and Zustand stores?](#q4-how-do-you-implement-testing-strategies-for-redux-and-zustand-stores)
+5. [How do you optimize performance in Redux and Zustand applications?](#q5-how-do-you-optimize-performance-in-redux-and-zustand-applications)
+6. [How do you integrate Redux and Zustand with DevTools and debugging?](#q6-how-do-you-integrate-redux-and-zustand-with-devtools-and-debugging)
+7. [How do you handle complex state normalization in Redux and Zustand?](#q7-how-do-you-handle-complex-state-normalization-in-redux-and-zustand)
+8. [How do you implement real-time updates and synchronization in Redux and Zustand?](#q8-how-do-you-implement-real-time-updates-and-synchronization-in-redux-and-zustand)
+9. [How do you implement undo/redo functionality in Redux and Zustand?](#q9-how-do-you-implement-undoredo-functionality-in-redux-and-zustand)
+10. [How do you implement data persistence and hydration in Redux and Zustand?](#q10-how-do-you-implement-data-persistence-and-hydration-in-redux-and-zustand)
 
 ---
 

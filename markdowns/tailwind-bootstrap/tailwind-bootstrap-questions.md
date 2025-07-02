@@ -1,6 +1,18 @@
-# Tailwind CSS + Bootstrap Interview Questions
+# Tailwind CSS & Bootstrap Interview Questions
 
 A comprehensive collection of interview questions covering Tailwind CSS, Bootstrap, and their comparison for modern web development.
+
+## Table of Contents
+
+1. [What is Tailwind CSS and how does it differ from traditional CSS frameworks?](#1-what-is-tailwind-css-and-how-does-it-differ-from-traditional-css-frameworks)
+2. [How do you implement responsive design with Tailwind CSS?](#2-how-do-you-implement-responsive-design-with-tailwind-css)
+3. [How do you create custom components and reusable styles in Tailwind?](#3-how-do-you-create-custom-components-and-reusable-styles-in-tailwind)
+4. [What is Bootstrap and what are its key features?](#4-what-is-bootstrap-and-what-are-its-key-features)
+5. [How do you create responsive layouts with Bootstrap's grid system?](#5-how-do-you-create-responsive-layouts-with-bootstraps-grid-system)
+6. [How do you customize Bootstrap components and themes?](#6-how-do-you-customize-bootstrap-components-and-themes)
+7. [When should you choose Tailwind CSS over Bootstrap and vice versa?](#7-when-should-you-choose-tailwind-css-over-bootstrap-and-vice-versa)
+8. [How do you migrate from Bootstrap to Tailwind CSS?](#8-how-do-you-migrate-from-bootstrap-to-tailwind-css)
+9. [How do you optimize performance in Tailwind CSS and Bootstrap?](#9-how-do-you-optimize-performance-in-tailwind-css-and-bootstrap)
 
 ---
 

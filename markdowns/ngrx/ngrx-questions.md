@@ -1,16 +1,21 @@
 # NgRx Interview Questions
 
 ## Table of Contents
-1. [NgRx Fundamentals](#ngrx-fundamentals)
-2. [Store and State Management](#store-and-state-management)
-3. [Actions and Action Creators](#actions-and-action-creators)
-4. [Reducers](#reducers)
-5. [Effects](#effects)
-6. [Selectors](#selectors)
-7. [Entity State Management](#entity-state-management)
-8. [NgRx Router Store](#ngrx-router-store)
-9. [Testing NgRx](#testing-ngrx)
-10. [NgRx Best Practices](#ngrx-best-practices)
+1. [Q1: What is NgRx and why would you use it?](#q1-what-is-ngrx-and-why-would-you-use-it)
+2. [Q2: How do you set up NgRx Store in an Angular application?](#q2-how-do-you-set-up-ngrx-store-in-an-angular-application)
+3. [Q3: How do you create and use actions in NgRx?](#q3-how-do-you-create-and-use-actions-in-ngrx)
+4. [Q4: How do you create reducers in NgRx?](#q4-how-do-you-create-reducers-in-ngrx)
+5. [Q5: How do you handle side effects with NgRx Effects?](#q5-how-do-you-handle-side-effects-with-ngrx-effects)
+6. [Q6: How do you create and use selectors in NgRx?](#q6-how-do-you-create-and-use-selectors-in-ngrx)
+7. [Q7: How do you implement advanced NgRx patterns for complex state management?](#q7-how-do-you-implement-advanced-ngrx-patterns-for-complex-state-management)
+8. [Q8: How do you implement real-time state synchronization with NgRx?](#q8-how-do-you-implement-real-time-state-synchronization-with-ngrx)
+9. [Q9: How do you implement advanced NgRx patterns for enterprise applications?](#q9-how-do-you-implement-advanced-ngrx-patterns-for-enterprise-applications)
+10. [Q10: How do you implement NgRx with micro-frontend architecture?](#q10-how-do-you-implement-ngrx-with-micro-frontend-architecture)
+11. [Q11: How do you implement NgRx with Angular 15+ Standalone Components and modern architecture?](#q11-how-do-you-implement-ngrx-with-angular-15-standalone-components-and-modern-architecture)
+12. [Q12: How do you implement advanced NgRx testing strategies with modern Angular testing utilities?](#q12-how-do-you-implement-advanced-ngrx-testing-strategies-with-modern-angular-testing-utilities)
+13. [Q13: How would you implement NgRx Signal Store for modern Angular applications?](#q13-how-would-you-implement-ngrx-signal-store-for-modern-angular-applications)
+14. [Q14: How would you implement advanced NgRx patterns for enterprise applications?](#q14-how-would-you-implement-advanced-ngrx-patterns-for-enterprise-applications)
+15. [Q15: How do you implement comprehensive testing strategies for NgRx applications?](#q15-how-do-you-implement-comprehensive-testing-strategies-for-ngrx-applications)
 
 ---
 

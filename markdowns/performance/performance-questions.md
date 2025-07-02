@@ -1,16 +1,18 @@
 # Performance Optimization Interview Questions
 
 ## Table of Contents
-1. [Web Performance Fundamentals](#web-performance-fundamentals)
-2. [Core Web Vitals](#core-web-vitals)
-3. [Loading Performance](#loading-performance)
-4. [Runtime Performance](#runtime-performance)
-5. [Memory Management](#memory-management)
-6. [Network Optimization](#network-optimization)
-7. [Image and Media Optimization](#image-and-media-optimization)
-8. [JavaScript Performance](#javascript-performance)
-9. [CSS Performance](#css-performance)
-10. [Angular Performance](#angular-performance)
+1. [Q1: What are the key metrics for measuring web performance?](#q1-what-are-the-key-metrics-for-measuring-web-performance)
+2. [Q2: How do you optimize Core Web Vitals?](#q2-how-do-you-optimize-core-web-vitals)
+3. [Q3: How do you optimize page loading performance?](#q3-how-do-you-optimize-page-loading-performance)
+4. [Q4: How do you optimize JavaScript runtime performance?](#q4-how-do-you-optimize-javascript-runtime-performance)
+5. [Q5: How do you prevent memory leaks in web applications?](#q5-how-do-you-prevent-memory-leaks-in-web-applications)
+6. [Q6: How do you implement advanced performance optimization strategies?](#q6-how-do-you-implement-advanced-performance-optimization-strategies)
+7. [Q7: How do you implement advanced performance monitoring and real-time optimization?](#q7-how-do-you-implement-advanced-performance-monitoring-and-real-time-optimization)
+8. [Q8: How do you implement comprehensive performance monitoring and analytics?](#q8-how-do-you-implement-comprehensive-performance-monitoring-and-analytics)
+9. [Q9: How do you implement advanced performance optimization for modern web applications?](#q9-how-do-you-implement-advanced-performance-optimization-for-modern-web-applications)
+10. [Q10: How do you implement advanced caching strategies and service worker optimization?](#q10-how-do-you-implement-advanced-caching-strategies-and-service-worker-optimization)
+11. [Q11: How would you implement advanced performance monitoring and optimization for modern web applications?](#q11-how-would-you-implement-advanced-performance-monitoring-and-optimization-for-modern-web-applications)
+12. [Q12: How would you implement advanced caching strategies and edge optimization for global performance?](#q12-how-would-you-implement-advanced-caching-strategies-and-edge-optimization-for-global-performance)
 
 ---
 

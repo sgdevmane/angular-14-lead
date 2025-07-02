@@ -1,12 +1,28 @@
 # Next.js Interview Questions & Answers
 
 ## Table of Contents
-1. [Next.js Fundamentals](#nextjs-fundamentals)
-2. [Routing & Navigation](#routing--navigation)
-3. [API Routes & Server-Side](#api-routes--server-side)
-4. [SSR, SSG & ISR](#ssr-ssg--isr)
-5. [Advanced Patterns](#advanced-patterns)
-6. [Performance & Optimization](#performance--optimization)
+1. [1. What is Next.js and what are its key features?](#1-what-is-nextjs-and-what-are-its-key-features)
+2. [2. Explain the difference between pages and components in Next.js](#2-explain-the-difference-between-pages-and-components-in-nextjs)
+3. [3. How does Next.js handle CSS and styling?](#3-how-does-nextjs-handle-css-and-styling)
+4. [4. What is the purpose of _app.js and _document.js?](#4-what-is-the-purpose-of-_appjs-and-_documentjs)
+5. [5. How does file-based routing work in Next.js?](#5-how-does-file-based-routing-work-in-nextjs)
+6. [6. Explain the Next.js Link component and its benefits](#6-explain-the-nextjs-link-component-and-its-benefits)
+7. [7. How do you handle nested routes and layouts in Next.js?](#7-how-do-you-handle-nested-routes-and-layouts-in-nextjs)
+8. [8. How do API routes work in Next.js?](#8-how-do-api-routes-work-in-nextjs)
+9. [9. How do you implement middleware in Next.js?](#9-how-do-you-implement-middleware-in-nextjs)
+10. [10. Explain the differences between SSR, SSG, and ISR in Next.js](#10-explain-the-differences-between-ssr-ssg-and-isr-in-nextjs)
+11. [11. How do you implement internationalization (i18n) in Next.js?](#11-how-do-you-implement-internationalization-i18n-in-nextjs)
+12. [12. How do you handle errors in Next.js?](#12-how-do-you-handle-errors-in-nextjs)
+13. [13. What are the different caching strategies in Next.js?](#13-what-are-the-different-caching-strategies-in-nextjs)
+14. [14. What are the deployment options for Next.js applications?](#14-what-are-the-deployment-options-for-nextjs-applications)
+15. [15. How can you optimize performance in a Next.js application?](#15-how-can-you-optimize-performance-in-a-nextjs-application)
+16. [16. How do you use TypeScript with Next.js?](#16-how-do-you-use-typescript-with-nextjs)
+17. [17. What are the best practices for testing Next.js applications?](#17-what-are-the-best-practices-for-testing-nextjs-applications)
+18. [18. How do you integrate a headless CMS with Next.js?](#18-how-do-you-integrate-a-headless-cms-with-nextjs)
+19. [19. How do you implement and use middleware in Next.js?](#19-how-do-you-implement-and-use-middleware-in-nextjs)
+20. [20. How do you implement code splitting and lazy loading in Next.js?](#20-how-do-you-implement-code-splitting-and-lazy-loading-in-nextjs)
+21. [21. How do you implement authentication in Next.js?](#21-how-do-you-implement-authentication-in-nextjs)
+22. [22. How do you optimize images in Next.js?](#22-how-do-you-optimize-images-in-nextjs)
 
 ---
 
