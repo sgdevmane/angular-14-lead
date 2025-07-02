@@ -1217,6 +1217,14 @@
           display: none;
         }
 
+        .fab-button {
+          display: none;
+        }
+
+        .sticky-question {
+          display: none;
+        }
+
         .container {
           grid-template-columns: 1fr;
         }
@@ -1893,7 +1901,7 @@
                 d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.79a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
               ></path>
             </svg>
-            <span>Controls</span>
+            <span>Controls Center</span>
             <svg
               class="chevron"
               xmlns="http://www.w3.org/2000/svg"
@@ -2045,38 +2053,44 @@
 
         <div class="nav-section">
           <h3>Frontend Technologies</h3>
-          <button class="nav-item" data-file="angular/angular-questions.md">
+          <button
+            class="nav-item"
+            data-file="markdowns/angular/angular-questions.md"
+          >
             Angular 14 <span class="badge">100+</span>
           </button>
           <button
             class="nav-item"
-            data-file="javascript/javascript-questions.md"
+            data-file="markdowns/javascript/javascript-questions.md"
           >
             JavaScript <span class="badge">80+</span>
           </button>
           <button
             class="nav-item"
-            data-file="typescript/typescript-questions.md"
+            data-file="markdowns/typescript/typescript-questions.md"
           >
             TypeScript <span class="badge">70+</span>
           </button>
-          <button class="nav-item" data-file="html/html-questions.md">
+          <button class="nav-item" data-file="markdowns/html/html-questions.md">
             HTML5 <span class="badge">50+</span>
           </button>
-          <button class="nav-item" data-file="css/css-questions.md">
+          <button class="nav-item" data-file="markdowns/css/css-questions.md">
             CSS3 <span class="badge">60+</span>
           </button>
-          <button class="nav-item" data-file="react/react-questions.md">
+          <button
+            class="nav-item"
+            data-file="markdowns/react/react-questions.md"
+          >
             React.js <span class="badge">45+</span>
           </button>
-          <button class="nav-item" data-file="vue/vue-questions.md">
+          <button class="nav-item" data-file="markdowns/vue/vue-questions.md">
             Vue.js <span class="badge">50+</span>
           </button>
         </div>
 
         <div class="nav-section">
           <h3>State Management</h3>
-          <button class="nav-item" data-file="ngrx/ngrx-questions.md">
+          <button class="nav-item" data-file="markdowns/ngrx/ngrx-questions.md">
             NgRx <span class="badge">40+</span>
           </button>
         </div>
@@ -2085,36 +2099,51 @@
           <h3>Performance & Security</h3>
           <button
             class="nav-item"
-            data-file="performance/performance-questions.md"
+            data-file="markdowns/performance/performance-questions.md"
           >
             Performance <span class="badge">35+</span>
           </button>
-          <button class="nav-item" data-file="security/security-questions.md">
+          <button
+            class="nav-item"
+            data-file="markdowns/security/security-questions.md"
+          >
             Security <span class="badge">45+</span>
           </button>
         </div>
 
         <div class="nav-section">
           <h3>Backend Technologies</h3>
-          <button class="nav-item" data-file="nodejs/nodejs-questions.md">
+          <button
+            class="nav-item"
+            data-file="markdowns/nodejs/nodejs-questions.md"
+          >
             Node.js <span class="badge">60+</span>
           </button>
-          <button class="nav-item" data-file="python/python-questions.md">
+          <button
+            class="nav-item"
+            data-file="markdowns/python/python-questions.md"
+          >
             Python & Django <span class="badge">55+</span>
           </button>
-          <button class="nav-item" data-file="docker/docker-questions.md">
+          <button
+            class="nav-item"
+            data-file="markdowns/docker/docker-questions.md"
+          >
             Docker & DevOps <span class="badge">45+</span>
           </button>
           <button
             class="nav-item"
-            data-file="kubernetes/kubernetes-questions.md"
+            data-file="markdowns/kubernetes/kubernetes-questions.md"
           >
             Kubernetes <span class="badge">40+</span>
           </button>
-          <button class="nav-item" data-file="aws/aws-questions.md">
+          <button class="nav-item" data-file="markdowns/aws/aws-questions.md">
             AWS Cloud <span class="badge">50+</span>
           </button>
-          <button class="nav-item" data-file="database/database-questions.md">
+          <button
+            class="nav-item"
+            data-file="markdowns/database/database-questions.md"
+          >
             Database & SQL <span class="badge">65+</span>
           </button>
         </div>
@@ -2123,7 +2152,7 @@
           <h3>Integration & Advanced</h3>
           <button
             class="nav-item"
-            data-file="integration/angular14-integration-questions.md"
+            data-file="markdowns/integration/angular14-integration-questions.md"
           >
             Angular 14 Integration <span class="badge">25+</span>
           </button>
@@ -3284,7 +3313,7 @@
           }
 
           // Load Angular questions by default
-          this.loadContent("angular/angular-questions.md");
+          this.loadContent("markdowns/javascript/javascript-questions.md");
 
           // Initialize new features
           this.initializeFontSizeControls();
