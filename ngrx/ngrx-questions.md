@@ -4027,3 +4027,283 @@ export function localStorageSyncReducer(
 ```
 
 This advanced NgRx guide now includes complex state composition patterns, optimistic updates with rollback capabilities, real-time state synchronization with conflict resolution strategies, enterprise-level patterns for scalability, comprehensive micro-frontend integration strategies, modern standalone component integration with Signal Store, and comprehensive testing strategies with modern Angular testing utilities.
+
+### Q15: How do you implement comprehensive testing strategies for NgRx applications?
+
+**Answer:**
+Testing NgRx applications requires a multi-layered approach covering actions, reducers, effects, selectors, and integration scenarios.
+
+**1. Testing Actions:**
+```typescript
+// user.actions.spec.ts
+import * as UserActions from './user.actions';
+import { User } from '../models/user.model';
+
+describe('User Actions', () => {
+  describe('loadUsers', () => {
+    it('should create an action', () => {
+      const action = UserActions.loadUsers();
+      expect(action.type).toBe('[User] Load Users');
+    });
+  });
+
+  describe('loadUsersSuccess', () => {
+    it('should create an action with users payload', () => {
+      const users: User[] = [
+        { id: '1', name: 'John', email: 'john@example.com', role: 'user' },
+        { id: '2', name: 'Jane', email: 'jane@example.com', role: 'admin' }
+      ];
+      const action = UserActions.loadUsersSuccess({ users });
+      
+      expect(action.type).toBe('[User] Load Users Success');
+      expect(action.users).toEqual(users);
+    });
+  });
+
+  describe('updateUser', () => {
+    it('should create an action with user update payload', () => {
+      const user: User = { id: '1', name: 'John Updated', email: 'john@example.com', role: 'user' };
+      const action = UserActions.updateUser({ user });
+      
+      expect(action.type).toBe('[User] Update User');
+      expect(action.user).toEqual(user);
+    });
+  });
+
+  describe('deleteUser', () => {
+    it('should create an action with user id', () => {
+      const id = '123';
+      const action = UserActions.deleteUser({ id });
+      
+      expect(action.type).toBe('[User] Delete User');
+      expect(action.id).toBe(id);
+    });
+  });
+});
+```
+
+**2. Testing Reducers:**
+```typescript
+// user.reducer.spec.ts
+import { userReducer, initialUserState } from './user.reducer';
+import * as UserActions from './user.actions';
+import { User } from '../models/user.model';
+
+describe('User Reducer', () => {
+  const mockUsers: User[] = [
+    { id: '1', name: 'John', email: 'john@example.com', role: 'user' },
+    { id: '2', name: 'Jane', email: 'jane@example.com', role: 'admin' }
+  ];
+
+  describe('unknown action', () => {
+    it('should return the previous state', () => {
+      const action = {} as any;
+      const result = userReducer(initialUserState, action);
+      expect(result).toBe(initialUserState);
+    });
+  });
+
+  describe('loadUsers action', () => {
+    it('should set loading to true and clear error', () => {
+      const action = UserActions.loadUsers();
+      const result = userReducer(initialUserState, action);
+      
+      expect(result.loading).toBe(true);
+      expect(result.error).toBe(null);
+      expect(result.users).toEqual([]);
+    });
+  });
+
+  describe('loadUsersSuccess action', () => {
+    it('should populate users and set loading to false', () => {
+      const action = UserActions.loadUsersSuccess({ users: mockUsers });
+      const result = userReducer(initialUserState, action);
+      
+      expect(result.loading).toBe(false);
+      expect(result.error).toBe(null);
+      expect(result.users).toEqual(mockUsers);
+    });
+  });
+
+  describe('loadUsersFailure action', () => {
+    it('should set error and loading to false', () => {
+      const error = 'Failed to load users';
+      const action = UserActions.loadUsersFailure({ error });
+      const result = userReducer(initialUserState, action);
+      
+      expect(result.loading).toBe(false);
+      expect(result.error).toBe(error);
+      expect(result.users).toEqual([]);
+    });
+  });
+
+  describe('updateUser action', () => {
+    it('should update existing user', () => {
+      const initialState = {
+        ...initialUserState,
+        users: mockUsers
+      };
+      
+      const updatedUser = { ...mockUsers[0], name: 'John Updated' };
+      const action = UserActions.updateUser({ user: updatedUser });
+      const result = userReducer(initialState, action);
+      
+      expect(result.users[0]).toEqual(updatedUser);
+      expect(result.users[1]).toEqual(mockUsers[1]);
+    });
+  });
+
+  describe('deleteUser action', () => {
+    it('should remove user from state', () => {
+      const initialState = {
+        ...initialUserState,
+        users: mockUsers
+      };
+      
+      const action = UserActions.deleteUser({ id: '1' });
+      const result = userReducer(initialState, action);
+      
+      expect(result.users).toHaveLength(1);
+      expect(result.users[0]).toEqual(mockUsers[1]);
+    });
+  });
+
+  describe('selectUser action', () => {
+    it('should set selected user', () => {
+      const action = UserActions.selectUser({ user: mockUsers[0] });
+      const result = userReducer(initialUserState, action);
+      
+      expect(result.selectedUser).toEqual(mockUsers[0]);
+    });
+  });
+});
+```
+
+**3. Testing Effects:**
+```typescript
+// user.effects.spec.ts
+import { TestBed } from '@angular/core/testing';
+import { provideMockActions } from '@ngrx/effects/testing';
+import { Observable, of, throwError } from 'rxjs';
+import { Action } from '@ngrx/store';
+import { UserEffects } from './user.effects';
+import { UserService } from '../services/user.service';
+import * as UserActions from './user.actions';
+import { User } from '../models/user.model';
+import { hot, cold } from 'jasmine-marbles';
+
+describe('UserEffects', () => {
+  let actions$: Observable<Action>;
+  let effects: UserEffects;
+  let userService: jasmine.SpyObj<UserService>;
+
+  const mockUsers: User[] = [
+    { id: '1', name: 'John', email: 'john@example.com', role: 'user' },
+    { id: '2', name: 'Jane', email: 'jane@example.com', role: 'admin' }
+  ];
+
+  beforeEach(() => {
+    const spy = jasmine.createSpyObj('UserService', [
+      'getUsers', 'createUser', 'updateUser', 'deleteUser'
+    ]);
+
+    TestBed.configureTestingModule({
+      providers: [
+        UserEffects,
+        provideMockActions(() => actions$),
+        { provide: UserService, useValue: spy }
+      ]
+    });
+
+    effects = TestBed.inject(UserEffects);
+    userService = TestBed.inject(UserService) as jasmine.SpyObj<UserService>;
+  });
+
+  describe('loadUsers$', () => {
+    it('should return loadUsersSuccess action on successful API call', () => {
+      const action = UserActions.loadUsers();
+      const outcome = UserActions.loadUsersSuccess({ users: mockUsers });
+
+      actions$ = hot('-a', { a: action });
+      const response = cold('-a|', { a: mockUsers });
+      userService.getUsers.and.returnValue(response);
+
+      const expected = cold('--b', { b: outcome });
+      expect(effects.loadUsers$).toBeObservable(expected);
+    });
+
+    it('should return loadUsersFailure action on API error', () => {
+      const action = UserActions.loadUsers();
+      const error = new Error('API Error');
+      const outcome = UserActions.loadUsersFailure({ error: error.message });
+
+      actions$ = hot('-a', { a: action });
+      const response = cold('-#|', {}, error);
+      userService.getUsers.and.returnValue(response);
+
+      const expected = cold('--b', { b: outcome });
+      expect(effects.loadUsers$).toBeObservable(expected);
+    });
+  });
+
+  describe('createUser$', () => {
+    it('should return createUserSuccess action on successful creation', () => {
+      const user = mockUsers[0];
+      const action = UserActions.createUser({ user });
+      const outcome = UserActions.createUserSuccess({ user });
+
+      actions$ = hot('-a', { a: action });
+      const response = cold('-a|', { a: user });
+      userService.createUser.and.returnValue(response);
+
+      const expected = cold('--b', { b: outcome });
+      expect(effects.createUser$).toBeObservable(expected);
+    });
+  });
+
+  describe('updateUser$', () => {
+    it('should return updateUserSuccess action on successful update', () => {
+      const user = { ...mockUsers[0], name: 'Updated Name' };
+      const action = UserActions.updateUser({ user });
+      const outcome = UserActions.updateUserSuccess({ user });
+
+      actions$ = hot('-a', { a: action });
+      const response = cold('-a|', { a: user });
+      userService.updateUser.and.returnValue(response);
+
+      const expected = cold('--b', { b: outcome });
+      expect(effects.updateUser$).toBeObservable(expected);
+    });
+  });
+
+  describe('deleteUser$', () => {
+    it('should return deleteUserSuccess action on successful deletion', () => {
+      const id = '1';
+      const action = UserActions.deleteUser({ id });
+      const outcome = UserActions.deleteUserSuccess({ id });
+
+      actions$ = hot('-a', { a: action });
+      const response = cold('-a|', { a: { success: true } });
+      userService.deleteUser.and.returnValue(response);
+
+      const expected = cold('--b', { b: outcome });
+      expect(effects.deleteUser$).toBeObservable(expected);
+    });
+  });
+});
+```
+
+**Best Practices for NgRx Testing:**
+
+1. **Test in Isolation**: Test each layer (actions, reducers, effects, selectors) independently
+2. **Use Marble Testing**: Leverage marble diagrams for testing complex async flows in effects
+3. **Mock External Dependencies**: Always mock HTTP services and other external dependencies
+4. **Test Error Scenarios**: Ensure error handling is properly tested
+5. **Performance Testing**: Include performance tests for large datasets and complex operations
+6. **Integration Testing**: Test the complete flow from component to store
+7. **Use Testing Utilities**: Create reusable testing helpers and utilities
+8. **Test Selectors Thoroughly**: Ensure selectors work correctly with various state combinations
+9. **Snapshot Testing**: Use snapshot testing for complex state structures
+10. **Test State Immutability**: Verify that reducers don't mutate the original state
+
+This comprehensive testing strategy ensures robust, maintainable NgRx applications with high confidence in state management reliability.

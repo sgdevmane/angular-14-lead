@@ -1,14 +1,26 @@
 # Node.js Interview Questions
 
 ## Table of Contents
-1. [Node.js Fundamentals](#nodejs-fundamentals)
-2. [Event Loop and Asynchronous Programming](#event-loop-and-asynchronous-programming)
-3. [Modules and NPM](#modules-and-npm)
-4. [Express.js Framework](#expressjs-framework)
-5. [Database Integration](#database-integration)
-6. [Authentication and Security](#authentication-and-security)
-7. [Performance and Optimization](#performance-and-optimization)
-8. [Testing and Deployment](#testing-and-deployment)
+- [Q1: What is Node.js and what are its key features?](#q1-what-is-nodejs-and-what-are-its-key-features)
+- [Q2: Explain the Node.js module system and how require() works](#q2-explain-the-nodejs-module-system-and-how-require-works)
+- [Q3: Explain the Node.js Event Loop and how it works](#q3-explain-the-nodejs-event-loop-and-how-it-works)
+- [Q4: What are Streams in Node.js and how do you use them?](#q4-what-are-streams-in-nodejs-and-how-do-you-use-them)
+- [Q5: How do you implement security best practices in Node.js applications?](#q5-how-do-you-implement-security-best-practices-in-nodejs-applications)
+- [Q6: How do you design and implement a microservices architecture with Node.js?](#q6-how-do-you-design-and-implement-a-microservices-architecture-with-nodejs)
+- [Q7: How do you implement a GraphQL API with Node.js?](#q7-how-do-you-implement-a-graphql-api-with-nodejs)
+- [Q8: How do you optimize and monitor a Node.js application for production?](#q8-how-do-you-optimize-and-monitor-a-nodejs-application-for-production)
+- [Q9: How do you work with streams in Node.js?](#q9-how-do-you-work-with-streams-in-nodejs)
+- [Q10: What are the common design patterns used in Node.js applications?](#q10-what-are-the-common-design-patterns-used-in-nodejs-applications)
+- [Q11: How do you implement real-time communication with WebSockets and Socket.io in Node.js?](#q11-how-do-you-implement-real-time-communication-with-websockets-and-socketio-in-nodejs)
+- [Q12: How do you implement comprehensive security measures in Node.js applications?](#q12-how-do-you-implement-comprehensive-security-measures-in-nodejs-applications)
+- [Q13: How do you design and implement microservices architecture with Node.js?](#q13-how-do-you-design-and-implement-microservices-architecture-with-nodejs)
+- [Q14: How do you implement clustering and worker threads in Node.js for CPU-intensive tasks?](#q14-how-do-you-implement-clustering-and-worker-threads-in-nodejs-for-cpu-intensive-tasks)
+- [Q15: How do you implement comprehensive testing strategies for Node.js applications?](#q15-how-do-you-implement-comprehensive-testing-strategies-for-nodejs-applications)
+- [Q16: How do you implement deployment and DevOps practices for Node.js applications?](#q16-how-do-you-implement-deployment-and-devops-practices-for-nodejs-applications)
+- [Q17: How do you implement advanced API design patterns and best practices in Node.js?](#q17-how-do-you-implement-advanced-api-design-patterns-and-best-practices-in-nodejs)
+- [Q18: How do you implement comprehensive error handling and logging in Node.js applications?](#q18-how-do-you-implement-comprehensive-error-handling-and-logging-in-nodejs-applications)
+- [Q19: How do you build real-time applications with WebSockets and Socket.io in Node.js?](#q19-how-do-you-build-real-time-applications-with-websockets-and-socketio-in-nodejs)
+- [Q20: How do you implement advanced Node.js patterns and enterprise architecture?](#q20-how-do-you-implement-advanced-nodejs-patterns-and-enterprise-architecture)
 
 ---
 
@@ -8097,3 +8109,6772 @@ main().catch(console.error);
 6. **Consider Performance**: Some patterns introduce overhead that may impact performance in high-load scenarios
 
 By understanding and appropriately applying these design patterns, you can build Node.js applications that are more maintainable, scalable, and robust.
+
+### Q11: How do you implement real-time communication with WebSockets and Socket.io in Node.js?
+
+**Answer:**
+
+Real-time communication is essential for modern applications like chat systems, live updates, gaming, and collaborative tools. Node.js provides excellent support for WebSockets through native APIs and libraries like Socket.io.
+
+**1. Native WebSocket Server Implementation:**
+
+```javascript
+// server.js - Native WebSocket implementation
+const http = require('http');
+const WebSocket = require('ws');
+const url = require('url');
+
+class WebSocketServer {
+  constructor(port = 8080) {
+    this.port = port;
+    this.clients = new Map();
+    this.rooms = new Map();
+    this.server = null;
+    this.wss = null;
+  }
+
+  start() {
+    // Create HTTP server
+    this.server = http.createServer();
+    
+    // Create WebSocket server
+    this.wss = new WebSocket.Server({ 
+      server: this.server,
+      verifyClient: this.verifyClient.bind(this)
+    });
+
+    this.wss.on('connection', this.handleConnection.bind(this));
+    
+    this.server.listen(this.port, () => {
+      console.log(`WebSocket server running on port ${this.port}`);
+    });
+  }
+
+  verifyClient(info) {
+    // Add authentication logic here
+    const token = url.parse(info.req.url, true).query.token;
+    
+    if (!token) {
+      console.log('Connection rejected: No token provided');
+      return false;
+    }
+    
+    // Verify token (simplified)
+    if (token !== 'valid-token') {
+      console.log('Connection rejected: Invalid token');
+      return false;
+    }
+    
+    return true;
+  }
+
+  handleConnection(ws, request) {
+    const clientId = this.generateClientId();
+    const query = url.parse(request.url, true).query;
+    const userId = query.userId || 'anonymous';
+    
+    // Store client information
+    this.clients.set(clientId, {
+      ws,
+      userId,
+      rooms: new Set(),
+      lastSeen: Date.now()
+    });
+
+    console.log(`Client ${clientId} (${userId}) connected`);
+
+    // Set up message handlers
+    ws.on('message', (data) => {
+      this.handleMessage(clientId, data);
+    });
+
+    ws.on('close', () => {
+      this.handleDisconnection(clientId);
+    });
+
+    ws.on('error', (error) => {
+      console.error(`WebSocket error for client ${clientId}:`, error);
+    });
+
+    // Send welcome message
+    this.sendToClient(clientId, {
+      type: 'welcome',
+      clientId,
+      timestamp: Date.now()
+    });
+  }
+
+  handleMessage(clientId, data) {
+    try {
+      const message = JSON.parse(data);
+      const client = this.clients.get(clientId);
+      
+      if (!client) return;
+      
+      client.lastSeen = Date.now();
+
+      switch (message.type) {
+        case 'join-room':
+          this.joinRoom(clientId, message.room);
+          break;
+        case 'leave-room':
+          this.leaveRoom(clientId, message.room);
+          break;
+        case 'chat-message':
+          this.handleChatMessage(clientId, message);
+          break;
+        case 'ping':
+          this.sendToClient(clientId, { type: 'pong', timestamp: Date.now() });
+          break;
+        default:
+          console.log(`Unknown message type: ${message.type}`);
+      }
+    } catch (error) {
+      console.error(`Error parsing message from client ${clientId}:`, error);
+    }
+  }
+
+  joinRoom(clientId, roomName) {
+    const client = this.clients.get(clientId);
+    if (!client) return;
+
+    // Add client to room
+    if (!this.rooms.has(roomName)) {
+      this.rooms.set(roomName, new Set());
+    }
+    
+    this.rooms.get(roomName).add(clientId);
+    client.rooms.add(roomName);
+
+    // Notify client
+    this.sendToClient(clientId, {
+      type: 'joined-room',
+      room: roomName,
+      timestamp: Date.now()
+    });
+
+    // Notify other room members
+    this.broadcastToRoom(roomName, {
+      type: 'user-joined',
+      userId: client.userId,
+      room: roomName,
+      timestamp: Date.now()
+    }, clientId);
+
+    console.log(`Client ${clientId} joined room ${roomName}`);
+  }
+
+  leaveRoom(clientId, roomName) {
+    const client = this.clients.get(clientId);
+    if (!client) return;
+
+    // Remove client from room
+    if (this.rooms.has(roomName)) {
+      this.rooms.get(roomName).delete(clientId);
+      
+      // Clean up empty rooms
+      if (this.rooms.get(roomName).size === 0) {
+        this.rooms.delete(roomName);
+      }
+    }
+    
+    client.rooms.delete(roomName);
+
+    // Notify client
+    this.sendToClient(clientId, {
+      type: 'left-room',
+      room: roomName,
+      timestamp: Date.now()
+    });
+
+    // Notify other room members
+    this.broadcastToRoom(roomName, {
+      type: 'user-left',
+      userId: client.userId,
+      room: roomName,
+      timestamp: Date.now()
+    });
+
+    console.log(`Client ${clientId} left room ${roomName}`);
+  }
+
+  handleChatMessage(clientId, message) {
+    const client = this.clients.get(clientId);
+    if (!client) return;
+
+    const chatMessage = {
+      type: 'chat-message',
+      userId: client.userId,
+      message: message.message,
+      room: message.room,
+      timestamp: Date.now()
+    };
+
+    if (message.room) {
+      // Send to room
+      this.broadcastToRoom(message.room, chatMessage);
+    } else {
+      // Send to all clients
+      this.broadcast(chatMessage);
+    }
+  }
+
+  sendToClient(clientId, message) {
+    const client = this.clients.get(clientId);
+    if (client && client.ws.readyState === WebSocket.OPEN) {
+      client.ws.send(JSON.stringify(message));
+    }
+  }
+
+  broadcastToRoom(roomName, message, excludeClientId = null) {
+    const room = this.rooms.get(roomName);
+    if (!room) return;
+
+    room.forEach(clientId => {
+      if (clientId !== excludeClientId) {
+        this.sendToClient(clientId, message);
+      }
+    });
+  }
+
+  broadcast(message, excludeClientId = null) {
+    this.clients.forEach((client, clientId) => {
+      if (clientId !== excludeClientId) {
+        this.sendToClient(clientId, message);
+      }
+    });
+  }
+
+  handleDisconnection(clientId) {
+    const client = this.clients.get(clientId);
+    if (!client) return;
+
+    // Remove from all rooms
+    client.rooms.forEach(roomName => {
+      this.leaveRoom(clientId, roomName);
+    });
+
+    // Remove client
+    this.clients.delete(clientId);
+    
+    console.log(`Client ${clientId} disconnected`);
+  }
+
+  generateClientId() {
+    return `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  // Health check and cleanup
+  startHealthCheck() {
+    setInterval(() => {
+      const now = Date.now();
+      const timeout = 30000; // 30 seconds
+
+      this.clients.forEach((client, clientId) => {
+        if (now - client.lastSeen > timeout) {
+          console.log(`Removing inactive client ${clientId}`);
+          client.ws.terminate();
+          this.handleDisconnection(clientId);
+        }
+      });
+    }, 10000); // Check every 10 seconds
+  }
+}
+
+// Start the server
+const wsServer = new WebSocketServer(8080);
+wsServer.start();
+wsServer.startHealthCheck();
+```
+
+**2. Socket.io Implementation:**
+
+```javascript
+// server.js - Socket.io implementation
+const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
+const jwt = require('jsonwebtoken');
+const Redis = require('redis');
+
+class SocketIOServer {
+  constructor(port = 3000) {
+    this.port = port;
+    this.app = express();
+    this.server = http.createServer(this.app);
+    this.io = socketIo(this.server, {
+      cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+      },
+      transports: ['websocket', 'polling']
+    });
+    
+    // Redis for scaling across multiple servers
+    this.redisClient = Redis.createClient();
+    this.setupRedisAdapter();
+    
+    this.connectedUsers = new Map();
+    this.setupMiddleware();
+    this.setupEventHandlers();
+  }
+
+  setupRedisAdapter() {
+    // For scaling Socket.io across multiple servers
+    const redisAdapter = require('socket.io-redis');
+    this.io.adapter(redisAdapter({ 
+      host: 'localhost', 
+      port: 6379 
+    }));
+  }
+
+  setupMiddleware() {
+    // Authentication middleware
+    this.io.use(async (socket, next) => {
+      try {
+        const token = socket.handshake.auth.token;
+        
+        if (!token) {
+          return next(new Error('Authentication error: No token provided'));
+        }
+        
+        // Verify JWT token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+        socket.userId = decoded.userId;
+        socket.username = decoded.username;
+        
+        next();
+      } catch (error) {
+        next(new Error('Authentication error: Invalid token'));
+      }
+    });
+
+    // Rate limiting middleware
+    this.io.use((socket, next) => {
+      socket.messageCount = 0;
+      socket.lastMessageTime = Date.now();
+      next();
+    });
+  }
+
+  setupEventHandlers() {
+    this.io.on('connection', (socket) => {
+      this.handleConnection(socket);
+    });
+  }
+
+  handleConnection(socket) {
+    console.log(`User ${socket.username} (${socket.userId}) connected`);
+    
+    // Store user connection
+    this.connectedUsers.set(socket.userId, {
+      socketId: socket.id,
+      username: socket.username,
+      rooms: new Set(),
+      lastSeen: Date.now()
+    });
+
+    // Join user to their personal room
+    socket.join(`user:${socket.userId}`);
+
+    // Set up event handlers
+    this.setupSocketEvents(socket);
+
+    // Notify user is online
+    socket.broadcast.emit('user-online', {
+      userId: socket.userId,
+      username: socket.username
+    });
+  }
+
+  setupSocketEvents(socket) {
+    // Join room
+    socket.on('join-room', async (data) => {
+      try {
+        await this.handleJoinRoom(socket, data);
+      } catch (error) {
+        socket.emit('error', { message: error.message });
+      }
+    });
+
+    // Leave room
+    socket.on('leave-room', async (data) => {
+      try {
+        await this.handleLeaveRoom(socket, data);
+      } catch (error) {
+        socket.emit('error', { message: error.message });
+      }
+    });
+
+    // Chat message
+    socket.on('chat-message', async (data) => {
+      try {
+        if (this.isRateLimited(socket)) {
+          socket.emit('error', { message: 'Rate limit exceeded' });
+          return;
+        }
+        
+        await this.handleChatMessage(socket, data);
+      } catch (error) {
+        socket.emit('error', { message: error.message });
+      }
+    });
+
+    // Private message
+    socket.on('private-message', async (data) => {
+      try {
+        await this.handlePrivateMessage(socket, data);
+      } catch (error) {
+        socket.emit('error', { message: error.message });
+      }
+    });
+
+    // Typing indicators
+    socket.on('typing-start', (data) => {
+      socket.to(data.room).emit('user-typing', {
+        userId: socket.userId,
+        username: socket.username,
+        room: data.room
+      });
+    });
+
+    socket.on('typing-stop', (data) => {
+      socket.to(data.room).emit('user-stopped-typing', {
+        userId: socket.userId,
+        room: data.room
+      });
+    });
+
+    // File sharing
+    socket.on('file-share', async (data) => {
+      try {
+        await this.handleFileShare(socket, data);
+      } catch (error) {
+        socket.emit('error', { message: error.message });
+      }
+    });
+
+    // Disconnect handler
+    socket.on('disconnect', () => {
+      this.handleDisconnection(socket);
+    });
+  }
+
+  async handleJoinRoom(socket, data) {
+    const { room, password } = data;
+    
+    // Validate room access (simplified)
+    if (password && password !== 'correct-password') {
+      throw new Error('Invalid room password');
+    }
+
+    // Join the room
+    await socket.join(room);
+    
+    // Update user data
+    const user = this.connectedUsers.get(socket.userId);
+    if (user) {
+      user.rooms.add(room);
+    }
+
+    // Get room members
+    const roomMembers = await this.getRoomMembers(room);
+    
+    // Notify user
+    socket.emit('joined-room', {
+      room,
+      members: roomMembers,
+      timestamp: Date.now()
+    });
+
+    // Notify other room members
+    socket.to(room).emit('user-joined-room', {
+      userId: socket.userId,
+      username: socket.username,
+      room,
+      timestamp: Date.now()
+    });
+
+    console.log(`${socket.username} joined room ${room}`);
+  }
+
+  async handleLeaveRoom(socket, data) {
+    const { room } = data;
+    
+    // Leave the room
+    await socket.leave(room);
+    
+    // Update user data
+    const user = this.connectedUsers.get(socket.userId);
+    if (user) {
+      user.rooms.delete(room);
+    }
+
+    // Notify user
+    socket.emit('left-room', {
+      room,
+      timestamp: Date.now()
+    });
+
+    // Notify other room members
+    socket.to(room).emit('user-left-room', {
+      userId: socket.userId,
+      username: socket.username,
+      room,
+      timestamp: Date.now()
+    });
+
+    console.log(`${socket.username} left room ${room}`);
+  }
+
+  async handleChatMessage(socket, data) {
+    const { room, message, messageType = 'text' } = data;
+    
+    // Validate message
+    if (!message || message.trim().length === 0) {
+      throw new Error('Message cannot be empty');
+    }
+    
+    if (message.length > 1000) {
+      throw new Error('Message too long');
+    }
+
+    const chatMessage = {
+      id: this.generateMessageId(),
+      userId: socket.userId,
+      username: socket.username,
+      message: message.trim(),
+      messageType,
+      room,
+      timestamp: Date.now()
+    };
+
+    // Store message in database/Redis
+    await this.storeMessage(chatMessage);
+
+    // Send to room
+    this.io.to(room).emit('chat-message', chatMessage);
+
+    console.log(`Message from ${socket.username} in ${room}: ${message}`);
+  }
+
+  async handlePrivateMessage(socket, data) {
+    const { targetUserId, message } = data;
+    
+    // Validate message
+    if (!message || message.trim().length === 0) {
+      throw new Error('Message cannot be empty');
+    }
+
+    const privateMessage = {
+      id: this.generateMessageId(),
+      fromUserId: socket.userId,
+      fromUsername: socket.username,
+      toUserId: targetUserId,
+      message: message.trim(),
+      timestamp: Date.now()
+    };
+
+    // Store private message
+    await this.storePrivateMessage(privateMessage);
+
+    // Send to target user
+    this.io.to(`user:${targetUserId}`).emit('private-message', privateMessage);
+    
+    // Send confirmation to sender
+    socket.emit('private-message-sent', privateMessage);
+
+    console.log(`Private message from ${socket.username} to user ${targetUserId}`);
+  }
+
+  async handleFileShare(socket, data) {
+    const { room, fileName, fileSize, fileType, fileData } = data;
+    
+    // Validate file
+    if (fileSize > 10 * 1024 * 1024) { // 10MB limit
+      throw new Error('File too large');
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+    if (!allowedTypes.includes(fileType)) {
+      throw new Error('File type not allowed');
+    }
+
+    // In a real application, you would upload to cloud storage
+    const fileUrl = await this.uploadFile(fileData, fileName, fileType);
+
+    const fileMessage = {
+      id: this.generateMessageId(),
+      userId: socket.userId,
+      username: socket.username,
+      messageType: 'file',
+      fileName,
+      fileSize,
+      fileType,
+      fileUrl,
+      room,
+      timestamp: Date.now()
+    };
+
+    // Store and broadcast
+    await this.storeMessage(fileMessage);
+    this.io.to(room).emit('file-shared', fileMessage);
+
+    console.log(`File shared by ${socket.username} in ${room}: ${fileName}`);
+  }
+
+  handleDisconnection(socket) {
+    console.log(`User ${socket.username} disconnected`);
+    
+    // Remove from connected users
+    this.connectedUsers.delete(socket.userId);
+    
+    // Notify others
+    socket.broadcast.emit('user-offline', {
+      userId: socket.userId,
+      username: socket.username
+    });
+  }
+
+  isRateLimited(socket) {
+    const now = Date.now();
+    const timeDiff = now - socket.lastMessageTime;
+    
+    if (timeDiff < 1000) { // Less than 1 second
+      socket.messageCount++;
+      if (socket.messageCount > 5) { // Max 5 messages per second
+        return true;
+      }
+    } else {
+      socket.messageCount = 1;
+      socket.lastMessageTime = now;
+    }
+    
+    return false;
+  }
+
+  async getRoomMembers(room) {
+    const sockets = await this.io.in(room).fetchSockets();
+    return sockets.map(socket => ({
+      userId: socket.userId,
+      username: socket.username
+    }));
+  }
+
+  async storeMessage(message) {
+    // Store in Redis for quick access
+    const key = `room:${message.room}:messages`;
+    await this.redisClient.lpush(key, JSON.stringify(message));
+    await this.redisClient.ltrim(key, 0, 99); // Keep last 100 messages
+    
+    // Also store in database for persistence
+    // await database.messages.create(message);
+  }
+
+  async storePrivateMessage(message) {
+    // Store private message
+    const key = `private:${message.fromUserId}:${message.toUserId}`;
+    await this.redisClient.lpush(key, JSON.stringify(message));
+    await this.redisClient.ltrim(key, 0, 99);
+  }
+
+  async uploadFile(fileData, fileName, fileType) {
+    // Simulate file upload - in real app, use AWS S3, Google Cloud Storage, etc.
+    const fileId = this.generateMessageId();
+    return `https://example.com/files/${fileId}/${fileName}`;
+  }
+
+  generateMessageId() {
+    return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  start() {
+    this.server.listen(this.port, () => {
+      console.log(`Socket.io server running on port ${this.port}`);
+    });
+  }
+
+  // Graceful shutdown
+  async shutdown() {
+    console.log('Shutting down Socket.io server...');
+    
+    // Close all connections
+    this.io.close();
+    
+    // Close Redis connection
+    await this.redisClient.quit();
+    
+    // Close HTTP server
+    this.server.close();
+  }
+}
+
+// Start the server
+const socketServer = new SocketIOServer(3000);
+socketServer.start();
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  await socketServer.shutdown();
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  await socketServer.shutdown();
+  process.exit(0);
+});
+```
+
+**3. Client-Side Implementation:**
+
+```javascript
+// client.js - Socket.io client
+const io = require('socket.io-client');
+
+class ChatClient {
+  constructor(serverUrl, token) {
+    this.serverUrl = serverUrl;
+    this.token = token;
+    this.socket = null;
+    this.isConnected = false;
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 5;
+  }
+
+  connect() {
+    this.socket = io(this.serverUrl, {
+      auth: {
+        token: this.token
+      },
+      transports: ['websocket', 'polling']
+    });
+
+    this.setupEventHandlers();
+  }
+
+  setupEventHandlers() {
+    this.socket.on('connect', () => {
+      console.log('Connected to server');
+      this.isConnected = true;
+      this.reconnectAttempts = 0;
+    });
+
+    this.socket.on('disconnect', (reason) => {
+      console.log('Disconnected from server:', reason);
+      this.isConnected = false;
+      
+      if (reason === 'io server disconnect') {
+        // Server disconnected the client, reconnect manually
+        this.reconnect();
+      }
+    });
+
+    this.socket.on('connect_error', (error) => {
+      console.error('Connection error:', error.message);
+      this.reconnect();
+    });
+
+    // Chat events
+    this.socket.on('chat-message', (message) => {
+      this.onChatMessage(message);
+    });
+
+    this.socket.on('private-message', (message) => {
+      this.onPrivateMessage(message);
+    });
+
+    this.socket.on('user-joined-room', (data) => {
+      console.log(`${data.username} joined room ${data.room}`);
+    });
+
+    this.socket.on('user-left-room', (data) => {
+      console.log(`${data.username} left room ${data.room}`);
+    });
+
+    this.socket.on('user-typing', (data) => {
+      console.log(`${data.username} is typing in ${data.room}`);
+    });
+
+    this.socket.on('user-stopped-typing', (data) => {
+      console.log(`User stopped typing in ${data.room}`);
+    });
+
+    this.socket.on('error', (error) => {
+      console.error('Server error:', error.message);
+    });
+  }
+
+  reconnect() {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      console.log(`Reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+      
+      setTimeout(() => {
+        this.socket.connect();
+      }, Math.pow(2, this.reconnectAttempts) * 1000); // Exponential backoff
+    } else {
+      console.error('Max reconnection attempts reached');
+    }
+  }
+
+  joinRoom(room, password = null) {
+    if (!this.isConnected) {
+      console.error('Not connected to server');
+      return;
+    }
+
+    this.socket.emit('join-room', { room, password });
+  }
+
+  leaveRoom(room) {
+    if (!this.isConnected) {
+      console.error('Not connected to server');
+      return;
+    }
+
+    this.socket.emit('leave-room', { room });
+  }
+
+  sendMessage(room, message) {
+    if (!this.isConnected) {
+      console.error('Not connected to server');
+      return;
+    }
+
+    this.socket.emit('chat-message', { room, message });
+  }
+
+  sendPrivateMessage(targetUserId, message) {
+    if (!this.isConnected) {
+      console.error('Not connected to server');
+      return;
+    }
+
+    this.socket.emit('private-message', { targetUserId, message });
+  }
+
+  startTyping(room) {
+    if (!this.isConnected) return;
+    this.socket.emit('typing-start', { room });
+  }
+
+  stopTyping(room) {
+    if (!this.isConnected) return;
+    this.socket.emit('typing-stop', { room });
+  }
+
+  shareFile(room, file) {
+    if (!this.isConnected) {
+      console.error('Not connected to server');
+      return;
+    }
+
+    // Convert file to base64 for transmission
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.socket.emit('file-share', {
+        room,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        fileData: reader.result
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  onChatMessage(message) {
+    console.log(`[${message.room}] ${message.username}: ${message.message}`);
+    // Update UI with new message
+  }
+
+  onPrivateMessage(message) {
+    console.log(`[Private] ${message.fromUsername}: ${message.message}`);
+    // Update UI with private message
+  }
+
+  disconnect() {
+    if (this.socket) {
+      this.socket.disconnect();
+    }
+  }
+}
+
+// Usage
+const client = new ChatClient('http://localhost:3000', 'your-jwt-token');
+client.connect();
+
+// Join a room
+client.joinRoom('general');
+
+// Send a message
+client.sendMessage('general', 'Hello everyone!');
+
+// Send a private message
+client.sendPrivateMessage('user123', 'Hi there!');
+```
+
+**Best Practices for Real-time Applications:**
+
+1. **Authentication**: Always authenticate WebSocket connections
+2. **Rate Limiting**: Implement rate limiting to prevent abuse
+3. **Error Handling**: Handle connection errors and implement reconnection logic
+4. **Scaling**: Use Redis adapter for scaling across multiple servers
+5. **Message Persistence**: Store important messages in a database
+6. **Security**: Validate all incoming data and sanitize messages
+7. **Performance**: Use rooms/namespaces to limit message broadcasting
+8. **Monitoring**: Monitor connection counts and message rates
+9. **Graceful Shutdown**: Implement proper cleanup on server shutdown
+10. **Client Optimization**: Implement connection pooling and message queuing on the client side
+
+Real-time communication with WebSockets and Socket.io enables building engaging, interactive applications that provide immediate feedback and collaboration capabilities.
+
+---
+
+### Q12: How do you implement comprehensive security measures in Node.js applications?
+**Difficulty: Advanced**
+
+**Answer:**
+Security is crucial in Node.js applications. Here's a comprehensive approach to implementing security measures:
+
+**1. Authentication and Authorization:**
+
+```javascript
+// auth/jwt.js - JWT Authentication middleware
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const validator = require('validator');
+
+class AuthService {
+  constructor() {
+    this.jwtSecret = process.env.JWT_SECRET || 'your-super-secret-key';
+    this.jwtExpiry = process.env.JWT_EXPIRY || '24h';
+    this.refreshTokenExpiry = process.env.REFRESH_TOKEN_EXPIRY || '7d';
+  }
+
+  /**
+   * Generates JWT token with user payload
+   */
+  generateToken(user) {
+    const payload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      permissions: user.permissions
+    };
+
+    return jwt.sign(payload, this.jwtSecret, {
+      expiresIn: this.jwtExpiry,
+      issuer: 'your-app-name',
+      audience: 'your-app-users'
+    });
+  }
+
+  /**
+   * Generates refresh token
+   */
+  generateRefreshToken(user) {
+    const payload = {
+      id: user.id,
+      type: 'refresh'
+    };
+
+    return jwt.sign(payload, this.jwtSecret, {
+      expiresIn: this.refreshTokenExpiry
+    });
+  }
+
+  /**
+   * Verifies JWT token
+   */
+  verifyToken(token) {
+    try {
+      return jwt.verify(token, this.jwtSecret);
+    } catch (error) {
+      throw new Error('Invalid or expired token');
+    }
+  }
+
+  /**
+   * Hashes password with salt
+   */
+  async hashPassword(password) {
+    const saltRounds = 12;
+    return await bcrypt.hash(password, saltRounds);
+  }
+
+  /**
+   * Compares password with hash
+   */
+  async comparePassword(password, hash) {
+    return await bcrypt.compare(password, hash);
+  }
+}
+
+// middleware/auth.js - Authentication middleware
+const authService = new AuthService();
+
+/**
+ * JWT Authentication middleware
+ */
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      error: 'Access token required'
+    });
+  }
+
+  try {
+    const decoded = authService.verifyToken(token);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({
+      success: false,
+      error: 'Invalid or expired token'
+    });
+  }
+};
+
+/**
+ * Role-based authorization middleware
+ */
+const authorize = (roles = []) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    if (roles.length && !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Insufficient permissions'
+      });
+    }
+
+    next();
+  };
+};
+
+/**
+ * Permission-based authorization middleware
+ */
+const requirePermission = (permission) => {
+  return (req, res, next) => {
+    if (!req.user || !req.user.permissions.includes(permission)) {
+      return res.status(403).json({
+        success: false,
+        error: `Permission '${permission}' required`
+      });
+    }
+    next();
+  };
+};
+
+module.exports = {
+  AuthService,
+  authenticateToken,
+  authorize,
+  requirePermission
+};
+```
+
+**2. Input Validation and Sanitization:**
+
+```javascript
+// middleware/validation.js - Input validation middleware
+const { body, param, query, validationResult } = require('express-validator');
+const DOMPurify = require('isomorphic-dompurify');
+const xss = require('xss');
+
+/**
+ * Validation error handler
+ */
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      error: 'Validation failed',
+      details: errors.array()
+    });
+  }
+  next();
+};
+
+/**
+ * User registration validation
+ */
+const validateUserRegistration = [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Valid email is required'),
+  body('password')
+    .isLength({ min: 8 })
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .withMessage('Password must be at least 8 characters with uppercase, lowercase, number, and special character'),
+  body('firstName')
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .matches(/^[a-zA-Z\s]+$/)
+    .withMessage('First name must be 2-50 characters and contain only letters'),
+  body('lastName')
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .matches(/^[a-zA-Z\s]+$/)
+    .withMessage('Last name must be 2-50 characters and contain only letters'),
+  body('phone')
+    .optional()
+    .isMobilePhone()
+    .withMessage('Valid phone number required'),
+  handleValidationErrors
+];
+
+/**
+ * User login validation
+ */
+const validateUserLogin = [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Valid email is required'),
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required'),
+  handleValidationErrors
+];
+
+/**
+ * XSS protection middleware
+ */
+const sanitizeInput = (req, res, next) => {
+  // Sanitize request body
+  if (req.body) {
+    req.body = sanitizeObject(req.body);
+  }
+
+  // Sanitize query parameters
+  if (req.query) {
+    req.query = sanitizeObject(req.query);
+  }
+
+  next();
+};
+
+/**
+ * Recursively sanitize object properties
+ */
+function sanitizeObject(obj) {
+  if (typeof obj === 'string') {
+    return xss(DOMPurify.sanitize(obj));
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizeObject);
+  }
+
+  if (obj && typeof obj === 'object') {
+    const sanitized = {};
+    for (const [key, value] of Object.entries(obj)) {
+      sanitized[key] = sanitizeObject(value);
+    }
+    return sanitized;
+  }
+
+  return obj;
+}
+
+module.exports = {
+  validateUserRegistration,
+  validateUserLogin,
+  sanitizeInput,
+  handleValidationErrors
+};
+```
+
+**3. Security Headers and CORS:**
+
+```javascript
+// middleware/security.js - Security middleware
+const helmet = require('helmet');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const slowDown = require('express-slow-down');
+const mongoSanitize = require('express-mongo-sanitize');
+
+/**
+ * Security headers configuration
+ */
+const securityHeaders = helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      scriptSrc: ["'self'"],
+      connectSrc: ["'self'", 'https://api.example.com'],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: []
+    }
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
+});
+
+/**
+ * CORS configuration
+ */
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
+    
+    // Allow requests with no origin (mobile apps, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+/**
+ * Rate limiting configuration
+ */
+const createRateLimit = (windowMs, max, message) => {
+  return rateLimit({
+    windowMs,
+    max,
+    message: {
+      success: false,
+      error: message
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+      res.status(429).json({
+        success: false,
+        error: message,
+        retryAfter: Math.round(windowMs / 1000)
+      });
+    }
+  });
+};
+
+// Different rate limits for different endpoints
+const generalLimiter = createRateLimit(
+  15 * 60 * 1000, // 15 minutes
+  100, // limit each IP to 100 requests per windowMs
+  'Too many requests from this IP, please try again later'
+);
+
+const authLimiter = createRateLimit(
+  15 * 60 * 1000, // 15 minutes
+  5, // limit each IP to 5 requests per windowMs
+  'Too many authentication attempts, please try again later'
+);
+
+const apiLimiter = createRateLimit(
+  15 * 60 * 1000, // 15 minutes
+  1000, // limit each IP to 1000 requests per windowMs
+  'API rate limit exceeded'
+);
+
+/**
+ * Speed limiting (progressive delay)
+ */
+const speedLimiter = slowDown({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  delayAfter: 50, // allow 50 requests per windowMs without delay
+  delayMs: 500 // add 500ms delay per request after delayAfter
+});
+
+/**
+ * NoSQL injection protection
+ */
+const noSQLInjectionProtection = mongoSanitize({
+  replaceWith: '_',
+  onSanitize: ({ req, key }) => {
+    console.warn(`Potential NoSQL injection attempt detected: ${key}`);
+  }
+});
+
+module.exports = {
+  securityHeaders,
+  corsOptions,
+  generalLimiter,
+  authLimiter,
+  apiLimiter,
+  speedLimiter,
+  noSQLInjectionProtection
+};
+```
+
+**4. Secure Application Setup:**
+
+```javascript
+// app.js - Secure Express application setup
+const express = require('express');
+const cors = require('cors');
+const compression = require('compression');
+const { securityHeaders, corsOptions, generalLimiter, noSQLInjectionProtection } = require('./middleware/security');
+const { sanitizeInput } = require('./middleware/validation');
+const { authenticateToken } = require('./middleware/auth');
+
+class SecureApp {
+  constructor() {
+    this.app = express();
+    this.setupSecurity();
+    this.setupMiddleware();
+    this.setupRoutes();
+    this.setupErrorHandling();
+  }
+
+  /**
+   * Setup security middleware
+   */
+  setupSecurity() {
+    // Security headers
+    this.app.use(securityHeaders);
+    
+    // CORS
+    this.app.use(cors(corsOptions));
+    
+    // Rate limiting
+    this.app.use(generalLimiter);
+    
+    // NoSQL injection protection
+    this.app.use(noSQLInjectionProtection);
+    
+    // Input sanitization
+    this.app.use(sanitizeInput);
+    
+    // Disable X-Powered-By header
+    this.app.disable('x-powered-by');
+    
+    // Trust proxy (if behind reverse proxy)
+    if (process.env.NODE_ENV === 'production') {
+      this.app.set('trust proxy', 1);
+    }
+  }
+
+  /**
+   * Setup general middleware
+   */
+  setupMiddleware() {
+    // Compression
+    this.app.use(compression());
+    
+    // Body parsing
+    this.app.use(express.json({ limit: '10mb' }));
+    this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+    
+    // Request logging
+    this.app.use(this.requestLogger);
+  }
+
+  /**
+   * Request logging middleware
+   */
+  requestLogger(req, res, next) {
+    const start = Date.now();
+    
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      console.log(`${req.method} ${req.url} - ${res.statusCode} - ${duration}ms`);
+      
+      // Log suspicious activities
+      if (res.statusCode >= 400) {
+        console.warn(`Suspicious request: ${req.method} ${req.url} - ${res.statusCode} - IP: ${req.ip}`);
+      }
+    });
+    
+    next();
+  }
+
+  /**
+   * Setup routes
+   */
+  setupRoutes() {
+    // Public routes
+    this.app.use('/api/auth', require('./routes/auth'));
+    this.app.use('/api/public', require('./routes/public'));
+    
+    // Protected routes
+    this.app.use('/api/users', authenticateToken, require('./routes/users'));
+    this.app.use('/api/admin', authenticateToken, require('./routes/admin'));
+    
+    // Health check
+    this.app.get('/health', (req, res) => {
+      res.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+      });
+    });
+  }
+
+  /**
+   * Setup error handling
+   */
+  setupErrorHandling() {
+    // 404 handler
+    this.app.use('*', (req, res) => {
+      res.status(404).json({
+        success: false,
+        error: 'Route not found'
+      });
+    });
+
+    // Global error handler
+    this.app.use((error, req, res, next) => {
+      console.error('Global error handler:', error);
+      
+      // Don't leak error details in production
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      
+      res.status(error.status || 500).json({
+        success: false,
+        error: isDevelopment ? error.message : 'Internal server error',
+        ...(isDevelopment && { stack: error.stack })
+      });
+    });
+  }
+
+  /**
+   * Start the server
+   */
+  start(port = process.env.PORT || 3000) {
+    this.app.listen(port, () => {
+      console.log(`🔒 Secure server running on port ${port}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+  }
+}
+
+// Start the application
+const app = new SecureApp();
+app.start();
+
+module.exports = SecureApp;
+```
+
+**Security Best Practices:**
+
+1. **Environment Variables**: Store sensitive data in environment variables
+2. **HTTPS**: Always use HTTPS in production
+3. **Input Validation**: Validate and sanitize all user inputs
+4. **Authentication**: Implement strong authentication mechanisms
+5. **Authorization**: Use role-based and permission-based access control
+6. **Rate Limiting**: Implement rate limiting to prevent abuse
+7. **Security Headers**: Use security headers to protect against common attacks
+8. **Dependency Security**: Regularly update dependencies and scan for vulnerabilities
+9. **Logging**: Implement comprehensive logging and monitoring
+10. **Error Handling**: Don't leak sensitive information in error messages
+
+---
+
+### Q13: How do you design and implement microservices architecture with Node.js?
+**Difficulty: Expert**
+
+**Answer:**
+Microservices architecture breaks down applications into small, independent services. Here's how to implement it with Node.js:
+
+**1. Service Discovery and Communication:**
+
+```javascript
+// services/discovery/consul-client.js - Service discovery with Consul
+const consul = require('consul')();
+const axios = require('axios');
+
+class ServiceDiscovery {
+  constructor() {
+    this.services = new Map();
+    this.healthCheckInterval = 30000; // 30 seconds
+  }
+
+  /**
+   * Register a service with Consul
+   */
+  async registerService(serviceConfig) {
+    const { name, id, address, port, health, tags = [] } = serviceConfig;
+    
+    try {
+      await consul.agent.service.register({
+        id: id || `${name}-${port}`,
+        name,
+        address,
+        port,
+        tags,
+        check: {
+          http: `http://${address}:${port}${health}`,
+          interval: '10s',
+          timeout: '5s'
+        }
+      });
+      
+      console.log(`✅ Service ${name} registered successfully`);
+    } catch (error) {
+      console.error(`❌ Failed to register service ${name}:`, error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Deregister a service
+   */
+  async deregisterService(serviceId) {
+    try {
+      await consul.agent.service.deregister(serviceId);
+      console.log(`✅ Service ${serviceId} deregistered successfully`);
+    } catch (error) {
+      console.error(`❌ Failed to deregister service ${serviceId}:`, error.message);
+    }
+  }
+
+  /**
+   * Discover services by name
+   */
+  async discoverService(serviceName) {
+    try {
+      const services = await consul.health.service({
+        service: serviceName,
+        passing: true
+      });
+      
+      return services.map(service => ({
+        id: service.Service.ID,
+        address: service.Service.Address,
+        port: service.Service.Port,
+        tags: service.Service.Tags
+      }));
+    } catch (error) {
+      console.error(`❌ Failed to discover service ${serviceName}:`, error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Get a healthy service instance (load balancing)
+   */
+  async getServiceInstance(serviceName, strategy = 'round-robin') {
+    const services = await this.discoverService(serviceName);
+    
+    if (services.length === 0) {
+      throw new Error(`No healthy instances found for service: ${serviceName}`);
+    }
+
+    switch (strategy) {
+      case 'round-robin':
+        return this.roundRobinSelection(serviceName, services);
+      case 'random':
+        return services[Math.floor(Math.random() * services.length)];
+      case 'least-connections':
+        return this.leastConnectionsSelection(services);
+      default:
+        return services[0];
+    }
+  }
+
+  /**
+   * Round-robin load balancing
+   */
+  roundRobinSelection(serviceName, services) {
+    if (!this.services.has(serviceName)) {
+      this.services.set(serviceName, { index: 0 });
+    }
+    
+    const serviceData = this.services.get(serviceName);
+    const service = services[serviceData.index % services.length];
+    serviceData.index++;
+    
+    return service;
+  }
+
+  /**
+   * Least connections load balancing (simplified)
+   */
+  leastConnectionsSelection(services) {
+    // In a real implementation, you'd track active connections
+    return services[0];
+  }
+}
+
+module.exports = ServiceDiscovery;
+```
+
+**2. API Gateway:**
+
+```javascript
+// gateway/api-gateway.js - API Gateway implementation
+const express = require('express');
+const httpProxy = require('http-proxy-middleware');
+const rateLimit = require('express-rate-limit');
+const ServiceDiscovery = require('../services/discovery/consul-client');
+const CircuitBreaker = require('./circuit-breaker');
+
+class APIGateway {
+  constructor() {
+    this.app = express();
+    this.serviceDiscovery = new ServiceDiscovery();
+    this.circuitBreakers = new Map();
+    this.setupMiddleware();
+    this.setupRoutes();
+  }
+
+  /**
+   * Setup gateway middleware
+   */
+  setupMiddleware() {
+    // Rate limiting
+    const limiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 1000, // limit each IP to 1000 requests per windowMs
+      message: 'Too many requests from this IP'
+    });
+    
+    this.app.use(limiter);
+    this.app.use(express.json());
+    this.app.use(this.requestLogger);
+    this.app.use(this.authenticationMiddleware);
+  }
+
+  /**
+   * Request logging middleware
+   */
+  requestLogger(req, res, next) {
+    const start = Date.now();
+    console.log(`📥 ${req.method} ${req.url} - ${req.ip}`);
+    
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      console.log(`📤 ${req.method} ${req.url} - ${res.statusCode} - ${duration}ms`);
+    });
+    
+    next();
+  }
+
+  /**
+   * Authentication middleware
+   */
+  authenticationMiddleware(req, res, next) {
+    // Skip auth for health checks and public endpoints
+    if (req.path === '/health' || req.path.startsWith('/api/public')) {
+      return next();
+    }
+
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication token required'
+      });
+    }
+
+    // Validate token (implement your token validation logic)
+    try {
+      // const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      // req.user = decoded;
+      next();
+    } catch (error) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid authentication token'
+      });
+    }
+  }
+
+  /**
+   * Setup service routes
+   */
+  setupRoutes() {
+    // User service routes
+    this.app.use('/api/users', this.createServiceProxy('user-service', '/api/users'));
+    
+    // Order service routes
+    this.app.use('/api/orders', this.createServiceProxy('order-service', '/api/orders'));
+    
+    // Product service routes
+    this.app.use('/api/products', this.createServiceProxy('product-service', '/api/products'));
+    
+    // Payment service routes
+    this.app.use('/api/payments', this.createServiceProxy('payment-service', '/api/payments'));
+    
+    // Notification service routes
+    this.app.use('/api/notifications', this.createServiceProxy('notification-service', '/api/notifications'));
+
+    // Health check
+    this.app.get('/health', (req, res) => {
+      res.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        services: Array.from(this.circuitBreakers.keys())
+      });
+    });
+  }
+
+  /**
+   * Create service proxy with circuit breaker
+   */
+  createServiceProxy(serviceName, pathRewrite) {
+    // Create circuit breaker for this service
+    if (!this.circuitBreakers.has(serviceName)) {
+      this.circuitBreakers.set(serviceName, new CircuitBreaker({
+        timeout: 5000,
+        errorThreshold: 5,
+        resetTimeout: 30000
+      }));
+    }
+
+    const circuitBreaker = this.circuitBreakers.get(serviceName);
+
+    return httpProxy({
+      target: 'http://placeholder', // Will be replaced by router
+      changeOrigin: true,
+      pathRewrite: {
+        [`^${pathRewrite}`]: ''
+      },
+      router: async (req) => {
+        try {
+          const service = await this.serviceDiscovery.getServiceInstance(serviceName);
+          return `http://${service.address}:${service.port}`;
+        } catch (error) {
+          console.error(`❌ Service discovery failed for ${serviceName}:`, error.message);
+          throw error;
+        }
+      },
+      onProxyReq: (proxyReq, req, res) => {
+        // Add correlation ID for tracing
+        const correlationId = req.headers['x-correlation-id'] || this.generateCorrelationId();
+        proxyReq.setHeader('x-correlation-id', correlationId);
+        proxyReq.setHeader('x-forwarded-for', req.ip);
+      },
+      onProxyRes: (proxyRes, req, res) => {
+        // Add response headers
+        res.setHeader('x-gateway', 'api-gateway');
+      },
+      onError: (err, req, res) => {
+        console.error(`❌ Proxy error for ${serviceName}:`, err.message);
+        
+        // Circuit breaker logic
+        circuitBreaker.recordFailure();
+        
+        if (circuitBreaker.isOpen()) {
+          res.status(503).json({
+            success: false,
+            error: 'Service temporarily unavailable',
+            service: serviceName
+          });
+        } else {
+          res.status(502).json({
+            success: false,
+            error: 'Bad gateway',
+            service: serviceName
+          });
+        }
+      }
+    });
+  }
+
+  /**
+   * Generate correlation ID for request tracing
+   */
+  generateCorrelationId() {
+    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Start the gateway
+   */
+  start(port = process.env.PORT || 3000) {
+    this.app.listen(port, () => {
+      console.log(`🚪 API Gateway running on port ${port}`);
+    });
+  }
+}
+
+module.exports = APIGateway;
+```
+
+**3. Circuit Breaker Pattern:**
+
+```javascript
+// gateway/circuit-breaker.js - Circuit breaker implementation
+class CircuitBreaker {
+  constructor(options = {}) {
+    this.timeout = options.timeout || 5000;
+    this.errorThreshold = options.errorThreshold || 5;
+    this.resetTimeout = options.resetTimeout || 30000;
+    
+    this.state = 'CLOSED'; // CLOSED, OPEN, HALF_OPEN
+    this.failureCount = 0;
+    this.lastFailureTime = null;
+    this.successCount = 0;
+  }
+
+  /**
+   * Execute a function with circuit breaker protection
+   */
+  async execute(fn) {
+    if (this.state === 'OPEN') {
+      if (this.shouldAttemptReset()) {
+        this.state = 'HALF_OPEN';
+        this.successCount = 0;
+      } else {
+        throw new Error('Circuit breaker is OPEN');
+      }
+    }
+
+    try {
+      const result = await this.callWithTimeout(fn);
+      this.onSuccess();
+      return result;
+    } catch (error) {
+      this.onFailure();
+      throw error;
+    }
+  }
+
+  /**
+   * Call function with timeout
+   */
+  async callWithTimeout(fn) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error('Request timeout'));
+      }, this.timeout);
+
+      fn()
+        .then(resolve)
+        .catch(reject)
+        .finally(() => clearTimeout(timer));
+    });
+  }
+
+  /**
+   * Handle successful execution
+   */
+  onSuccess() {
+    this.failureCount = 0;
+    
+    if (this.state === 'HALF_OPEN') {
+      this.successCount++;
+      if (this.successCount >= 3) {
+        this.state = 'CLOSED';
+        console.log('🔄 Circuit breaker reset to CLOSED');
+      }
+    }
+  }
+
+  /**
+   * Handle failed execution
+   */
+  onFailure() {
+    this.failureCount++;
+    this.lastFailureTime = Date.now();
+    
+    if (this.failureCount >= this.errorThreshold) {
+      this.state = 'OPEN';
+      console.log('⚠️ Circuit breaker opened due to failures');
+    }
+  }
+
+  /**
+   * Record failure without executing
+   */
+  recordFailure() {
+    this.onFailure();
+  }
+
+  /**
+   * Check if circuit breaker should attempt reset
+   */
+  shouldAttemptReset() {
+    return Date.now() - this.lastFailureTime >= this.resetTimeout;
+  }
+
+  /**
+   * Check if circuit breaker is open
+   */
+  isOpen() {
+    return this.state === 'OPEN';
+  }
+
+  /**
+   * Get current state
+   */
+  getState() {
+    return {
+      state: this.state,
+      failureCount: this.failureCount,
+      lastFailureTime: this.lastFailureTime,
+      successCount: this.successCount
+    };
+  }
+}
+
+module.exports = CircuitBreaker;
+```
+
+**Microservices Best Practices:**
+
+1. **Single Responsibility**: Each service should have one business responsibility
+2. **Database per Service**: Each service should have its own database
+3. **API Versioning**: Implement proper API versioning strategies
+4. **Service Discovery**: Use service discovery for dynamic service location
+5. **Circuit Breakers**: Implement circuit breakers to handle service failures
+6. **Distributed Tracing**: Use correlation IDs for request tracing
+7. **Event-Driven Architecture**: Use events for service communication
+8. **Health Checks**: Implement comprehensive health checks
+9. **Monitoring**: Monitor service performance and health
+10. **Security**: Implement service-to-service authentication
+
+Microservices architecture provides scalability, flexibility, and technology diversity but requires careful planning and implementation of supporting infrastructure.
+
+---
+
+### Q14: How do you implement clustering and worker threads in Node.js for CPU-intensive tasks?
+**Difficulty: Advanced**
+
+**Answer:**
+Node.js provides clustering and worker threads to handle CPU-intensive tasks and improve application performance by utilizing multiple CPU cores.
+
+**1. Cluster Module Implementation:**
+
+```javascript
+// cluster-server.js - Master process with worker management
+const cluster = require('cluster');
+const http = require('http');
+const os = require('os');
+const express = require('express');
+
+class ClusterManager {
+  constructor() {
+    this.numCPUs = os.cpus().length;
+    this.workers = new Map();
+    this.workerStats = new Map();
+  }
+
+  /**
+   * Start cluster with worker management
+   */
+  start() {
+    if (cluster.isMaster) {
+      this.startMaster();
+    } else {
+      this.startWorker();
+    }
+  }
+
+  /**
+   * Master process - manages workers
+   */
+  startMaster() {
+    console.log(`🚀 Master ${process.pid} is running`);
+    console.log(`💻 Starting ${this.numCPUs} workers...`);
+
+    // Fork workers
+    for (let i = 0; i < this.numCPUs; i++) {
+      this.forkWorker();
+    }
+
+    // Handle worker events
+    cluster.on('exit', (worker, code, signal) => {
+      console.log(`❌ Worker ${worker.process.pid} died with code ${code} and signal ${signal}`);
+      this.workers.delete(worker.id);
+      this.workerStats.delete(worker.id);
+      
+      // Restart worker
+      console.log('🔄 Starting a new worker...');
+      this.forkWorker();
+    });
+
+    // Handle worker messages
+    cluster.on('message', (worker, message) => {
+      if (message.type === 'stats') {
+        this.workerStats.set(worker.id, {
+          ...message.data,
+          timestamp: Date.now()
+        });
+      }
+    });
+
+    // Setup graceful shutdown
+    this.setupGracefulShutdown();
+    
+    // Start monitoring
+    this.startMonitoring();
+  }
+
+  /**
+   * Fork a new worker
+   */
+  forkWorker() {
+    const worker = cluster.fork();
+    this.workers.set(worker.id, {
+      worker,
+      startTime: Date.now(),
+      restarts: 0
+    });
+
+    worker.on('message', (message) => {
+      if (message.type === 'ready') {
+        console.log(`✅ Worker ${worker.process.pid} is ready`);
+      }
+    });
+
+    return worker;
+  }
+
+  /**
+   * Worker process - handles requests
+   */
+  startWorker() {
+    const app = express();
+    
+    // Middleware
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+
+    // Routes
+    app.get('/health', (req, res) => {
+      res.json({
+        status: 'healthy',
+        worker: process.pid,
+        uptime: process.uptime(),
+        memory: process.memoryUsage()
+      });
+    });
+
+    app.get('/cpu-intensive', async (req, res) => {
+      const startTime = Date.now();
+      
+      try {
+        // Simulate CPU-intensive task
+        const result = await this.performCPUIntensiveTask(req.query.iterations || 1000000);
+        
+        const duration = Date.now() - startTime;
+        
+        // Send stats to master
+        process.send({
+          type: 'stats',
+          data: {
+            endpoint: '/cpu-intensive',
+            duration,
+            memory: process.memoryUsage(),
+            cpu: process.cpuUsage()
+          }
+        });
+
+        res.json({
+          result,
+          worker: process.pid,
+          duration,
+          iterations: req.query.iterations || 1000000
+        });
+      } catch (error) {
+        res.status(500).json({
+          error: error.message,
+          worker: process.pid
+        });
+      }
+    });
+
+    app.get('/worker-stats', (req, res) => {
+      res.json({
+        worker: process.pid,
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        cpu: process.cpuUsage()
+      });
+    });
+
+    const server = app.listen(process.env.PORT || 3000, () => {
+      console.log(`🔧 Worker ${process.pid} started on port ${server.address().port}`);
+      
+      // Notify master that worker is ready
+      process.send({ type: 'ready' });
+    });
+
+    // Graceful shutdown for worker
+    process.on('SIGTERM', () => {
+      console.log(`🛑 Worker ${process.pid} received SIGTERM`);
+      server.close(() => {
+        console.log(`✅ Worker ${process.pid} closed`);
+        process.exit(0);
+      });
+    });
+  }
+
+  /**
+   * Perform CPU-intensive calculation
+   */
+  async performCPUIntensiveTask(iterations) {
+    return new Promise((resolve) => {
+      let result = 0;
+      for (let i = 0; i < iterations; i++) {
+        result += Math.sqrt(i) * Math.sin(i) * Math.cos(i);
+      }
+      resolve(result);
+    });
+  }
+
+  /**
+   * Setup graceful shutdown
+   */
+  setupGracefulShutdown() {
+    process.on('SIGTERM', () => {
+      console.log('🛑 Master received SIGTERM, shutting down workers...');
+      
+      for (const [id, workerInfo] of this.workers) {
+        workerInfo.worker.kill('SIGTERM');
+      }
+      
+      setTimeout(() => {
+        console.log('🔥 Force killing remaining workers...');
+        for (const [id, workerInfo] of this.workers) {
+          workerInfo.worker.kill('SIGKILL');
+        }
+        process.exit(0);
+      }, 10000);
+    });
+  }
+
+  /**
+   * Start monitoring workers
+   */
+  startMonitoring() {
+    setInterval(() => {
+      console.log('\n📊 Worker Statistics:');
+      console.log(`Active Workers: ${this.workers.size}`);
+      
+      for (const [id, stats] of this.workerStats) {
+        if (stats && Date.now() - stats.timestamp < 60000) {
+          console.log(`Worker ${id}: ${JSON.stringify(stats, null, 2)}`);
+        }
+      }
+    }, 30000);
+  }
+}
+
+// Start cluster
+const clusterManager = new ClusterManager();
+clusterManager.start();
+```
+
+**2. Worker Threads Implementation:**
+
+```javascript
+// worker-threads-example.js - Using worker threads for CPU-intensive tasks
+const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
+const path = require('path');
+const express = require('express');
+
+class WorkerThreadManager {
+  constructor() {
+    this.workers = new Map();
+    this.taskQueue = [];
+    this.maxWorkers = require('os').cpus().length;
+    this.activeWorkers = 0;
+  }
+
+  /**
+   * Execute CPU-intensive task using worker thread
+   */
+  async executeCPUTask(taskData) {
+    return new Promise((resolve, reject) => {
+      if (this.activeWorkers >= this.maxWorkers) {
+        this.taskQueue.push({ taskData, resolve, reject });
+        return;
+      }
+
+      this.createWorker(taskData, resolve, reject);
+    });
+  }
+
+  /**
+   * Create a new worker thread
+   */
+  createWorker(taskData, resolve, reject) {
+    this.activeWorkers++;
+    
+    const worker = new Worker(__filename, {
+      workerData: { task: 'cpu-intensive', data: taskData }
+    });
+
+    const workerId = Date.now() + Math.random();
+    this.workers.set(workerId, worker);
+
+    worker.on('message', (result) => {
+      resolve(result);
+      this.cleanupWorker(workerId);
+    });
+
+    worker.on('error', (error) => {
+      reject(error);
+      this.cleanupWorker(workerId);
+    });
+
+    worker.on('exit', (code) => {
+      if (code !== 0) {
+        reject(new Error(`Worker stopped with exit code ${code}`));
+      }
+      this.cleanupWorker(workerId);
+    });
+  }
+
+  /**
+   * Cleanup worker and process queue
+   */
+  cleanupWorker(workerId) {
+    this.workers.delete(workerId);
+    this.activeWorkers--;
+
+    // Process queued tasks
+    if (this.taskQueue.length > 0) {
+      const { taskData, resolve, reject } = this.taskQueue.shift();
+      this.createWorker(taskData, resolve, reject);
+    }
+  }
+
+  /**
+   * Get worker statistics
+   */
+  getStats() {
+    return {
+      activeWorkers: this.activeWorkers,
+      queuedTasks: this.taskQueue.length,
+      maxWorkers: this.maxWorkers
+    };
+  }
+}
+
+// Worker thread code
+if (!isMainThread) {
+  const { task, data } = workerData;
+
+  if (task === 'cpu-intensive') {
+    // Perform CPU-intensive calculation
+    const startTime = Date.now();
+    let result = 0;
+    
+    for (let i = 0; i < data.iterations; i++) {
+      result += Math.sqrt(i) * Math.sin(i) * Math.cos(i);
+      
+      // Yield occasionally to prevent blocking
+      if (i % 100000 === 0) {
+        // Small delay to allow other operations
+        setImmediate(() => {});
+      }
+    }
+
+    const duration = Date.now() - startTime;
+    
+    parentPort.postMessage({
+      result,
+      duration,
+      iterations: data.iterations,
+      worker: 'thread'
+    });
+  }
+} else {
+  // Main thread - Express server
+  const app = express();
+  const workerManager = new WorkerThreadManager();
+
+  app.use(express.json());
+
+  app.get('/cpu-task', async (req, res) => {
+    try {
+      const iterations = parseInt(req.query.iterations) || 1000000;
+      
+      const result = await workerManager.executeCPUTask({ iterations });
+      
+      res.json({
+        success: true,
+        ...result,
+        mainThread: process.pid
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  app.get('/worker-stats', (req, res) => {
+    res.json(workerManager.getStats());
+  });
+
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server with worker threads running on port ${PORT}`);
+  });
+}
+```
+
+**3. Hybrid Approach - Cluster + Worker Threads:**
+
+```javascript
+// hybrid-approach.js - Combining clusters and worker threads
+const cluster = require('cluster');
+const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
+const express = require('express');
+const os = require('os');
+
+if (cluster.isMaster) {
+  // Master process - fork workers
+  const numCPUs = os.cpus().length;
+  
+  console.log(`🚀 Master ${process.pid} forking ${numCPUs} workers`);
+  
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+  
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`❌ Worker ${worker.process.pid} died, restarting...`);
+    cluster.fork();
+  });
+  
+} else {
+  // Worker process - handles HTTP requests and manages worker threads
+  const app = express();
+  
+  class HybridTaskManager {
+    constructor() {
+      this.threadPool = [];
+      this.maxThreads = 2; // Limit threads per worker process
+      this.activeThreads = 0;
+    }
+
+    async executeTask(taskType, taskData) {
+      return new Promise((resolve, reject) => {
+        if (this.activeThreads >= this.maxThreads) {
+          // Fallback to synchronous execution in worker process
+          this.executeSyncTask(taskData)
+            .then(resolve)
+            .catch(reject);
+          return;
+        }
+
+        this.executeInThread(taskType, taskData)
+          .then(resolve)
+          .catch(reject);
+      });
+    }
+
+    async executeInThread(taskType, taskData) {
+      return new Promise((resolve, reject) => {
+        this.activeThreads++;
+        
+        const worker = new Worker(__filename, {
+          workerData: { taskType, taskData, isWorkerThread: true }
+        });
+
+        worker.on('message', (result) => {
+          this.activeThreads--;
+          resolve(result);
+        });
+
+        worker.on('error', (error) => {
+          this.activeThreads--;
+          reject(error);
+        });
+      });
+    }
+
+    async executeSyncTask(taskData) {
+      // Fallback synchronous execution
+      const startTime = Date.now();
+      let result = 0;
+      
+      for (let i = 0; i < taskData.iterations; i++) {
+        result += Math.sqrt(i);
+      }
+      
+      return {
+        result,
+        duration: Date.now() - startTime,
+        executedIn: 'worker-process',
+        worker: process.pid
+      };
+    }
+  }
+
+  const taskManager = new HybridTaskManager();
+
+  app.use(express.json());
+
+  app.get('/hybrid-task', async (req, res) => {
+    try {
+      const iterations = parseInt(req.query.iterations) || 1000000;
+      
+      const result = await taskManager.executeTask('cpu-intensive', { iterations });
+      
+      res.json({
+        success: true,
+        ...result,
+        cluster: process.pid
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`🔧 Worker ${process.pid} listening on port ${PORT}`);
+  });
+}
+
+// Worker thread execution
+if (!isMainThread && workerData && workerData.isWorkerThread) {
+  const { taskType, taskData } = workerData;
+  
+  if (taskType === 'cpu-intensive') {
+    const startTime = Date.now();
+    let result = 0;
+    
+    for (let i = 0; i < taskData.iterations; i++) {
+      result += Math.sqrt(i) * Math.sin(i);
+    }
+    
+    parentPort.postMessage({
+      result,
+      duration: Date.now() - startTime,
+      executedIn: 'worker-thread',
+      iterations: taskData.iterations
+    });
+  }
+}
+```
+
+**Best Practices:**
+
+1. **Use Clusters for I/O-bound tasks** and multiple HTTP connections
+2. **Use Worker Threads for CPU-intensive tasks** that don't require shared memory
+3. **Monitor worker health** and implement automatic restarts
+4. **Implement graceful shutdown** for both clusters and threads
+5. **Limit the number of worker threads** to prevent resource exhaustion
+6. **Use message passing** for communication between workers
+7. **Implement proper error handling** and fallback mechanisms
+8. **Monitor performance metrics** to optimize worker allocation
+
+Clustering and worker threads enable Node.js applications to fully utilize multi-core systems and handle both I/O-intensive and CPU-intensive workloads efficiently.
+
+---
+
+### Q15: How do you implement comprehensive testing strategies for Node.js applications?
+**Difficulty: Advanced**
+
+**Answer:**
+Comprehensive testing in Node.js involves multiple testing levels and strategies to ensure application reliability, performance, and maintainability.
+
+**1. Testing Pyramid Setup:**
+
+```javascript
+// package.json - Testing dependencies
+{
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "supertest": "^6.3.0",
+    "@testing-library/jest-dom": "^5.16.0",
+    "sinon": "^15.0.0",
+    "nock": "^13.3.0",
+    "artillery": "^2.0.0",
+    "nyc": "^15.1.0",
+    "eslint": "^8.0.0",
+    "prettier": "^2.8.0"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:unit": "jest --testPathPattern=unit",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:e2e": "jest --testPathPattern=e2e",
+    "test:coverage": "nyc jest",
+    "test:watch": "jest --watch",
+    "test:performance": "artillery run tests/performance/load-test.yml",
+    "lint": "eslint src/",
+    "format": "prettier --write src/"
+  }
+}
+```
+
+**2. Unit Testing Implementation:**
+
+```javascript
+// tests/unit/services/userService.test.js
+const UserService = require('../../../src/services/userService');
+const UserRepository = require('../../../src/repositories/userRepository');
+const EmailService = require('../../../src/services/emailService');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+// Mock dependencies
+jest.mock('../../../src/repositories/userRepository');
+jest.mock('../../../src/services/emailService');
+jest.mock('bcrypt');
+jest.mock('jsonwebtoken');
+
+describe('UserService', () => {
+  let userService;
+  let mockUserRepository;
+  let mockEmailService;
+
+  beforeEach(() => {
+    // Reset mocks
+    jest.clearAllMocks();
+    
+    // Create mock instances
+    mockUserRepository = new UserRepository();
+    mockEmailService = new EmailService();
+    
+    // Initialize service with mocked dependencies
+    userService = new UserService(mockUserRepository, mockEmailService);
+  });
+
+  describe('createUser', () => {
+    const validUserData = {
+      email: 'test@example.com',
+      password: 'password123',
+      firstName: 'John',
+      lastName: 'Doe'
+    };
+
+    it('should create a user successfully', async () => {
+      // Arrange
+      const hashedPassword = 'hashedPassword123';
+      const userId = 'user123';
+      const expectedUser = {
+        id: userId,
+        ...validUserData,
+        password: hashedPassword,
+        createdAt: expect.any(Date)
+      };
+
+      mockUserRepository.findByEmail.mockResolvedValue(null);
+      bcrypt.hash.mockResolvedValue(hashedPassword);
+      mockUserRepository.create.mockResolvedValue(expectedUser);
+      mockEmailService.sendWelcomeEmail.mockResolvedValue(true);
+
+      // Act
+      const result = await userService.createUser(validUserData);
+
+      // Assert
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(validUserData.email);
+      expect(bcrypt.hash).toHaveBeenCalledWith(validUserData.password, 10);
+      expect(mockUserRepository.create).toHaveBeenCalledWith({
+        ...validUserData,
+        password: hashedPassword
+      });
+      expect(mockEmailService.sendWelcomeEmail).toHaveBeenCalledWith(expectedUser);
+      expect(result).toEqual(expectedUser);
+    });
+
+    it('should throw error if user already exists', async () => {
+      // Arrange
+      const existingUser = { id: 'existing123', email: validUserData.email };
+      mockUserRepository.findByEmail.mockResolvedValue(existingUser);
+
+      // Act & Assert
+      await expect(userService.createUser(validUserData))
+        .rejects
+        .toThrow('User already exists with this email');
+      
+      expect(mockUserRepository.create).not.toHaveBeenCalled();
+      expect(mockEmailService.sendWelcomeEmail).not.toHaveBeenCalled();
+    });
+
+    it('should handle email service failure gracefully', async () => {
+      // Arrange
+      const hashedPassword = 'hashedPassword123';
+      const createdUser = { id: 'user123', ...validUserData, password: hashedPassword };
+      
+      mockUserRepository.findByEmail.mockResolvedValue(null);
+      bcrypt.hash.mockResolvedValue(hashedPassword);
+      mockUserRepository.create.mockResolvedValue(createdUser);
+      mockEmailService.sendWelcomeEmail.mockRejectedValue(new Error('Email service down'));
+
+      // Act
+      const result = await userService.createUser(validUserData);
+
+      // Assert
+      expect(result).toEqual(createdUser);
+      // User should still be created even if email fails
+      expect(mockUserRepository.create).toHaveBeenCalled();
+    });
+  });
+
+  describe('authenticateUser', () => {
+    it('should authenticate user with valid credentials', async () => {
+      // Arrange
+      const email = 'test@example.com';
+      const password = 'password123';
+      const hashedPassword = 'hashedPassword123';
+      const user = {
+        id: 'user123',
+        email,
+        password: hashedPassword,
+        firstName: 'John',
+        lastName: 'Doe'
+      };
+      const token = 'jwt.token.here';
+
+      mockUserRepository.findByEmail.mockResolvedValue(user);
+      bcrypt.compare.mockResolvedValue(true);
+      jwt.sign.mockReturnValue(token);
+
+      // Act
+      const result = await userService.authenticateUser(email, password);
+
+      // Assert
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
+      expect(bcrypt.compare).toHaveBeenCalledWith(password, hashedPassword);
+      expect(jwt.sign).toHaveBeenCalledWith(
+        { userId: user.id, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+      expect(result).toEqual({
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName
+        },
+        token
+      });
+    });
+
+    it('should throw error for invalid credentials', async () => {
+      // Arrange
+      const email = 'test@example.com';
+      const password = 'wrongpassword';
+      const user = {
+        id: 'user123',
+        email,
+        password: 'hashedPassword123'
+      };
+
+      mockUserRepository.findByEmail.mockResolvedValue(user);
+      bcrypt.compare.mockResolvedValue(false);
+
+      // Act & Assert
+      await expect(userService.authenticateUser(email, password))
+        .rejects
+        .toThrow('Invalid credentials');
+      
+      expect(jwt.sign).not.toHaveBeenCalled();
+    });
+  });
+});
+```
+
+**3. Integration Testing:**
+
+```javascript
+// tests/integration/api/users.test.js
+const request = require('supertest');
+const app = require('../../../src/app');
+const db = require('../../../src/config/database');
+const User = require('../../../src/models/User');
+
+describe('Users API Integration Tests', () => {
+  let server;
+  let authToken;
+  let testUser;
+
+  beforeAll(async () => {
+    // Setup test database
+    await db.connect(process.env.TEST_DATABASE_URL);
+    server = app.listen(0); // Use random port
+  });
+
+  afterAll(async () => {
+    await server.close();
+    await db.disconnect();
+  });
+
+  beforeEach(async () => {
+    // Clean database before each test
+    await User.deleteMany({});
+    
+    // Create test user and get auth token
+    testUser = {
+      email: 'test@example.com',
+      password: 'password123',
+      firstName: 'John',
+      lastName: 'Doe'
+    };
+  });
+
+  afterEach(async () => {
+    // Clean up after each test
+    await User.deleteMany({});
+  });
+
+  describe('POST /api/users/register', () => {
+    it('should register a new user successfully', async () => {
+      const response = await request(server)
+        .post('/api/users/register')
+        .send(testUser)
+        .expect(201);
+
+      expect(response.body).toMatchObject({
+        success: true,
+        message: 'User created successfully',
+        data: {
+          user: {
+            email: testUser.email,
+            firstName: testUser.firstName,
+            lastName: testUser.lastName
+          }
+        }
+      });
+
+      expect(response.body.data.user).not.toHaveProperty('password');
+      expect(response.body.data).toHaveProperty('token');
+
+      // Verify user was created in database
+      const createdUser = await User.findOne({ email: testUser.email });
+      expect(createdUser).toBeTruthy();
+      expect(createdUser.email).toBe(testUser.email);
+    });
+
+    it('should return 400 for invalid email format', async () => {
+      const invalidUser = {
+        ...testUser,
+        email: 'invalid-email'
+      };
+
+      const response = await request(server)
+        .post('/api/users/register')
+        .send(invalidUser)
+        .expect(400);
+
+      expect(response.body).toMatchObject({
+        success: false,
+        error: expect.stringContaining('email')
+      });
+    });
+
+    it('should return 409 for duplicate email', async () => {
+      // Create user first
+      await request(server)
+        .post('/api/users/register')
+        .send(testUser)
+        .expect(201);
+
+      // Try to create same user again
+      const response = await request(server)
+        .post('/api/users/register')
+        .send(testUser)
+        .expect(409);
+
+      expect(response.body).toMatchObject({
+        success: false,
+        error: 'User already exists with this email'
+      });
+    });
+  });
+
+  describe('POST /api/users/login', () => {
+    beforeEach(async () => {
+      // Create user for login tests
+      await request(server)
+        .post('/api/users/register')
+        .send(testUser);
+    });
+
+    it('should login with valid credentials', async () => {
+      const response = await request(server)
+        .post('/api/users/login')
+        .send({
+          email: testUser.email,
+          password: testUser.password
+        })
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        success: true,
+        data: {
+          user: {
+            email: testUser.email,
+            firstName: testUser.firstName,
+            lastName: testUser.lastName
+          },
+          token: expect.any(String)
+        }
+      });
+
+      authToken = response.body.data.token;
+    });
+
+    it('should return 401 for invalid credentials', async () => {
+      const response = await request(server)
+        .post('/api/users/login')
+        .send({
+          email: testUser.email,
+          password: 'wrongpassword'
+        })
+        .expect(401);
+
+      expect(response.body).toMatchObject({
+        success: false,
+        error: 'Invalid credentials'
+      });
+    });
+  });
+
+  describe('GET /api/users/profile', () => {
+    beforeEach(async () => {
+      // Register and login to get auth token
+      const registerResponse = await request(server)
+        .post('/api/users/register')
+        .send(testUser);
+      
+      authToken = registerResponse.body.data.token;
+    });
+
+    it('should get user profile with valid token', async () => {
+      const response = await request(server)
+        .get('/api/users/profile')
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        success: true,
+        data: {
+          user: {
+            email: testUser.email,
+            firstName: testUser.firstName,
+            lastName: testUser.lastName
+          }
+        }
+      });
+    });
+
+    it('should return 401 without auth token', async () => {
+      const response = await request(server)
+        .get('/api/users/profile')
+        .expect(401);
+
+      expect(response.body).toMatchObject({
+        success: false,
+        error: 'Access token required'
+      });
+    });
+
+    it('should return 401 with invalid token', async () => {
+      const response = await request(server)
+        .get('/api/users/profile')
+        .set('Authorization', 'Bearer invalid.token.here')
+        .expect(401);
+
+      expect(response.body).toMatchObject({
+        success: false,
+        error: expect.stringContaining('token')
+      });
+    });
+  });
+});
+```
+
+**4. End-to-End Testing:**
+
+```javascript
+// tests/e2e/userJourney.test.js
+const request = require('supertest');
+const app = require('../../src/app');
+const db = require('../../src/config/database');
+
+describe('User Journey E2E Tests', () => {
+  let server;
+  let userToken;
+  let userId;
+
+  beforeAll(async () => {
+    await db.connect(process.env.TEST_DATABASE_URL);
+    server = app.listen(0);
+  });
+
+  afterAll(async () => {
+    await server.close();
+    await db.disconnect();
+  });
+
+  beforeEach(async () => {
+    // Clean database
+    await db.clearAll();
+  });
+
+  it('should complete full user journey: register -> login -> update profile -> logout', async () => {
+    const userData = {
+      email: 'journey@example.com',
+      password: 'password123',
+      firstName: 'Journey',
+      lastName: 'User'
+    };
+
+    // Step 1: Register user
+    const registerResponse = await request(server)
+      .post('/api/users/register')
+      .send(userData)
+      .expect(201);
+
+    expect(registerResponse.body.success).toBe(true);
+    userToken = registerResponse.body.data.token;
+    userId = registerResponse.body.data.user.id;
+
+    // Step 2: Login user
+    const loginResponse = await request(server)
+      .post('/api/users/login')
+      .send({
+        email: userData.email,
+        password: userData.password
+      })
+      .expect(200);
+
+    expect(loginResponse.body.success).toBe(true);
+    userToken = loginResponse.body.data.token;
+
+    // Step 3: Get user profile
+    const profileResponse = await request(server)
+      .get('/api/users/profile')
+      .set('Authorization', `Bearer ${userToken}`)
+      .expect(200);
+
+    expect(profileResponse.body.data.user.email).toBe(userData.email);
+
+    // Step 4: Update user profile
+    const updateData = {
+      firstName: 'Updated',
+      lastName: 'Name'
+    };
+
+    const updateResponse = await request(server)
+      .put('/api/users/profile')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send(updateData)
+      .expect(200);
+
+    expect(updateResponse.body.data.user.firstName).toBe(updateData.firstName);
+    expect(updateResponse.body.data.user.lastName).toBe(updateData.lastName);
+
+    // Step 5: Verify updated profile
+    const verifyResponse = await request(server)
+      .get('/api/users/profile')
+      .set('Authorization', `Bearer ${userToken}`)
+      .expect(200);
+
+    expect(verifyResponse.body.data.user.firstName).toBe(updateData.firstName);
+    expect(verifyResponse.body.data.user.lastName).toBe(updateData.lastName);
+
+    // Step 6: Logout user
+    const logoutResponse = await request(server)
+      .post('/api/users/logout')
+      .set('Authorization', `Bearer ${userToken}`)
+      .expect(200);
+
+    expect(logoutResponse.body.success).toBe(true);
+
+    // Step 7: Verify token is invalidated
+    await request(server)
+      .get('/api/users/profile')
+      .set('Authorization', `Bearer ${userToken}`)
+      .expect(401);
+  });
+});
+```
+
+**5. Performance Testing:**
+
+```yaml
+# tests/performance/load-test.yml
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 50
+      name: "Load test"
+    - duration: 60
+      arrivalRate: 100
+      name: "Stress test"
+  processor: "./load-test-processor.js"
+
+scenarios:
+  - name: "User Registration and Login"
+    weight: 70
+    flow:
+      - post:
+          url: "/api/users/register"
+          json:
+            email: "{{ $randomEmail() }}"
+            password: "password123"
+            firstName: "{{ $randomFirstName() }}"
+            lastName: "{{ $randomLastName() }}"
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+      - post:
+          url: "/api/users/login"
+          json:
+            email: "{{ email }}"
+            password: "password123"
+      - get:
+          url: "/api/users/profile"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+
+  - name: "API Health Check"
+    weight: 30
+    flow:
+      - get:
+          url: "/api/health"
+```
+
+**6. Test Configuration:**
+
+```javascript
+// jest.config.js
+module.exports = {
+  testEnvironment: 'node',
+  collectCoverageFrom: [
+    'src/**/*.js',
+    '!src/config/**',
+    '!src/migrations/**',
+    '!src/seeds/**'
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    }
+  },
+  testMatch: [
+    '**/tests/**/*.test.js'
+  ],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+  testTimeout: 10000,
+  verbose: true
+};
+```
+
+**Testing Best Practices:**
+
+1. **Follow the Testing Pyramid**: More unit tests, fewer integration tests, minimal E2E tests
+2. **Use Test Doubles**: Mock external dependencies and services
+3. **Test Behavior, Not Implementation**: Focus on what the code does, not how
+4. **Maintain Test Independence**: Each test should be able to run in isolation
+5. **Use Descriptive Test Names**: Make test intentions clear
+6. **Implement Continuous Testing**: Run tests on every commit
+7. **Monitor Test Performance**: Keep test execution time reasonable
+8. **Test Error Scenarios**: Include negative test cases
+9. **Use Test Data Builders**: Create reusable test data factories
+10. **Implement Database Cleanup**: Ensure clean state between tests
+
+Comprehensive testing ensures application reliability, facilitates refactoring, and provides confidence in deployments.
+
+---
+
+### Q16: How do you implement deployment and DevOps practices for Node.js applications?
+**Difficulty: Advanced**
+
+**Answer:**
+Deploying Node.js applications requires comprehensive DevOps practices including containerization, CI/CD pipelines, monitoring, and infrastructure management.
+
+**1. Docker Containerization:**
+
+```dockerfile
+# Dockerfile - Multi-stage build for Node.js application
+# Stage 1: Build stage
+FROM node:18-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies (including dev dependencies for build)
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy source code
+COPY . .
+
+# Build application (if needed)
+RUN npm run build 2>/dev/null || echo "No build script found"
+
+# Stage 2: Production stage
+FROM node:18-alpine AS production
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy built application from builder stage
+COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
+COPY --from=builder --chown=nextjs:nodejs /app/src ./src
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# Create necessary directories
+RUN mkdir -p /app/logs && chown nextjs:nodejs /app/logs
+
+# Switch to non-root user
+USER nextjs
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node healthcheck.js
+
+# Start application
+CMD ["node", "src/server.js"]
+```
+
+```javascript
+// healthcheck.js - Docker health check script
+const http = require('http');
+
+const options = {
+  host: 'localhost',
+  port: process.env.PORT || 3000,
+  path: '/health',
+  timeout: 2000
+};
+
+const request = http.request(options, (res) => {
+  console.log(`Health check status: ${res.statusCode}`);
+  if (res.statusCode === 200) {
+    process.exit(0);
+  } else {
+    process.exit(1);
+  }
+});
+
+request.on('error', (err) => {
+  console.error('Health check failed:', err.message);
+  process.exit(1);
+});
+
+request.end();
+```
+
+**2. Docker Compose for Development:**
+
+```yaml
+# docker-compose.yml - Development environment
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=mongodb://mongo:27017/myapp
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=dev-secret-key
+    volumes:
+      - ./src:/app/src
+      - ./logs:/app/logs
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=myapp
+    volumes:
+      - mongo-data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    networks:
+      - app-network
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+  redis-data:
+
+networks:
+  app-network:
+    driver: bridge
+```
+
+**3. CI/CD Pipeline with GitHub Actions:**
+
+```yaml
+# .github/workflows/ci-cd.yml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  NODE_VERSION: '18'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:6.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: password
+        ports:
+          - 27017:27017
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run linting
+      run: npm run lint
+    
+    - name: Run unit tests
+      run: npm run test:unit
+      env:
+        NODE_ENV: test
+    
+    - name: Run integration tests
+      run: npm run test:integration
+      env:
+        NODE_ENV: test
+        TEST_DATABASE_URL: mongodb://admin:password@localhost:27017/test?authSource=admin
+        REDIS_URL: redis://localhost:6379
+    
+    - name: Generate coverage report
+      run: npm run test:coverage
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+    
+    - name: Run security audit
+      run: npm audit --audit-level=high
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  deploy-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment"
+        # Add deployment commands here
+        curl -X POST "${{ secrets.STAGING_WEBHOOK_URL }}" \
+          -H "Authorization: Bearer ${{ secrets.STAGING_DEPLOY_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "image": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop",
+            "environment": "staging"
+          }'
+
+  deploy-production:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production environment"
+        # Add production deployment commands here
+        curl -X POST "${{ secrets.PRODUCTION_WEBHOOK_URL }}" \
+          -H "Authorization: Bearer ${{ secrets.PRODUCTION_DEPLOY_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "image": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest",
+            "environment": "production"
+          }'
+```
+
+**4. Kubernetes Deployment:**
+
+```yaml
+# k8s/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: myapp
+  labels:
+    name: myapp
+
+---
+# k8s/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: myapp
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  LOG_LEVEL: "info"
+
+---
+# k8s/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: myapp
+type: Opaque
+data:
+  DATABASE_URL: <base64-encoded-database-url>
+  JWT_SECRET: <base64-encoded-jwt-secret>
+  REDIS_URL: <base64-encoded-redis-url>
+
+---
+# k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-deployment
+  namespace: myapp
+  labels:
+    app: myapp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: ghcr.io/username/myapp:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: NODE_ENV
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: PORT
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: DATABASE_URL
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: JWT_SECRET
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: logs
+        emptyDir: {}
+      imagePullSecrets:
+      - name: ghcr-secret
+
+---
+# k8s/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-service
+  namespace: myapp
+spec:
+  selector:
+    app: myapp
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: ClusterIP
+
+---
+# k8s/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myapp-ingress
+  namespace: myapp
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+spec:
+  tls:
+  - hosts:
+    - api.myapp.com
+    secretName: myapp-tls
+  rules:
+  - host: api.myapp.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: myapp-service
+            port:
+              number: 80
+
+---
+# k8s/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: myapp-hpa
+  namespace: myapp
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapp-deployment
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+```
+
+**5. Monitoring and Observability:**
+
+```javascript
+// monitoring/prometheus-metrics.js
+const promClient = require('prom-client');
+
+// Create a Registry
+const register = new promClient.Registry();
+
+// Add default metrics
+promClient.collectDefaultMetrics({
+  register,
+  timeout: 5000,
+  gcDurationBuckets: [0.001, 0.01, 0.1, 1, 2, 5],
+});
+
+// Custom metrics
+const httpRequestDuration = new promClient.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'Duration of HTTP requests in seconds',
+  labelNames: ['method', 'route', 'status_code'],
+  buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10]
+});
+
+const httpRequestTotal = new promClient.Counter({
+  name: 'http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'status_code']
+});
+
+const activeConnections = new promClient.Gauge({
+  name: 'active_connections',
+  help: 'Number of active connections'
+});
+
+const databaseConnectionPool = new promClient.Gauge({
+  name: 'database_connection_pool_size',
+  help: 'Current database connection pool size',
+  labelNames: ['pool_name', 'state']
+});
+
+// Register custom metrics
+register.registerMetric(httpRequestDuration);
+register.registerMetric(httpRequestTotal);
+register.registerMetric(activeConnections);
+register.registerMetric(databaseConnectionPool);
+
+// Middleware for Express
+const metricsMiddleware = (req, res, next) => {
+  const start = Date.now();
+  
+  res.on('finish', () => {
+    const duration = (Date.now() - start) / 1000;
+    const route = req.route ? req.route.path : req.path;
+    
+    httpRequestDuration
+      .labels(req.method, route, res.statusCode)
+      .observe(duration);
+    
+    httpRequestTotal
+      .labels(req.method, route, res.statusCode)
+      .inc();
+  });
+  
+  next();
+};
+
+module.exports = {
+  register,
+  metricsMiddleware,
+  metrics: {
+    httpRequestDuration,
+    httpRequestTotal,
+    activeConnections,
+    databaseConnectionPool
+  }
+};
+```
+
+**6. Infrastructure as Code with Terraform:**
+
+```hcl
+# terraform/main.tf
+terraform {
+  required_version = ">= 1.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+  
+  backend "s3" {
+    bucket = "myapp-terraform-state"
+    key    = "production/terraform.tfstate"
+    region = "us-west-2"
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+}
+
+# VPC
+resource "aws_vpc" "main" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+  
+  tags = {
+    Name        = "${var.project_name}-vpc"
+    Environment = var.environment
+  }
+}
+
+# ECS Cluster
+resource "aws_ecs_cluster" "main" {
+  name = "${var.project_name}-cluster"
+  
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
+  
+  tags = {
+    Environment = var.environment
+  }
+}
+
+# ECS Task Definition
+resource "aws_ecs_task_definition" "app" {
+  family                   = "${var.project_name}-app"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = 512
+  memory                   = 1024
+  execution_role_arn       = aws_iam_role.ecs_execution_role.arn
+  task_role_arn           = aws_iam_role.ecs_task_role.arn
+  
+  container_definitions = jsonencode([
+    {
+      name  = "app"
+      image = "${var.ecr_repository_url}:latest"
+      
+      portMappings = [
+        {
+          containerPort = 3000
+          protocol      = "tcp"
+        }
+      ]
+      
+      environment = [
+        {
+          name  = "NODE_ENV"
+          value = var.environment
+        },
+        {
+          name  = "PORT"
+          value = "3000"
+        }
+      ]
+      
+      secrets = [
+        {
+          name      = "DATABASE_URL"
+          valueFrom = aws_ssm_parameter.database_url.arn
+        },
+        {
+          name      = "JWT_SECRET"
+          valueFrom = aws_ssm_parameter.jwt_secret.arn
+        }
+      ]
+      
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.app.name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
+      
+      healthCheck = {
+        command     = ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 60
+      }
+    }
+  ])
+}
+
+# ECS Service
+resource "aws_ecs_service" "app" {
+  name            = "${var.project_name}-service"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.app.arn
+  desired_count   = var.app_count
+  launch_type     = "FARGATE"
+  
+  network_configuration {
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    subnets          = aws_subnet.private[*].id
+    assign_public_ip = false
+  }
+  
+  load_balancer {
+    target_group_arn = aws_lb_target_group.app.arn
+    container_name   = "app"
+    container_port   = 3000
+  }
+  
+  depends_on = [aws_lb_listener.app]
+}
+```
+
+**DevOps Best Practices:**
+
+1. **Infrastructure as Code**: Use Terraform, CloudFormation, or similar tools
+2. **Container Security**: Scan images for vulnerabilities, use minimal base images
+3. **Secrets Management**: Use AWS Secrets Manager, HashiCorp Vault, or similar
+4. **Monitoring**: Implement comprehensive logging, metrics, and alerting
+5. **Blue-Green Deployments**: Minimize downtime with deployment strategies
+6. **Auto-scaling**: Configure horizontal and vertical scaling
+7. **Backup and Recovery**: Implement automated backup strategies
+8. **Security**: Follow security best practices and compliance requirements
+9. **Cost Optimization**: Monitor and optimize cloud costs
+10. **Documentation**: Maintain comprehensive deployment and operational documentation
+
+Proper DevOps practices ensure reliable, scalable, and maintainable Node.js applications in production environments.
+
+---
+
+### Q17: How do you implement advanced API design patterns and best practices in Node.js?
+**Difficulty: Advanced**
+
+**Answer:**
+Advanced API design involves implementing robust patterns for scalability, maintainability, and developer experience including versioning, documentation, rate limiting, and caching strategies.
+
+**1. RESTful API Design with Express:**
+
+```javascript
+// api/v1/routes/users.js - RESTful user routes
+const express = require('express');
+const { body, param, query, validationResult } = require('express-validator');
+const rateLimit = require('express-rate-limit');
+const UserController = require('../controllers/userController');
+const authMiddleware = require('../middleware/auth');
+const cacheMiddleware = require('../middleware/cache');
+const router = express.Router();
+
+/**
+ * Rate limiting configuration
+ */
+const createUserLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per windowMs
+  message: {
+    error: 'Too many accounts created from this IP, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: {
+    error: 'Too many requests from this IP, please try again later.'
+  }
+});
+
+/**
+ * Validation middleware
+ */
+const validateUser = [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Valid email is required'),
+  body('password')
+    .isLength({ min: 8 })
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .withMessage('Password must be at least 8 characters with uppercase, lowercase, number, and special character'),
+  body('firstName')
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('First name must be between 2 and 50 characters'),
+  body('lastName')
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Last name must be between 2 and 50 characters')
+];
+
+const validateUserId = [
+  param('id')
+    .isMongoId()
+    .withMessage('Valid user ID is required')
+];
+
+const validatePagination = [
+  query('page')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Page must be a positive integer'),
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage('Limit must be between 1 and 100'),
+  query('sort')
+    .optional()
+    .isIn(['createdAt', '-createdAt', 'email', '-email', 'firstName', '-firstName'])
+    .withMessage('Invalid sort field')
+];
+
+/**
+ * Error handling middleware
+ */
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      error: 'Validation failed',
+      details: errors.array()
+    });
+  }
+  next();
+};
+
+/**
+ * Routes
+ */
+
+// GET /api/v1/users - Get all users with pagination
+router.get('/',
+  generalLimiter,
+  authMiddleware.authenticate,
+  authMiddleware.authorize(['admin', 'moderator']),
+  validatePagination,
+  handleValidationErrors,
+  cacheMiddleware.cache('users', 300), // Cache for 5 minutes
+  UserController.getUsers
+);
+
+// GET /api/v1/users/:id - Get user by ID
+router.get('/:id',
+  generalLimiter,
+  authMiddleware.authenticate,
+  validateUserId,
+  handleValidationErrors,
+  cacheMiddleware.cache('user', 600), // Cache for 10 minutes
+  UserController.getUserById
+);
+
+// POST /api/v1/users - Create new user
+router.post('/',
+  createUserLimiter,
+  validateUser,
+  handleValidationErrors,
+  UserController.createUser
+);
+
+// PUT /api/v1/users/:id - Update user
+router.put('/:id',
+  generalLimiter,
+  authMiddleware.authenticate,
+  validateUserId,
+  [
+    body('firstName').optional().trim().isLength({ min: 2, max: 50 }),
+    body('lastName').optional().trim().isLength({ min: 2, max: 50 }),
+    body('email').optional().isEmail().normalizeEmail()
+  ],
+  handleValidationErrors,
+  UserController.updateUser
+);
+
+// DELETE /api/v1/users/:id - Delete user
+router.delete('/:id',
+  generalLimiter,
+  authMiddleware.authenticate,
+  authMiddleware.authorize(['admin']),
+  validateUserId,
+  handleValidationErrors,
+  UserController.deleteUser
+);
+
+// PATCH /api/v1/users/:id/status - Update user status
+router.patch('/:id/status',
+  generalLimiter,
+  authMiddleware.authenticate,
+  authMiddleware.authorize(['admin']),
+  validateUserId,
+  [
+    body('status')
+      .isIn(['active', 'inactive', 'suspended'])
+      .withMessage('Status must be active, inactive, or suspended')
+  ],
+  handleValidationErrors,
+  UserController.updateUserStatus
+);
+
+module.exports = router;
+```
+
+**2. API Versioning Strategy:**
+
+```javascript
+// api/versionManager.js - API version management
+const express = require('express');
+const semver = require('semver');
+
+class APIVersionManager {
+  constructor() {
+    this.versions = new Map();
+    this.deprecatedVersions = new Set();
+    this.supportedVersions = ['1.0.0', '1.1.0', '2.0.0'];
+    this.defaultVersion = '2.0.0';
+  }
+
+  /**
+   * Register API version
+   */
+  registerVersion(version, router) {
+    if (!semver.valid(version)) {
+      throw new Error(`Invalid version format: ${version}`);
+    }
+    this.versions.set(version, router);
+  }
+
+  /**
+   * Deprecate API version
+   */
+  deprecateVersion(version, sunsetDate) {
+    this.deprecatedVersions.add(version);
+    console.log(`API version ${version} deprecated. Sunset date: ${sunsetDate}`);
+  }
+
+  /**
+   * Version resolution middleware
+   */
+  versionMiddleware() {
+    return (req, res, next) => {
+      // Extract version from header, query param, or URL
+      let requestedVersion = 
+        req.headers['api-version'] ||
+        req.query.version ||
+        this.extractVersionFromURL(req.path) ||
+        this.defaultVersion;
+
+      // Validate and resolve version
+      const resolvedVersion = this.resolveVersion(requestedVersion);
+      
+      if (!resolvedVersion) {
+        return res.status(400).json({
+          success: false,
+          error: 'Unsupported API version',
+          supportedVersions: this.supportedVersions
+        });
+      }
+
+      // Add version info to request
+      req.apiVersion = resolvedVersion;
+      
+      // Add deprecation warning if applicable
+      if (this.deprecatedVersions.has(resolvedVersion)) {
+        res.set('Warning', `299 - "API version ${resolvedVersion} is deprecated"`);
+        res.set('Sunset', this.getSunsetDate(resolvedVersion));
+      }
+
+      // Add version headers
+      res.set('API-Version', resolvedVersion);
+      res.set('API-Supported-Versions', this.supportedVersions.join(', '));
+
+      next();
+    };
+  }
+
+  /**
+   * Extract version from URL path
+   */
+  extractVersionFromURL(path) {
+    const match = path.match(/^\/api\/v(\d+(?:\.\d+)?(?:\.\d+)?)/i);
+    return match ? match[1] : null;
+  }
+
+  /**
+   * Resolve version using semantic versioning
+   */
+  resolveVersion(requestedVersion) {
+    // If exact version exists, return it
+    if (this.versions.has(requestedVersion)) {
+      return requestedVersion;
+    }
+
+    // Find compatible version
+    const compatibleVersions = this.supportedVersions
+      .filter(version => semver.satisfies(version, `^${requestedVersion}`))
+      .sort(semver.rcompare);
+
+    return compatibleVersions[0] || null;
+  }
+
+  /**
+   * Get sunset date for deprecated version
+   */
+  getSunsetDate(version) {
+    // Return sunset date based on version
+    const sunsetDates = {
+      '1.0.0': '2024-12-31',
+      '1.1.0': '2025-06-30'
+    };
+    return sunsetDates[version] || 'TBD';
+  }
+
+  /**
+   * Route to appropriate version
+   */
+  routeToVersion() {
+    return (req, res, next) => {
+      const version = req.apiVersion;
+      const router = this.versions.get(version);
+      
+      if (router) {
+        router(req, res, next);
+      } else {
+        res.status(500).json({
+          success: false,
+          error: 'Internal server error: Version router not found'
+        });
+      }
+    };
+  }
+}
+
+module.exports = APIVersionManager;
+```
+
+**3. Advanced Caching Strategy:**
+
+```javascript
+// middleware/cache.js - Advanced caching middleware
+const Redis = require('ioredis');
+const crypto = require('crypto');
+
+class CacheManager {
+  constructor() {
+    this.redis = new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: process.env.REDIS_PORT || 6379,
+      password: process.env.REDIS_PASSWORD,
+      retryDelayOnFailover: 100,
+      maxRetriesPerRequest: 3,
+      lazyConnect: true
+    });
+    
+    this.defaultTTL = 300; // 5 minutes
+    this.keyPrefix = 'api:cache:';
+  }
+
+  /**
+   * Generate cache key
+   */
+  generateKey(req, namespace = 'default') {
+    const keyData = {
+      method: req.method,
+      url: req.originalUrl,
+      user: req.user?.id || 'anonymous',
+      query: req.query,
+      headers: {
+        'accept-language': req.headers['accept-language'],
+        'user-agent': req.headers['user-agent']
+      }
+    };
+    
+    const hash = crypto
+      .createHash('sha256')
+      .update(JSON.stringify(keyData))
+      .digest('hex');
+    
+    return `${this.keyPrefix}${namespace}:${hash}`;
+  }
+
+  /**
+   * Cache middleware
+   */
+  cache(namespace, ttl = this.defaultTTL, options = {}) {
+    return async (req, res, next) => {
+      // Skip caching for non-GET requests
+      if (req.method !== 'GET') {
+        return next();
+      }
+
+      // Skip caching if disabled
+      if (options.skipCache || req.headers['cache-control'] === 'no-cache') {
+        return next();
+      }
+
+      const cacheKey = this.generateKey(req, namespace);
+      
+      try {
+        // Try to get from cache
+        const cachedData = await this.redis.get(cacheKey);
+        
+        if (cachedData) {
+          const data = JSON.parse(cachedData);
+          
+          // Set cache headers
+          res.set('X-Cache', 'HIT');
+          res.set('X-Cache-Key', cacheKey);
+          res.set('Cache-Control', `public, max-age=${ttl}`);
+          
+          return res.status(data.statusCode).json(data.body);
+        }
+        
+        // Cache miss - continue to route handler
+        res.set('X-Cache', 'MISS');
+        
+        // Override res.json to cache the response
+        const originalJson = res.json;
+        res.json = function(body) {
+          // Cache successful responses
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            const cacheData = {
+              statusCode: res.statusCode,
+              body: body,
+              timestamp: Date.now()
+            };
+            
+            // Set cache with TTL
+            this.redis.setex(cacheKey, ttl, JSON.stringify(cacheData))
+              .catch(err => console.error('Cache set error:', err));
+            
+            // Set cache headers
+            res.set('Cache-Control', `public, max-age=${ttl}`);
+          }
+          
+          return originalJson.call(this, body);
+        }.bind(this);
+        
+        next();
+      } catch (error) {
+        console.error('Cache error:', error);
+        // Continue without caching on error
+        next();
+      }
+    };
+  }
+
+  /**
+   * Invalidate cache by pattern
+   */
+  async invalidate(pattern) {
+    try {
+      const keys = await this.redis.keys(`${this.keyPrefix}${pattern}*`);
+      if (keys.length > 0) {
+        await this.redis.del(...keys);
+        console.log(`Invalidated ${keys.length} cache entries for pattern: ${pattern}`);
+      }
+    } catch (error) {
+      console.error('Cache invalidation error:', error);
+    }
+  }
+
+  /**
+   * Cache warming
+   */
+  async warmCache(routes) {
+    for (const route of routes) {
+      try {
+        // Make internal request to warm cache
+        await this.makeInternalRequest(route);
+        console.log(`Cache warmed for route: ${route}`);
+      } catch (error) {
+        console.error(`Cache warming failed for route ${route}:`, error);
+      }
+    }
+  }
+
+  /**
+   * Get cache statistics
+   */
+  async getStats() {
+    try {
+      const info = await this.redis.info('memory');
+      const keyCount = await this.redis.dbsize();
+      
+      return {
+        keyCount,
+        memoryUsage: this.parseMemoryInfo(info),
+        hitRate: await this.calculateHitRate()
+      };
+    } catch (error) {
+      console.error('Cache stats error:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Parse Redis memory info
+   */
+  parseMemoryInfo(info) {
+    const lines = info.split('\r\n');
+    const memoryInfo = {};
+    
+    lines.forEach(line => {
+      if (line.startsWith('used_memory_human:')) {
+        memoryInfo.used = line.split(':')[1];
+      }
+      if (line.startsWith('used_memory_peak_human:')) {
+        memoryInfo.peak = line.split(':')[1];
+      }
+    });
+    
+    return memoryInfo;
+  }
+
+  /**
+   * Calculate cache hit rate
+   */
+  async calculateHitRate() {
+    try {
+      const info = await this.redis.info('stats');
+      const lines = info.split('\r\n');
+      let hits = 0, misses = 0;
+      
+      lines.forEach(line => {
+        if (line.startsWith('keyspace_hits:')) {
+          hits = parseInt(line.split(':')[1]);
+        }
+        if (line.startsWith('keyspace_misses:')) {
+          misses = parseInt(line.split(':')[1]);
+        }
+      });
+      
+      const total = hits + misses;
+      return total > 0 ? (hits / total * 100).toFixed(2) : 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+}
+
+module.exports = new CacheManager();
+```
+
+**4. API Documentation with OpenAPI/Swagger:**
+
+```javascript
+// docs/swagger.js - OpenAPI documentation
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Node.js API',
+      version: '2.0.0',
+      description: 'A comprehensive Node.js API with advanced patterns',
+      contact: {
+        name: 'API Support',
+        email: 'support@example.com',
+        url: 'https://example.com/support'
+      },
+      license: {
+        name: 'MIT',
+        url: 'https://opensource.org/licenses/MIT'
+      }
+    },
+    servers: [
+      {
+        url: 'https://api.example.com/v2',
+        description: 'Production server'
+      },
+      {
+        url: 'https://staging-api.example.com/v2',
+        description: 'Staging server'
+      },
+      {
+        url: 'http://localhost:3000/api/v2',
+        description: 'Development server'
+      }
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        },
+        apiKey: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'X-API-Key'
+        }
+      },
+      schemas: {
+        User: {
+          type: 'object',
+          required: ['email', 'firstName', 'lastName'],
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Unique identifier for the user'
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              description: 'User email address'
+            },
+            firstName: {
+              type: 'string',
+              minLength: 2,
+              maxLength: 50,
+              description: 'User first name'
+            },
+            lastName: {
+              type: 'string',
+              minLength: 2,
+              maxLength: 50,
+              description: 'User last name'
+            },
+            status: {
+              type: 'string',
+              enum: ['active', 'inactive', 'suspended'],
+              description: 'User account status'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'User creation timestamp'
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'User last update timestamp'
+            }
+          }
+        },
+        Error: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: false
+            },
+            error: {
+              type: 'string',
+              description: 'Error message'
+            },
+            details: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  field: {
+                    type: 'string'
+                  },
+                  message: {
+                    type: 'string'
+                  }
+                }
+              }
+            }
+          }
+        },
+        PaginatedResponse: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: true
+            },
+            data: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/User'
+              }
+            },
+            pagination: {
+              type: 'object',
+              properties: {
+                page: {
+                  type: 'integer',
+                  minimum: 1
+                },
+                limit: {
+                  type: 'integer',
+                  minimum: 1,
+                  maximum: 100
+                },
+                total: {
+                  type: 'integer',
+                  minimum: 0
+                },
+                pages: {
+                  type: 'integer',
+                  minimum: 0
+                }
+              }
+            }
+          }
+        }
+      },
+      responses: {
+        UnauthorizedError: {
+          description: 'Authentication required',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/Error'
+              }
+            }
+          }
+        },
+        ForbiddenError: {
+          description: 'Insufficient permissions',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/Error'
+              }
+            }
+          }
+        },
+        ValidationError: {
+          description: 'Validation failed',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/Error'
+              }
+            }
+          }
+        },
+        NotFoundError: {
+          description: 'Resource not found',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/Error'
+              }
+            }
+          }
+        },
+        RateLimitError: {
+          description: 'Rate limit exceeded',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/Error'
+              }
+            }
+          }
+        }
+      }
+    },
+    security: [
+      {
+        bearerAuth: []
+      }
+    ]
+  },
+  apis: ['./api/v*/routes/*.js', './api/v*/controllers/*.js']
+};
+
+const specs = swaggerJsdoc(options);
+
+// Custom CSS for Swagger UI
+const customCss = `
+  .swagger-ui .topbar { display: none }
+  .swagger-ui .info { margin: 20px 0 }
+  .swagger-ui .scheme-container { background: #f7f7f7; padding: 15px }
+`;
+
+const swaggerOptions = {
+  customCss,
+  customSiteTitle: 'Node.js API Documentation',
+  customfavIcon: '/favicon.ico',
+  swaggerOptions: {
+    persistAuthorization: true,
+    displayRequestDuration: true,
+    docExpansion: 'none',
+    filter: true,
+    showExtensions: true,
+    tryItOutEnabled: true
+  }
+};
+
+module.exports = {
+  specs,
+  swaggerUi,
+  swaggerOptions
+};
+```
+
+**API Design Best Practices:**
+
+1. **Consistent Naming**: Use consistent naming conventions for endpoints and fields
+2. **HTTP Status Codes**: Use appropriate HTTP status codes for different scenarios
+3. **Error Handling**: Implement comprehensive error handling with detailed messages
+4. **Validation**: Validate all input data with clear error messages
+5. **Pagination**: Implement pagination for list endpoints
+6. **Filtering and Sorting**: Allow filtering and sorting of data
+7. **Rate Limiting**: Implement rate limiting to prevent abuse
+8. **Caching**: Use appropriate caching strategies for performance
+9. **Versioning**: Implement proper API versioning strategies
+10. **Documentation**: Maintain comprehensive API documentation
+11. **Security**: Implement authentication, authorization, and input sanitization
+12. **Monitoring**: Add logging and metrics for API usage
+
+Advanced API design patterns ensure scalable, maintainable, and developer-friendly APIs that can evolve over time while maintaining backward compatibility.
+
+---
+
+### Q18: How do you implement comprehensive error handling and logging in Node.js applications?
+**Difficulty: Advanced**
+
+**Answer:**
+Comprehensive error handling and logging are crucial for maintaining robust Node.js applications, enabling effective debugging, monitoring, and troubleshooting in production environments.
+
+**1. Centralized Error Handling System:**
+
+```javascript
+// errors/errorHandler.js - Centralized error handling
+const winston = require('winston');
+const { v4: uuidv4 } = require('uuid');
+
+class AppError extends Error {
+  constructor(message, statusCode, isOperational = true) {
+    super(message);
+    this.statusCode = statusCode;
+    this.isOperational = isOperational;
+    this.timestamp = new Date().toISOString();
+    this.errorId = uuidv4();
+    
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+class ErrorHandler {
+  constructor() {
+    this.logger = winston.createLogger({
+      level: 'info',
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.errors({ stack: true }),
+        winston.format.json()
+      ),
+      defaultMeta: { service: 'nodejs-app' },
+      transports: [
+        new winston.transports.File({ 
+          filename: 'logs/error.log', 
+          level: 'error',
+          maxsize: 5242880, // 5MB
+          maxFiles: 5
+        }),
+        new winston.transports.File({ 
+          filename: 'logs/combined.log',
+          maxsize: 5242880,
+          maxFiles: 10
+        })
+      ]
+    });
+
+    if (process.env.NODE_ENV !== 'production') {
+      this.logger.add(new winston.transports.Console({
+        format: winston.format.combine(
+          winston.format.colorize(),
+          winston.format.simple()
+        )
+      }));
+    }
+  }
+
+  /**
+   * Handle operational errors
+   */
+  handleError(error, req = null, res = null) {
+    const errorInfo = {
+      errorId: error.errorId || uuidv4(),
+      message: error.message,
+      stack: error.stack,
+      statusCode: error.statusCode || 500,
+      timestamp: error.timestamp || new Date().toISOString(),
+      isOperational: error.isOperational || false,
+      url: req?.originalUrl,
+      method: req?.method,
+      userAgent: req?.get('User-Agent'),
+      ip: req?.ip,
+      userId: req?.user?.id
+    };
+
+    // Log error
+    this.logger.error('Application Error', errorInfo);
+
+    // Send error response if response object is available
+    if (res && !res.headersSent) {
+      const statusCode = error.statusCode || 500;
+      const message = error.isOperational ? error.message : 'Internal Server Error';
+      
+      res.status(statusCode).json({
+        success: false,
+        error: message,
+        errorId: errorInfo.errorId,
+        timestamp: errorInfo.timestamp,
+        ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+      });
+    }
+
+    // Handle critical errors
+    if (!error.isOperational) {
+      this.handleCriticalError(error);
+    }
+  }
+
+  /**
+   * Handle critical/programming errors
+   */
+  handleCriticalError(error) {
+    this.logger.error('Critical Error - Shutting down application', {
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+
+    // Graceful shutdown
+    process.exit(1);
+  }
+
+  /**
+   * Express error middleware
+   */
+  expressErrorHandler() {
+    return (error, req, res, next) => {
+      this.handleError(error, req, res);
+    };
+  }
+
+  /**
+   * Async error wrapper
+   */
+  asyncErrorHandler(fn) {
+    return (req, res, next) => {
+      Promise.resolve(fn(req, res, next)).catch(next);
+    };
+  }
+
+  /**
+   * Validation error handler
+   */
+  handleValidationError(error) {
+    const errors = Object.values(error.errors).map(err => ({
+      field: err.path,
+      message: err.message,
+      value: err.value
+    }));
+
+    return new AppError('Validation Error', 400, true, { errors });
+  }
+
+  /**
+   * Database error handler
+   */
+  handleDatabaseError(error) {
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      return new AppError(`Duplicate ${field}: ${error.keyValue[field]}`, 400);
+    }
+
+    if (error.name === 'CastError') {
+      return new AppError(`Invalid ${error.path}: ${error.value}`, 400);
+    }
+
+    return new AppError('Database operation failed', 500, false);
+  }
+}
+
+module.exports = { AppError, ErrorHandler };
+```
+
+**2. Advanced Logging Configuration:**
+
+```javascript
+// logging/logger.js - Advanced logging setup
+const winston = require('winston');
+const DailyRotateFile = require('winston-daily-rotate-file');
+const { ElasticsearchTransport } = require('winston-elasticsearch');
+const path = require('path');
+
+class Logger {
+  constructor() {
+    this.logDir = path.join(process.cwd(), 'logs');
+    this.createLogger();
+  }
+
+  createLogger() {
+    // Custom format for structured logging
+    const customFormat = winston.format.combine(
+      winston.format.timestamp({
+        format: 'YYYY-MM-DD HH:mm:ss'
+      }),
+      winston.format.errors({ stack: true }),
+      winston.format.printf(({ timestamp, level, message, stack, ...meta }) => {
+        const logObject = {
+          timestamp,
+          level,
+          message,
+          ...meta
+        };
+
+        if (stack) {
+          logObject.stack = stack;
+        }
+
+        return JSON.stringify(logObject);
+      })
+    );
+
+    // Transport configurations
+    const transports = [
+      // Daily rotate file for all logs
+      new DailyRotateFile({
+        filename: path.join(this.logDir, 'application-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        maxSize: '20m',
+        maxFiles: '14d',
+        format: customFormat
+      }),
+
+      // Daily rotate file for error logs only
+      new DailyRotateFile({
+        filename: path.join(this.logDir, 'error-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        level: 'error',
+        maxSize: '20m',
+        maxFiles: '30d',
+        format: customFormat
+      }),
+
+      // Daily rotate file for HTTP access logs
+      new DailyRotateFile({
+        filename: path.join(this.logDir, 'access-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        maxSize: '50m',
+        maxFiles: '7d',
+        format: winston.format.combine(
+          winston.format.timestamp(),
+          winston.format.json()
+        )
+      })
+    ];
+
+    // Add console transport for development
+    if (process.env.NODE_ENV !== 'production') {
+      transports.push(
+        new winston.transports.Console({
+          format: winston.format.combine(
+            winston.format.colorize(),
+            winston.format.timestamp({ format: 'HH:mm:ss' }),
+            winston.format.printf(({ timestamp, level, message, ...meta }) => {
+              const metaStr = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
+              return `${timestamp} [${level}]: ${message} ${metaStr}`;
+            })
+          )
+        })
+      );
+    }
+
+    // Add Elasticsearch transport for production
+    if (process.env.NODE_ENV === 'production' && process.env.ELASTICSEARCH_URL) {
+      transports.push(
+        new ElasticsearchTransport({
+          level: 'info',
+          clientOpts: {
+            node: process.env.ELASTICSEARCH_URL,
+            auth: {
+              username: process.env.ELASTICSEARCH_USERNAME,
+              password: process.env.ELASTICSEARCH_PASSWORD
+            }
+          },
+          index: 'nodejs-app-logs',
+          indexTemplate: {
+            name: 'nodejs-app-logs-template',
+            body: {
+              index_patterns: ['nodejs-app-logs-*'],
+              settings: {
+                number_of_shards: 1,
+                number_of_replicas: 1
+              },
+              mappings: {
+                properties: {
+                  '@timestamp': { type: 'date' },
+                  level: { type: 'keyword' },
+                  message: { type: 'text' },
+                  stack: { type: 'text' },
+                  userId: { type: 'keyword' },
+                  requestId: { type: 'keyword' },
+                  url: { type: 'keyword' },
+                  method: { type: 'keyword' },
+                  statusCode: { type: 'integer' },
+                  responseTime: { type: 'float' }
+                }
+              }
+            }
+          }
+        })
+      );
+    }
+
+    this.logger = winston.createLogger({
+      level: process.env.LOG_LEVEL || 'info',
+      format: customFormat,
+      defaultMeta: {
+        service: 'nodejs-app',
+        version: process.env.APP_VERSION || '1.0.0',
+        environment: process.env.NODE_ENV || 'development'
+      },
+      transports,
+      exitOnError: false
+    });
+
+    // Handle uncaught exceptions and unhandled rejections
+    this.logger.exceptions.handle(
+      new winston.transports.File({ 
+        filename: path.join(this.logDir, 'exceptions.log'),
+        maxsize: 5242880,
+        maxFiles: 5
+      })
+    );
+
+    this.logger.rejections.handle(
+      new winston.transports.File({ 
+        filename: path.join(this.logDir, 'rejections.log'),
+        maxsize: 5242880,
+        maxFiles: 5
+      })
+    );
+  }
+
+  /**
+   * HTTP request logging middleware
+   */
+  httpLogger() {
+    return (req, res, next) => {
+      const start = Date.now();
+      const requestId = req.headers['x-request-id'] || require('uuid').v4();
+      
+      // Add request ID to request object
+      req.requestId = requestId;
+      res.setHeader('X-Request-ID', requestId);
+
+      // Log request
+      this.logger.info('HTTP Request', {
+        requestId,
+        method: req.method,
+        url: req.originalUrl,
+        userAgent: req.get('User-Agent'),
+        ip: req.ip,
+        userId: req.user?.id,
+        body: req.method !== 'GET' ? req.body : undefined
+      });
+
+      // Override res.end to log response
+      const originalEnd = res.end;
+      res.end = function(chunk, encoding) {
+        const responseTime = Date.now() - start;
+        
+        // Log response
+        this.logger.info('HTTP Response', {
+          requestId,
+          method: req.method,
+          url: req.originalUrl,
+          statusCode: res.statusCode,
+          responseTime,
+          contentLength: res.get('Content-Length')
+        });
+
+        originalEnd.call(this, chunk, encoding);
+      }.bind(this);
+
+      next();
+    };
+  }
+
+  /**
+   * Performance monitoring
+   */
+  performanceLogger(operation) {
+    const start = process.hrtime.bigint();
+    
+    return {
+      end: (metadata = {}) => {
+        const end = process.hrtime.bigint();
+        const duration = Number(end - start) / 1000000; // Convert to milliseconds
+        
+        this.logger.info('Performance Metric', {
+          operation,
+          duration,
+          ...metadata
+        });
+      }
+    };
+  }
+
+  /**
+   * Security event logging
+   */
+  securityLogger(event, details = {}) {
+    this.logger.warn('Security Event', {
+      event,
+      timestamp: new Date().toISOString(),
+      ...details
+    });
+  }
+
+  /**
+   * Business logic logging
+   */
+  businessLogger(event, data = {}) {
+    this.logger.info('Business Event', {
+      event,
+      timestamp: new Date().toISOString(),
+      ...data
+    });
+  }
+
+  // Expose winston logger methods
+  info(message, meta = {}) {
+    this.logger.info(message, meta);
+  }
+
+  error(message, meta = {}) {
+    this.logger.error(message, meta);
+  }
+
+  warn(message, meta = {}) {
+    this.logger.warn(message, meta);
+  }
+
+  debug(message, meta = {}) {
+    this.logger.debug(message, meta);
+  }
+}
+
+module.exports = new Logger();
+```
+
+**3. Error Monitoring and Alerting:**
+
+```javascript
+// monitoring/errorMonitor.js - Error monitoring and alerting
+const nodemailer = require('nodemailer');
+const slack = require('@slack/webhook');
+const logger = require('../logging/logger');
+
+class ErrorMonitor {
+  constructor() {
+    this.errorCounts = new Map();
+    this.alertThresholds = {
+      error: { count: 10, timeWindow: 300000 }, // 10 errors in 5 minutes
+      critical: { count: 5, timeWindow: 60000 }  // 5 critical errors in 1 minute
+    };
+    
+    this.setupEmailTransporter();
+    this.setupSlackWebhook();
+    this.startMonitoring();
+  }
+
+  setupEmailTransporter() {
+    if (process.env.SMTP_HOST) {
+      this.emailTransporter = nodemailer.createTransporter({
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT || 587,
+        secure: process.env.SMTP_SECURE === 'true',
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS
+        }
+      });
+    }
+  }
+
+  setupSlackWebhook() {
+    if (process.env.SLACK_WEBHOOK_URL) {
+      this.slackWebhook = new slack.IncomingWebhook(process.env.SLACK_WEBHOOK_URL);
+    }
+  }
+
+  /**
+   * Monitor error patterns
+   */
+  monitorError(error, context = {}) {
+    const errorKey = `${error.name}:${error.message}`;
+    const now = Date.now();
+    
+    // Initialize error tracking
+    if (!this.errorCounts.has(errorKey)) {
+      this.errorCounts.set(errorKey, []);
+    }
+    
+    const errorTimes = this.errorCounts.get(errorKey);
+    errorTimes.push(now);
+    
+    // Clean old entries
+    const threshold = now - this.alertThresholds.error.timeWindow;
+    this.errorCounts.set(errorKey, errorTimes.filter(time => time > threshold));
+    
+    // Check if alert threshold is reached
+    const recentErrors = this.errorCounts.get(errorKey);
+    if (recentErrors.length >= this.alertThresholds.error.count) {
+      this.sendAlert('error', {
+        errorType: error.name,
+        message: error.message,
+        count: recentErrors.length,
+        timeWindow: this.alertThresholds.error.timeWindow / 1000,
+        context
+      });
+      
+      // Reset counter after alert
+      this.errorCounts.set(errorKey, []);
+    }
+  }
+
+  /**
+   * Send alert notifications
+   */
+  async sendAlert(severity, details) {
+    const alertMessage = this.formatAlertMessage(severity, details);
+    
+    try {
+      // Send email alert
+      if (this.emailTransporter) {
+        await this.sendEmailAlert(severity, alertMessage, details);
+      }
+      
+      // Send Slack alert
+      if (this.slackWebhook) {
+        await this.sendSlackAlert(severity, alertMessage, details);
+      }
+      
+      logger.info('Alert sent successfully', { severity, details });
+    } catch (error) {
+      logger.error('Failed to send alert', { error: error.message, severity, details });
+    }
+  }
+
+  formatAlertMessage(severity, details) {
+    return {
+      title: `${severity.toUpperCase()} Alert - Node.js Application`,
+      summary: `${details.count} ${details.errorType} errors in ${details.timeWindow} seconds`,
+      details: {
+        ...details,
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV,
+        server: process.env.SERVER_NAME || 'unknown'
+      }
+    };
+  }
+
+  async sendEmailAlert(severity, message, details) {
+    const mailOptions = {
+      from: process.env.ALERT_FROM_EMAIL,
+      to: process.env.ALERT_TO_EMAIL,
+      subject: message.title,
+      html: `
+        <h2>${message.title}</h2>
+        <p><strong>Summary:</strong> ${message.summary}</p>
+        <h3>Details:</h3>
+        <ul>
+          <li><strong>Error Type:</strong> ${details.errorType}</li>
+          <li><strong>Message:</strong> ${details.message}</li>
+          <li><strong>Count:</strong> ${details.count}</li>
+          <li><strong>Time Window:</strong> ${details.timeWindow} seconds</li>
+          <li><strong>Environment:</strong> ${process.env.NODE_ENV}</li>
+          <li><strong>Timestamp:</strong> ${message.details.timestamp}</li>
+        </ul>
+        ${details.context ? `<h3>Context:</h3><pre>${JSON.stringify(details.context, null, 2)}</pre>` : ''}
+      `
+    };
+
+    await this.emailTransporter.sendMail(mailOptions);
+  }
+
+  async sendSlackAlert(severity, message, details) {
+    const color = severity === 'critical' ? 'danger' : 'warning';
+    
+    const slackMessage = {
+      text: message.title,
+      attachments: [
+        {
+          color,
+          title: message.summary,
+          fields: [
+            {
+              title: 'Error Type',
+              value: details.errorType,
+              short: true
+            },
+            {
+              title: 'Count',
+              value: details.count.toString(),
+              short: true
+            },
+            {
+              title: 'Environment',
+              value: process.env.NODE_ENV,
+              short: true
+            },
+            {
+              title: 'Server',
+              value: process.env.SERVER_NAME || 'unknown',
+              short: true
+            }
+          ],
+          footer: 'Node.js Error Monitor',
+          ts: Math.floor(Date.now() / 1000)
+        }
+      ]
+    };
+
+    await this.slackWebhook.send(slackMessage);
+  }
+
+  /**
+   * Start monitoring process
+   */
+  startMonitoring() {
+    // Clean up old error counts every minute
+    setInterval(() => {
+      const now = Date.now();
+      const threshold = now - this.alertThresholds.error.timeWindow;
+      
+      for (const [key, times] of this.errorCounts.entries()) {
+        const filteredTimes = times.filter(time => time > threshold);
+        if (filteredTimes.length === 0) {
+          this.errorCounts.delete(key);
+        } else {
+          this.errorCounts.set(key, filteredTimes);
+        }
+      }
+    }, 60000);
+
+    logger.info('Error monitoring started');
+  }
+
+  /**
+   * Health check for monitoring system
+   */
+  getHealthStatus() {
+    return {
+      status: 'healthy',
+      activeErrorTypes: this.errorCounts.size,
+      emailConfigured: !!this.emailTransporter,
+      slackConfigured: !!this.slackWebhook,
+      uptime: process.uptime()
+    };
+  }
+}
+
+module.exports = new ErrorMonitor();
+```
+
+**4. Application Integration:**
+
+```javascript
+// app.js - Main application with error handling
+const express = require('express');
+const helmet = require('helmet');
+const cors = require('cors');
+const { ErrorHandler, AppError } = require('./errors/errorHandler');
+const logger = require('./logging/logger');
+const errorMonitor = require('./monitoring/errorMonitor');
+
+const app = express();
+const errorHandler = new ErrorHandler();
+
+// Security middleware
+app.use(helmet());
+app.use(cors());
+
+// Request parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Logging middleware
+app.use(logger.httpLogger());
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    errorMonitor: errorMonitor.getHealthStatus()
+  });
+});
+
+// API routes
+app.use('/api/v1', require('./routes'));
+
+// 404 handler
+app.all('*', (req, res, next) => {
+  next(new AppError(`Route ${req.originalUrl} not found`, 404));
+});
+
+// Global error handler
+app.use(errorHandler.expressErrorHandler());
+
+// Process error handlers
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception', { error: error.message, stack: error.stack });
+  errorMonitor.monitorError(error, { type: 'uncaughtException' });
+  errorHandler.handleCriticalError(error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection', { reason, promise });
+  const error = new Error(`Unhandled Rejection: ${reason}`);
+  errorMonitor.monitorError(error, { type: 'unhandledRejection' });
+  errorHandler.handleCriticalError(error);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, shutting down gracefully');
+  process.exit(0);
+});
+
+module.exports = app;
+```
+
+**Error Handling Best Practices:**
+
+1. **Centralized Error Handling**: Use a centralized error handler for consistent error processing
+2. **Structured Logging**: Implement structured logging with proper metadata
+3. **Error Classification**: Distinguish between operational and programming errors
+4. **Monitoring and Alerting**: Set up real-time error monitoring and alerting
+5. **Graceful Degradation**: Handle errors gracefully without crashing the application
+6. **Security**: Don't expose sensitive information in error messages
+7. **Performance**: Use efficient logging mechanisms that don't impact performance
+8. **Correlation IDs**: Use request IDs for tracing errors across services
+9. **Error Recovery**: Implement retry mechanisms and circuit breakers
+10. **Documentation**: Document error codes and handling procedures
+
+Comprehensive error handling and logging ensure application reliability, facilitate debugging, and provide insights for continuous improvement.
+
+---
+
+### Q19: How do you build real-time applications with WebSockets and Socket.io in Node.js?
+**Difficulty: Advanced**
+
+**Answer:**
+Building real-time applications requires implementing WebSocket connections, managing real-time communication patterns, handling scaling challenges, and ensuring reliable message delivery.
+
+**1. Advanced Socket.io Server Implementation:**
+
+```javascript
+// server/socketServer.js - Advanced Socket.io server
+const socketIo = require('socket.io');
+const Redis = require('ioredis');
+const jwt = require('jsonwebtoken');
+const { RateLimiterRedis } = require('rate-limiter-flexible');
+const logger = require('../logging/logger');
+
+class SocketServer {
+  constructor(httpServer) {
+    this.io = socketIo(httpServer, {
+      cors: {
+        origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+        methods: ['GET', 'POST'],
+        credentials: true
+      },
+      transports: ['websocket', 'polling'],
+      pingTimeout: 60000,
+      pingInterval: 25000,
+      upgradeTimeout: 30000,
+      maxHttpBufferSize: 1e6, // 1MB
+      allowEIO3: true
+    });
+
+    this.redis = new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: process.env.REDIS_PORT || 6379,
+      password: process.env.REDIS_PASSWORD,
+      retryDelayOnFailover: 100,
+      maxRetriesPerRequest: 3
+    });
+
+    this.setupRedisAdapter();
+    this.setupRateLimiting();
+    this.setupMiddleware();
+    this.setupEventHandlers();
+    this.setupNamespaces();
+    
+    this.connectedUsers = new Map();
+    this.rooms = new Map();
+    this.messageQueue = [];
+  }
+
+  /**
+   * Setup Redis adapter for scaling
+   */
+  setupRedisAdapter() {
+    const redisAdapter = require('socket.io-redis');
+    this.io.adapter(redisAdapter({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: process.env.REDIS_PORT || 6379,
+      password: process.env.REDIS_PASSWORD
+    }));
+  }
+
+  /**
+   * Setup rate limiting
+   */
+  setupRateLimiting() {
+    this.rateLimiter = new RateLimiterRedis({
+      storeClient: this.redis,
+      keyPrefix: 'socket_rate_limit',
+      points: 100, // Number of requests
+      duration: 60, // Per 60 seconds
+      blockDuration: 60 // Block for 60 seconds if limit exceeded
+    });
+  }
+
+  /**
+   * Setup authentication and middleware
+   */
+  setupMiddleware() {
+    // Authentication middleware
+    this.io.use(async (socket, next) => {
+      try {
+        const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
+        
+        if (!token) {
+          return next(new Error('Authentication token required'));
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await this.getUserById(decoded.userId);
+        
+        if (!user) {
+          return next(new Error('User not found'));
+        }
+
+        socket.userId = user.id;
+        socket.user = user;
+        next();
+      } catch (error) {
+        logger.error('Socket authentication failed', { error: error.message });
+        next(new Error('Authentication failed'));
+      }
+    });
+
+    // Rate limiting middleware
+    this.io.use(async (socket, next) => {
+      try {
+        await this.rateLimiter.consume(socket.handshake.address);
+        next();
+      } catch (rejRes) {
+        logger.warn('Socket rate limit exceeded', { 
+          ip: socket.handshake.address,
+          remainingPoints: rejRes.remainingPoints,
+          msBeforeNext: rejRes.msBeforeNext
+        });
+        next(new Error('Rate limit exceeded'));
+      }
+    });
+
+    // Logging middleware
+    this.io.use((socket, next) => {
+      socket.onAny((eventName, ...args) => {
+        logger.info('Socket event received', {
+          socketId: socket.id,
+          userId: socket.userId,
+          event: eventName,
+          timestamp: new Date().toISOString()
+        });
+      });
+      next();
+    });
+  }
+
+  /**
+   * Setup main event handlers
+   */
+  setupEventHandlers() {
+    this.io.on('connection', (socket) => {
+      this.handleConnection(socket);
+    });
+  }
+
+  /**
+   * Handle new socket connection
+   */
+  handleConnection(socket) {
+    logger.info('User connected', {
+      socketId: socket.id,
+      userId: socket.userId,
+      userAgent: socket.handshake.headers['user-agent']
+    });
+
+    // Store user connection
+    this.connectedUsers.set(socket.userId, {
+      socketId: socket.id,
+      user: socket.user,
+      connectedAt: new Date(),
+      lastActivity: new Date()
+    });
+
+    // Join user to their personal room
+    socket.join(`user:${socket.userId}`);
+
+    // Send pending messages
+    this.sendPendingMessages(socket);
+
+    // Setup event handlers
+    this.setupSocketEventHandlers(socket);
+
+    // Handle disconnection
+    socket.on('disconnect', (reason) => {
+      this.handleDisconnection(socket, reason);
+    });
+  }
+
+  /**
+   * Setup individual socket event handlers
+   */
+  setupSocketEventHandlers(socket) {
+    // Join room
+    socket.on('join_room', async (data) => {
+      try {
+        await this.handleJoinRoom(socket, data);
+      } catch (error) {
+        socket.emit('error', { message: error.message });
+      }
+    });
+
+    // Leave room
+    socket.on('leave_room', async (data) => {
+      try {
+        await this.handleLeaveRoom(socket, data);
+      } catch (error) {
+        socket.emit('error', { message: error.message });
+      }
+    });
+
+    // Send message
+    socket.on('send_message', async (data) => {
+      try {
+        await this.handleSendMessage(socket, data);
+      } catch (error) {
+        socket.emit('error', { message: error.message });
+      }
+    });
+
+    // Typing indicators
+    socket.on('typing_start', (data) => {
+      this.handleTypingStart(socket, data);
+    });
+
+    socket.on('typing_stop', (data) => {
+      this.handleTypingStop(socket, data);
+    });
+
+    // File sharing
+    socket.on('share_file', async (data) => {
+      try {
+        await this.handleFileShare(socket, data);
+      } catch (error) {
+        socket.emit('error', { message: error.message });
+      }
+    });
+
+    // Video call signaling
+    socket.on('call_user', (data) => {
+      this.handleCallUser(socket, data);
+    });
+
+    socket.on('call_response', (data) => {
+      this.handleCallResponse(socket, data);
+    });
+
+    socket.on('ice_candidate', (data) => {
+      this.handleIceCandidate(socket, data);
+    });
+
+    // Presence updates
+    socket.on('update_presence', (data) => {
+      this.handlePresenceUpdate(socket, data);
+    });
+  }
+
+  /**
+   * Handle joining a room
+   */
+  async handleJoinRoom(socket, { roomId, password }) {
+    // Validate room access
+    const room = await this.validateRoomAccess(socket.userId, roomId, password);
+    
+    if (!room) {
+      throw new Error('Access denied to room');
+    }
+
+    // Join the room
+    socket.join(roomId);
+    
+    // Update room participants
+    if (!this.rooms.has(roomId)) {
+      this.rooms.set(roomId, new Set());
+    }
+    this.rooms.get(roomId).add(socket.userId);
+
+    // Notify other participants
+    socket.to(roomId).emit('user_joined', {
+      userId: socket.userId,
+      user: socket.user,
+      timestamp: new Date().toISOString()
+    });
+
+    // Send room info to user
+    const participants = Array.from(this.rooms.get(roomId))
+      .map(userId => this.connectedUsers.get(userId)?.user)
+      .filter(Boolean);
+
+    socket.emit('room_joined', {
+      roomId,
+      participants,
+      roomInfo: room
+    });
+
+    logger.info('User joined room', {
+      userId: socket.userId,
+      roomId,
+      participantCount: participants.length
+    });
+  }
+
+  /**
+   * Handle leaving a room
+   */
+  async handleLeaveRoom(socket, { roomId }) {
+    socket.leave(roomId);
+    
+    // Update room participants
+    if (this.rooms.has(roomId)) {
+      this.rooms.get(roomId).delete(socket.userId);
+      
+      // Remove room if empty
+      if (this.rooms.get(roomId).size === 0) {
+        this.rooms.delete(roomId);
+      }
+    }
+
+    // Notify other participants
+    socket.to(roomId).emit('user_left', {
+      userId: socket.userId,
+      timestamp: new Date().toISOString()
+    });
+
+    socket.emit('room_left', { roomId });
+
+    logger.info('User left room', {
+      userId: socket.userId,
+      roomId
+    });
+  }
+
+  /**
+   * Handle sending messages
+   */
+  async handleSendMessage(socket, { roomId, message, type = 'text', metadata = {} }) {
+    // Validate message
+    if (!message || message.trim().length === 0) {
+      throw new Error('Message cannot be empty');
+    }
+
+    if (message.length > 5000) {
+      throw new Error('Message too long');
+    }
+
+    // Check if user is in room
+    if (!socket.rooms.has(roomId)) {
+      throw new Error('You are not in this room');
+    }
+
+    // Create message object
+    const messageObj = {
+      id: this.generateMessageId(),
+      roomId,
+      userId: socket.userId,
+      user: socket.user,
+      message: message.trim(),
+      type,
+      metadata,
+      timestamp: new Date().toISOString(),
+      edited: false,
+      reactions: {}
+    };
+
+    // Save message to database
+    await this.saveMessage(messageObj);
+
+    // Broadcast message to room
+    this.io.to(roomId).emit('new_message', messageObj);
+
+    // Update user activity
+    this.updateUserActivity(socket.userId);
+
+    logger.info('Message sent', {
+      messageId: messageObj.id,
+      userId: socket.userId,
+      roomId,
+      type
+    });
+  }
+
+  /**
+   * Handle typing indicators
+   */
+  handleTypingStart(socket, { roomId }) {
+    socket.to(roomId).emit('user_typing', {
+      userId: socket.userId,
+      user: socket.user,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  handleTypingStop(socket, { roomId }) {
+    socket.to(roomId).emit('user_stopped_typing', {
+      userId: socket.userId,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  /**
+   * Handle file sharing
+   */
+  async handleFileShare(socket, { roomId, fileInfo, fileData }) {
+    // Validate file
+    if (!fileInfo || !fileData) {
+      throw new Error('File information and data required');
+    }
+
+    if (fileInfo.size > 10 * 1024 * 1024) { // 10MB limit
+      throw new Error('File too large');
+    }
+
+    // Process and store file
+    const processedFile = await this.processFile(fileInfo, fileData);
+    
+    // Create file message
+    const messageObj = {
+      id: this.generateMessageId(),
+      roomId,
+      userId: socket.userId,
+      user: socket.user,
+      message: `Shared file: ${fileInfo.name}`,
+      type: 'file',
+      metadata: {
+        file: processedFile
+      },
+      timestamp: new Date().toISOString()
+    };
+
+    // Save and broadcast
+    await this.saveMessage(messageObj);
+    this.io.to(roomId).emit('new_message', messageObj);
+
+    logger.info('File shared', {
+      messageId: messageObj.id,
+      userId: socket.userId,
+      roomId,
+      fileName: fileInfo.name,
+      fileSize: fileInfo.size
+    });
+  }
+
+  /**
+   * Handle video call signaling
+   */
+  handleCallUser(socket, { targetUserId, offer, callType = 'video' }) {
+    const targetSocket = this.getSocketByUserId(targetUserId);
+    
+    if (targetSocket) {
+      targetSocket.emit('incoming_call', {
+        callerId: socket.userId,
+        caller: socket.user,
+        offer,
+        callType,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      socket.emit('call_failed', {
+        reason: 'User not available',
+        targetUserId
+      });
+    }
+  }
+
+  handleCallResponse(socket, { callerId, answer, accepted }) {
+    const callerSocket = this.getSocketByUserId(callerId);
+    
+    if (callerSocket) {
+      callerSocket.emit('call_response', {
+        responderId: socket.userId,
+        responder: socket.user,
+        answer,
+        accepted,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  handleIceCandidate(socket, { targetUserId, candidate }) {
+    const targetSocket = this.getSocketByUserId(targetUserId);
+    
+    if (targetSocket) {
+      targetSocket.emit('ice_candidate', {
+        senderId: socket.userId,
+        candidate
+      });
+    }
+  }
+
+  /**
+   * Handle presence updates
+   */
+  handlePresenceUpdate(socket, { status, customMessage }) {
+    const validStatuses = ['online', 'away', 'busy', 'invisible'];
+    
+    if (!validStatuses.includes(status)) {
+      socket.emit('error', { message: 'Invalid status' });
+      return;
+    }
+
+    // Update user presence
+    const userConnection = this.connectedUsers.get(socket.userId);
+    if (userConnection) {
+      userConnection.presence = {
+        status,
+        customMessage,
+        lastUpdated: new Date().toISOString()
+      };
+    }
+
+    // Broadcast presence update to user's contacts
+    this.broadcastPresenceUpdate(socket.userId, { status, customMessage });
+  }
+
+  /**
+   * Handle disconnection
+   */
+  handleDisconnection(socket, reason) {
+    logger.info('User disconnected', {
+      socketId: socket.id,
+      userId: socket.userId,
+      reason
+    });
+
+    // Remove from connected users
+    this.connectedUsers.delete(socket.userId);
+
+    // Remove from all rooms
+    for (const [roomId, participants] of this.rooms.entries()) {
+      if (participants.has(socket.userId)) {
+        participants.delete(socket.userId);
+        
+        // Notify room participants
+        socket.to(roomId).emit('user_disconnected', {
+          userId: socket.userId,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Remove room if empty
+        if (participants.size === 0) {
+          this.rooms.delete(roomId);
+        }
+      }
+    }
+
+    // Update presence to offline
+    this.broadcastPresenceUpdate(socket.userId, { status: 'offline' });
+  }
+
+  /**
+   * Setup namespaces for different features
+   */
+  setupNamespaces() {
+    // Chat namespace
+    const chatNamespace = this.io.of('/chat');
+    chatNamespace.use(this.authMiddleware.bind(this));
+    chatNamespace.on('connection', (socket) => {
+      this.handleChatConnection(socket);
+    });
+
+    // Notifications namespace
+    const notificationNamespace = this.io.of('/notifications');
+    notificationNamespace.use(this.authMiddleware.bind(this));
+    notificationNamespace.on('connection', (socket) => {
+      this.handleNotificationConnection(socket);
+    });
+
+    // Gaming namespace
+    const gameNamespace = this.io.of('/game');
+    gameNamespace.use(this.authMiddleware.bind(this));
+    gameNamespace.on('connection', (socket) => {
+      this.handleGameConnection(socket);
+    });
+  }
+
+  /**
+   * Utility methods
+   */
+  generateMessageId() {
+    return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  getSocketByUserId(userId) {
+    const userConnection = this.connectedUsers.get(userId);
+    return userConnection ? this.io.sockets.sockets.get(userConnection.socketId) : null;
+  }
+
+  updateUserActivity(userId) {
+    const userConnection = this.connectedUsers.get(userId);
+    if (userConnection) {
+      userConnection.lastActivity = new Date();
+    }
+  }
+
+  async broadcastPresenceUpdate(userId, presence) {
+    // Get user's contacts and broadcast presence update
+    const contacts = await this.getUserContacts(userId);
+    
+    contacts.forEach(contactId => {
+      const contactSocket = this.getSocketByUserId(contactId);
+      if (contactSocket) {
+        contactSocket.emit('presence_update', {
+          userId,
+          presence,
+          timestamp: new Date().toISOString()
+        });
+      }
+    });
+  }
+
+  /**
+   * Get server statistics
+   */
+  getStats() {
+    return {
+      connectedUsers: this.connectedUsers.size,
+      activeRooms: this.rooms.size,
+      totalSockets: this.io.engine.clientsCount,
+      uptime: process.uptime(),
+      memory: process.memoryUsage()
+    };
+  }
+
+  // Placeholder methods - implement based on your database/business logic
+  async getUserById(userId) { /* Implementation */ }
+  async validateRoomAccess(userId, roomId, password) { /* Implementation */ }
+  async saveMessage(message) { /* Implementation */ }
+  async processFile(fileInfo, fileData) { /* Implementation */ }
+  async getUserContacts(userId) { /* Implementation */ }
+  async sendPendingMessages(socket) { /* Implementation */ }
+}
+
+module.exports = SocketServer;
+```
+
+**Real-time Application Best Practices:**
+
+1. **Authentication**: Implement proper authentication for WebSocket connections
+2. **Rate Limiting**: Prevent abuse with rate limiting on socket events
+3. **Scaling**: Use Redis adapter for horizontal scaling
+4. **Error Handling**: Implement comprehensive error handling for socket events
+5. **Message Persistence**: Store messages for offline users
+6. **Presence Management**: Track user online/offline status
+7. **Room Management**: Implement proper room joining/leaving logic
+8. **File Handling**: Secure file upload and sharing mechanisms
+9. **Performance**: Optimize for high concurrent connections
+10. **Monitoring**: Track connection metrics and performance
+11. **Security**: Validate all incoming data and implement proper authorization
+12. **Graceful Degradation**: Handle connection failures and reconnection
+
+Real-time applications require careful consideration of scalability, security, and user experience to provide reliable and performant communication features.
+
+---
+
+### Q20: How do you implement advanced Node.js patterns and enterprise architecture?
+**Difficulty: Expert**
+
+**Answer:**
+Advanced Node.js patterns and enterprise architecture involve implementing sophisticated design patterns, architectural principles, and best practices for building scalable, maintainable, and robust enterprise-grade applications.
+
+**1. Domain-Driven Design (DDD) Implementation:**
+
+```javascript
+// domain/entities/User.js - Domain Entity
+class User {
+  constructor(id, email, profile, preferences) {
+    this.id = id;
+    this.email = email;
+    this.profile = profile;
+    this.preferences = preferences;
+    this.events = [];
+  }
+
+  updateProfile(newProfile) {
+    if (!this.isValidProfile(newProfile)) {
+      throw new Error('Invalid profile data');
+    }
+    
+    const oldProfile = { ...this.profile };
+    this.profile = { ...this.profile, ...newProfile };
+    
+    this.addEvent(new ProfileUpdatedEvent(this.id, oldProfile, this.profile));
+  }
+
+  changeEmail(newEmail) {
+    if (!this.isValidEmail(newEmail)) {
+      throw new Error('Invalid email format');
+    }
+    
+    const oldEmail = this.email;
+    this.email = newEmail;
+    
+    this.addEvent(new EmailChangedEvent(this.id, oldEmail, newEmail));
+  }
+
+  addEvent(event) {
+    this.events.push(event);
+  }
+
+  clearEvents() {
+    this.events = [];
+  }
+
+  isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  isValidProfile(profile) {
+    return profile && typeof profile === 'object' && profile.firstName && profile.lastName;
+  }
+}
+
+// domain/valueObjects/Email.js - Value Object
+class Email {
+  constructor(value) {
+    if (!this.isValid(value)) {
+      throw new Error('Invalid email format');
+    }
+    this.value = value;
+  }
+
+  isValid(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  equals(other) {
+    return other instanceof Email && this.value === other.value;
+  }
+
+  toString() {
+    return this.value;
+  }
+}
+
+// domain/aggregates/UserAggregate.js - Aggregate Root
+class UserAggregate {
+  constructor(user) {
+    this.user = user;
+    this.version = 0;
+  }
+
+  updateProfile(profileData) {
+    this.user.updateProfile(profileData);
+    this.version++;
+  }
+
+  changeEmail(newEmail) {
+    this.user.changeEmail(newEmail);
+    this.version++;
+  }
+
+  getUncommittedEvents() {
+    return this.user.events;
+  }
+
+  markEventsAsCommitted() {
+    this.user.clearEvents();
+  }
+}
+
+// domain/repositories/UserRepository.js - Repository Interface
+class UserRepository {
+  async findById(id) {
+    throw new Error('Method must be implemented');
+  }
+
+  async findByEmail(email) {
+    throw new Error('Method must be implemented');
+  }
+
+  async save(userAggregate) {
+    throw new Error('Method must be implemented');
+  }
+
+  async delete(id) {
+    throw new Error('Method must be implemented');
+  }
+}
+
+module.exports = { User, Email, UserAggregate, UserRepository };
+```
+
+**2. CQRS (Command Query Responsibility Segregation) Pattern:**
+
+```javascript
+// application/commands/UpdateUserProfileCommand.js
+class UpdateUserProfileCommand {
+  constructor(userId, profileData, requestedBy) {
+    this.userId = userId;
+    this.profileData = profileData;
+    this.requestedBy = requestedBy;
+    this.timestamp = new Date();
+  }
+}
+
+// application/commandHandlers/UpdateUserProfileHandler.js
+class UpdateUserProfileHandler {
+  constructor(userRepository, eventBus, logger) {
+    this.userRepository = userRepository;
+    this.eventBus = eventBus;
+    this.logger = logger;
+  }
+
+  async handle(command) {
+    try {
+      // Load aggregate
+      const userAggregate = await this.userRepository.findById(command.userId);
+      
+      if (!userAggregate) {
+        throw new Error('User not found');
+      }
+
+      // Execute business logic
+      userAggregate.updateProfile(command.profileData);
+
+      // Save aggregate
+      await this.userRepository.save(userAggregate);
+
+      // Publish events
+      const events = userAggregate.getUncommittedEvents();
+      for (const event of events) {
+        await this.eventBus.publish(event);
+      }
+      
+      userAggregate.markEventsAsCommitted();
+
+      this.logger.info('User profile updated successfully', {
+        userId: command.userId,
+        requestedBy: command.requestedBy
+      });
+
+      return { success: true, userId: command.userId };
+    } catch (error) {
+      this.logger.error('Failed to update user profile', {
+        error: error.message,
+        userId: command.userId,
+        command
+      });
+      throw error;
+    }
+  }
+}
+
+// application/queries/GetUserProfileQuery.js
+class GetUserProfileQuery {
+  constructor(userId, includePreferences = false) {
+    this.userId = userId;
+    this.includePreferences = includePreferences;
+  }
+}
+
+// application/queryHandlers/GetUserProfileHandler.js
+class GetUserProfileHandler {
+  constructor(readModelRepository, cache, logger) {
+    this.readModelRepository = readModelRepository;
+    this.cache = cache;
+    this.logger = logger;
+  }
+
+  async handle(query) {
+    try {
+      // Check cache first
+      const cacheKey = `user_profile_${query.userId}_${query.includePreferences}`;
+      const cachedResult = await this.cache.get(cacheKey);
+      
+      if (cachedResult) {
+        this.logger.debug('User profile retrieved from cache', { userId: query.userId });
+        return JSON.parse(cachedResult);
+      }
+
+      // Query read model
+      const userProfile = await this.readModelRepository.getUserProfile(
+        query.userId,
+        query.includePreferences
+      );
+
+      if (!userProfile) {
+        throw new Error('User profile not found');
+      }
+
+      // Cache result
+      await this.cache.setex(cacheKey, 300, JSON.stringify(userProfile)); // 5 minutes
+
+      this.logger.debug('User profile retrieved from database', { userId: query.userId });
+      return userProfile;
+    } catch (error) {
+      this.logger.error('Failed to get user profile', {
+        error: error.message,
+        userId: query.userId
+      });
+      throw error;
+    }
+  }
+}
+
+module.exports = {
+  UpdateUserProfileCommand,
+  UpdateUserProfileHandler,
+  GetUserProfileQuery,
+  GetUserProfileHandler
+};
+```
+
+**3. Event Sourcing Implementation:**
+
+```javascript
+// infrastructure/eventStore/EventStore.js
+const { v4: uuidv4 } = require('uuid');
+
+class EventStore {
+  constructor(database, logger) {
+    this.database = database;
+    this.logger = logger;
+  }
+
+  async saveEvents(aggregateId, events, expectedVersion) {
+    const transaction = await this.database.beginTransaction();
+    
+    try {
+      // Check current version
+      const currentVersion = await this.getCurrentVersion(aggregateId, transaction);
+      
+      if (currentVersion !== expectedVersion) {
+        throw new Error(`Concurrency conflict. Expected version ${expectedVersion}, but current version is ${currentVersion}`);
+      }
+
+      // Save events
+      for (let i = 0; i < events.length; i++) {
+        const event = events[i];
+        const eventData = {
+          id: uuidv4(),
+          aggregateId,
+          eventType: event.constructor.name,
+          eventData: JSON.stringify(event),
+          version: expectedVersion + i + 1,
+          timestamp: new Date(),
+          metadata: event.metadata || {}
+        };
+
+        await this.database.query(
+          'INSERT INTO events (id, aggregate_id, event_type, event_data, version, timestamp, metadata) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [eventData.id, eventData.aggregateId, eventData.eventType, eventData.eventData, eventData.version, eventData.timestamp, JSON.stringify(eventData.metadata)],
+          transaction
+        );
+      }
+
+      await transaction.commit();
+      
+      this.logger.info('Events saved successfully', {
+        aggregateId,
+        eventCount: events.length,
+        newVersion: expectedVersion + events.length
+      });
+    } catch (error) {
+      await transaction.rollback();
+      this.logger.error('Failed to save events', {
+        error: error.message,
+        aggregateId,
+        expectedVersion
+      });
+      throw error;
+    }
+  }
+
+  async getEvents(aggregateId, fromVersion = 0) {
+    try {
+      const rows = await this.database.query(
+        'SELECT * FROM events WHERE aggregate_id = ? AND version > ? ORDER BY version ASC',
+        [aggregateId, fromVersion]
+      );
+
+      return rows.map(row => ({
+        id: row.id,
+        aggregateId: row.aggregate_id,
+        eventType: row.event_type,
+        eventData: JSON.parse(row.event_data),
+        version: row.version,
+        timestamp: row.timestamp,
+        metadata: JSON.parse(row.metadata || '{}')
+      }));
+    } catch (error) {
+      this.logger.error('Failed to get events', {
+        error: error.message,
+        aggregateId,
+        fromVersion
+      });
+      throw error;
+    }
+  }
+
+  async getCurrentVersion(aggregateId, transaction = null) {
+    const query = 'SELECT MAX(version) as version FROM events WHERE aggregate_id = ?';
+    const rows = await this.database.query(query, [aggregateId], transaction);
+    return rows[0]?.version || 0;
+  }
+
+  async createSnapshot(aggregateId, aggregateData, version) {
+    try {
+      await this.database.query(
+        'INSERT INTO snapshots (aggregate_id, aggregate_data, version, timestamp) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE aggregate_data = VALUES(aggregate_data), version = VALUES(version), timestamp = VALUES(timestamp)',
+        [aggregateId, JSON.stringify(aggregateData), version, new Date()]
+      );
+
+      this.logger.info('Snapshot created', { aggregateId, version });
+    } catch (error) {
+      this.logger.error('Failed to create snapshot', {
+        error: error.message,
+        aggregateId,
+        version
+      });
+      throw error;
+    }
+  }
+
+  async getSnapshot(aggregateId) {
+    try {
+      const rows = await this.database.query(
+        'SELECT * FROM snapshots WHERE aggregate_id = ? ORDER BY version DESC LIMIT 1',
+        [aggregateId]
+      );
+
+      if (rows.length === 0) {
+        return null;
+      }
+
+      const snapshot = rows[0];
+      return {
+        aggregateId: snapshot.aggregate_id,
+        aggregateData: JSON.parse(snapshot.aggregate_data),
+        version: snapshot.version,
+        timestamp: snapshot.timestamp
+      };
+    } catch (error) {
+      this.logger.error('Failed to get snapshot', {
+        error: error.message,
+        aggregateId
+      });
+      throw error;
+    }
+  }
+}
+
+module.exports = EventStore;
+```
+
+**4. Hexagonal Architecture (Ports and Adapters):**
+
+```javascript
+// ports/UserService.js - Application Port
+class UserService {
+  constructor(userRepository, eventBus, emailService, logger) {
+    this.userRepository = userRepository;
+    this.eventBus = eventBus;
+    this.emailService = emailService;
+    this.logger = logger;
+  }
+
+  async createUser(userData) {
+    // Business logic implementation
+    const user = new User(
+      uuidv4(),
+      new Email(userData.email),
+      userData.profile,
+      userData.preferences || {}
+    );
+
+    const userAggregate = new UserAggregate(user);
+    await this.userRepository.save(userAggregate);
+
+    // Publish domain events
+    const events = userAggregate.getUncommittedEvents();
+    for (const event of events) {
+      await this.eventBus.publish(event);
+    }
+
+    return user;
+  }
+
+  async updateUserProfile(userId, profileData) {
+    const userAggregate = await this.userRepository.findById(userId);
+    
+    if (!userAggregate) {
+      throw new Error('User not found');
+    }
+
+    userAggregate.updateProfile(profileData);
+    await this.userRepository.save(userAggregate);
+
+    // Publish events
+    const events = userAggregate.getUncommittedEvents();
+    for (const event of events) {
+      await this.eventBus.publish(event);
+    }
+
+    return userAggregate.user;
+  }
+}
+
+// adapters/persistence/MongoUserRepository.js - Infrastructure Adapter
+class MongoUserRepository extends UserRepository {
+  constructor(mongoClient, eventStore, logger) {
+    super();
+    this.mongoClient = mongoClient;
+    this.eventStore = eventStore;
+    this.logger = logger;
+    this.collection = mongoClient.db('app').collection('users');
+  }
+
+  async findById(id) {
+    try {
+      // Try to get snapshot first
+      const snapshot = await this.eventStore.getSnapshot(id);
+      let user, version = 0;
+
+      if (snapshot) {
+        user = this.deserializeUser(snapshot.aggregateData);
+        version = snapshot.version;
+      }
+
+      // Get events after snapshot
+      const events = await this.eventStore.getEvents(id, version);
+      
+      if (!user && events.length === 0) {
+        return null;
+      }
+
+      // Replay events
+      if (!user) {
+        user = new User(); // Create empty user
+      }
+
+      for (const event of events) {
+        user = this.applyEvent(user, event);
+      }
+
+      return new UserAggregate(user);
+    } catch (error) {
+      this.logger.error('Failed to find user by ID', {
+        error: error.message,
+        userId: id
+      });
+      throw error;
+    }
+  }
+
+  async findByEmail(email) {
+    try {
+      const userData = await this.collection.findOne({ 'email.value': email });
+      
+      if (!userData) {
+        return null;
+      }
+
+      return this.findById(userData._id);
+    } catch (error) {
+      this.logger.error('Failed to find user by email', {
+        error: error.message,
+        email
+      });
+      throw error;
+    }
+  }
+
+  async save(userAggregate) {
+    try {
+      const events = userAggregate.getUncommittedEvents();
+      
+      if (events.length === 0) {
+        return;
+      }
+
+      // Save events to event store
+      await this.eventStore.saveEvents(
+        userAggregate.user.id,
+        events,
+        userAggregate.version - events.length
+      );
+
+      // Update read model
+      await this.updateReadModel(userAggregate.user);
+
+      // Create snapshot if needed
+      if (userAggregate.version % 10 === 0) {
+        await this.eventStore.createSnapshot(
+          userAggregate.user.id,
+          this.serializeUser(userAggregate.user),
+          userAggregate.version
+        );
+      }
+
+      this.logger.info('User aggregate saved successfully', {
+        userId: userAggregate.user.id,
+        version: userAggregate.version
+      });
+    } catch (error) {
+      this.logger.error('Failed to save user aggregate', {
+        error: error.message,
+        userId: userAggregate.user.id
+      });
+      throw error;
+    }
+  }
+
+  async updateReadModel(user) {
+    await this.collection.replaceOne(
+      { _id: user.id },
+      {
+        _id: user.id,
+        email: user.email,
+        profile: user.profile,
+        preferences: user.preferences,
+        updatedAt: new Date()
+      },
+      { upsert: true }
+    );
+  }
+
+  serializeUser(user) {
+    return {
+      id: user.id,
+      email: user.email,
+      profile: user.profile,
+      preferences: user.preferences
+    };
+  }
+
+  deserializeUser(data) {
+    return new User(data.id, data.email, data.profile, data.preferences);
+  }
+
+  applyEvent(user, eventData) {
+    // Apply event to user based on event type
+    switch (eventData.eventType) {
+      case 'ProfileUpdatedEvent':
+        user.profile = eventData.eventData.newProfile;
+        break;
+      case 'EmailChangedEvent':
+        user.email = eventData.eventData.newEmail;
+        break;
+      // Add more event types as needed
+    }
+    return user;
+  }
+}
+
+// adapters/messaging/RabbitMQEventBus.js - Infrastructure Adapter
+class RabbitMQEventBus {
+  constructor(connection, logger) {
+    this.connection = connection;
+    this.logger = logger;
+    this.channel = null;
+  }
+
+  async initialize() {
+    this.channel = await this.connection.createChannel();
+    await this.channel.assertExchange('domain_events', 'topic', { durable: true });
+  }
+
+  async publish(event) {
+    try {
+      const routingKey = `${event.constructor.name.toLowerCase()}.${event.aggregateId}`;
+      const message = JSON.stringify({
+        eventType: event.constructor.name,
+        eventData: event,
+        timestamp: new Date().toISOString(),
+        metadata: event.metadata || {}
+      });
+
+      await this.channel.publish(
+        'domain_events',
+        routingKey,
+        Buffer.from(message),
+        { persistent: true }
+      );
+
+      this.logger.info('Event published successfully', {
+        eventType: event.constructor.name,
+        routingKey
+      });
+    } catch (error) {
+      this.logger.error('Failed to publish event', {
+        error: error.message,
+        eventType: event.constructor.name
+      });
+      throw error;
+    }
+  }
+
+  async subscribe(eventType, handler) {
+    try {
+      const queueName = `${eventType.toLowerCase()}_handler`;
+      await this.channel.assertQueue(queueName, { durable: true });
+      await this.channel.bindQueue(queueName, 'domain_events', `${eventType.toLowerCase()}.*`);
+
+      await this.channel.consume(queueName, async (message) => {
+        try {
+          const eventData = JSON.parse(message.content.toString());
+          await handler(eventData);
+          this.channel.ack(message);
+        } catch (error) {
+          this.logger.error('Failed to handle event', {
+            error: error.message,
+            eventType
+          });
+          this.channel.nack(message, false, false); // Dead letter queue
+        }
+      });
+
+      this.logger.info('Event subscription created', { eventType });
+    } catch (error) {
+      this.logger.error('Failed to subscribe to event', {
+        error: error.message,
+        eventType
+      });
+      throw error;
+    }
+  }
+}
+
+module.exports = {
+  UserService,
+  MongoUserRepository,
+  RabbitMQEventBus
+};
+```
+
+**5. Dependency Injection Container:**
+
+```javascript
+// infrastructure/container/DIContainer.js
+class DIContainer {
+  constructor() {
+    this.services = new Map();
+    this.singletons = new Map();
+  }
+
+  register(name, factory, options = {}) {
+    this.services.set(name, {
+      factory,
+      singleton: options.singleton || false,
+      dependencies: options.dependencies || []
+    });
+  }
+
+  resolve(name) {
+    const service = this.services.get(name);
+    
+    if (!service) {
+      throw new Error(`Service '${name}' not found`);
+    }
+
+    if (service.singleton && this.singletons.has(name)) {
+      return this.singletons.get(name);
+    }
+
+    // Resolve dependencies
+    const dependencies = service.dependencies.map(dep => this.resolve(dep));
+    
+    // Create instance
+    const instance = service.factory(...dependencies);
+
+    if (service.singleton) {
+      this.singletons.set(name, instance);
+    }
+
+    return instance;
+  }
+
+  registerSingleton(name, factory, dependencies = []) {
+    this.register(name, factory, { singleton: true, dependencies });
+  }
+}
+
+// Setup container
+const container = new DIContainer();
+
+// Register infrastructure services
+container.registerSingleton('logger', () => require('../logging/logger'));
+container.registerSingleton('database', () => require('../database/connection'));
+container.registerSingleton('redis', () => require('../cache/redis'));
+container.registerSingleton('eventStore', (database, logger) => new EventStore(database, logger), ['database', 'logger']);
+
+// Register repositories
+container.registerSingleton('userRepository', (mongoClient, eventStore, logger) => 
+  new MongoUserRepository(mongoClient, eventStore, logger), ['database', 'eventStore', 'logger']);
+
+// Register services
+container.registerSingleton('userService', (userRepository, eventBus, emailService, logger) => 
+  new UserService(userRepository, eventBus, emailService, logger), ['userRepository', 'eventBus', 'emailService', 'logger']);
+
+// Register command handlers
+container.register('updateUserProfileHandler', (userRepository, eventBus, logger) => 
+  new UpdateUserProfileHandler(userRepository, eventBus, logger), ['userRepository', 'eventBus', 'logger']);
+
+module.exports = container;
+```
+
+**Enterprise Architecture Best Practices:**
+
+1. **Domain-Driven Design**: Implement rich domain models with clear boundaries
+2. **CQRS**: Separate command and query responsibilities for better scalability
+3. **Event Sourcing**: Store events as the source of truth for audit and replay capabilities
+4. **Hexagonal Architecture**: Decouple business logic from infrastructure concerns
+5. **Dependency Injection**: Use IoC containers for better testability and maintainability
+6. **Event-Driven Architecture**: Use domain events for loose coupling between bounded contexts
+7. **Clean Architecture**: Follow clean architecture principles with clear layer separation
+8. **Repository Pattern**: Abstract data access logic from business logic
+9. **Unit of Work**: Manage transactions and consistency across aggregates
+10. **Specification Pattern**: Encapsulate business rules and queries
+11. **Factory Pattern**: Create complex objects with proper initialization
+12. **Strategy Pattern**: Implement pluggable algorithms and business rules
+
+Advanced Node.js patterns and enterprise architecture enable building sophisticated, scalable, and maintainable applications that can evolve with changing business requirements while maintaining code quality and performance.
