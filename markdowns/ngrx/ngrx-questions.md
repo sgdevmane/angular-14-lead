@@ -1,21 +1,51 @@
 # NgRx Interview Questions
 
 ## Table of Contents
-1. [Q1: What is NgRx and why would you use it?](#q1-what-is-ngrx-and-why-would-you-use-it)
-2. [Q2: How do you set up NgRx Store in an Angular application?](#q2-how-do-you-set-up-ngrx-store-in-an-angular-application)
-3. [Q3: How do you create and use actions in NgRx?](#q3-how-do-you-create-and-use-actions-in-ngrx)
-4. [Q4: How do you create reducers in NgRx?](#q4-how-do-you-create-reducers-in-ngrx)
-5. [Q5: How do you handle side effects with NgRx Effects?](#q5-how-do-you-handle-side-effects-with-ngrx-effects)
-6. [Q6: How do you create and use selectors in NgRx?](#q6-how-do-you-create-and-use-selectors-in-ngrx)
-7. [Q7: How do you implement advanced NgRx patterns for complex state management?](#q7-how-do-you-implement-advanced-ngrx-patterns-for-complex-state-management)
-8. [Q8: How do you implement real-time state synchronization with NgRx?](#q8-how-do-you-implement-real-time-state-synchronization-with-ngrx)
-9. [Q9: How do you implement advanced NgRx patterns for enterprise applications?](#q9-how-do-you-implement-advanced-ngrx-patterns-for-enterprise-applications)
-10. [Q10: How do you implement NgRx with micro-frontend architecture?](#q10-how-do-you-implement-ngrx-with-micro-frontend-architecture)
-11. [Q11: How do you implement NgRx with Angular 15+ Standalone Components and modern architecture?](#q11-how-do-you-implement-ngrx-with-angular-15-standalone-components-and-modern-architecture)
-12. [Q12: How do you implement advanced NgRx testing strategies with modern Angular testing utilities?](#q12-how-do-you-implement-advanced-ngrx-testing-strategies-with-modern-angular-testing-utilities)
-13. [Q13: How would you implement NgRx Signal Store for modern Angular applications?](#q13-how-would-you-implement-ngrx-signal-store-for-modern-angular-applications)
-14. [Q14: How would you implement advanced NgRx patterns for enterprise applications?](#q14-how-would-you-implement-advanced-ngrx-patterns-for-enterprise-applications)
-15. [Q15: How do you implement comprehensive testing strategies for NgRx applications?](#q15-how-do-you-implement-comprehensive-testing-strategies-for-ngrx-applications)
+- [NgRx Interview Questions](#ngrx-interview-questions)
+  - [Table of Contents](#table-of-contents)
+  - [NgRx Fundamentals](#ngrx-fundamentals)
+    - [Q1: What is NgRx and why would you use it?](#q1-what-is-ngrx-and-why-would-you-use-it)
+  - [Store and State Management](#store-and-state-management)
+    - [Q2: How do you set up NgRx Store in an Angular application?](#q2-how-do-you-set-up-ngrx-store-in-an-angular-application)
+  - [Actions and Action Creators](#actions-and-action-creators)
+    - [Q3: How do you create and use actions in NgRx?](#q3-how-do-you-create-and-use-actions-in-ngrx)
+  - [Reducers](#reducers)
+    - [Q4: How do you create reducers in NgRx?](#q4-how-do-you-create-reducers-in-ngrx)
+  - [Effects](#effects)
+    - [Q5: How do you handle side effects with NgRx Effects?](#q5-how-do-you-handle-side-effects-with-ngrx-effects)
+  - [Selectors](#selectors)
+    - [Q6: How do you create and use selectors in NgRx?](#q6-how-do-you-create-and-use-selectors-in-ngrx)
+  - [Advanced NgRx Patterns](#advanced-ngrx-patterns)
+    - [Q7: How do you implement advanced NgRx patterns for complex state management?](#q7-how-do-you-implement-advanced-ngrx-patterns-for-complex-state-management)
+    - [Q8: How do you implement real-time state synchronization with NgRx?](#q8-how-do-you-implement-real-time-state-synchronization-with-ngrx)
+    - [Q9: How do you implement advanced NgRx patterns for enterprise applications?](#q9-how-do-you-implement-advanced-ngrx-patterns-for-enterprise-applications)
+    - [Q10: How do you implement NgRx with micro-frontend architecture?](#q10-how-do-you-implement-ngrx-with-micro-frontend-architecture)
+    - [Q11: How do you implement NgRx with Angular 15+ Standalone Components and modern architecture?](#q11-how-do-you-implement-ngrx-with-angular-15-standalone-components-and-modern-architecture)
+    - [Q12: How do you implement advanced NgRx testing strategies with modern Angular testing utilities?](#q12-how-do-you-implement-advanced-ngrx-testing-strategies-with-modern-angular-testing-utilities)
+  - [Advanced NgRx Patterns](#advanced-ngrx-patterns-1)
+    - [Q13: How would you implement NgRx Signal Store for modern Angular applications?](#q13-how-would-you-implement-ngrx-signal-store-for-modern-angular-applications)
+    - [Q14: How would you implement advanced NgRx patterns for enterprise applications?](#q14-how-would-you-implement-advanced-ngrx-patterns-for-enterprise-applications)
+    - [Q15: How do you implement comprehensive testing strategies for NgRx applications?](#q15-how-do-you-implement-comprehensive-testing-strategies-for-ngrx-applications)
+  - [NgRx Component Store](#ngrx-component-store)
+    - [Q11: What is NgRx Component Store and how does it differ from the global store?](#q11-what-is-ngrx-component-store-and-how-does-it-differ-from-the-global-store)
+  - [NgRx Data](#ngrx-data)
+    - [Q12: What is NgRx Data and how does it simplify entity management?](#q12-what-is-ngrx-data-and-how-does-it-simplify-entity-management)
+  - [NgRx Performance Optimization](#ngrx-performance-optimization)
+    - [Q13: How do you optimize NgRx performance and prevent common performance issues?](#q13-how-do-you-optimize-ngrx-performance-and-prevent-common-performance-issues)
+  - [NgRx Advanced Patterns](#ngrx-advanced-patterns)
+    - [Q14: What are advanced NgRx patterns for complex state management scenarios?](#q14-what-are-advanced-ngrx-patterns-for-complex-state-management-scenarios)
+  - [NgRx Error Handling and Resilience](#ngrx-error-handling-and-resilience)
+    - [Q15: How do you implement comprehensive error handling and resilience patterns in NgRx?](#q15-how-do-you-implement-comprehensive-error-handling-and-resilience-patterns-in-ngrx)
+  - [NgRx Real-time Updates and WebSocket Integration](#ngrx-real-time-updates-and-websocket-integration)
+    - [Q16: How do you implement real-time updates and WebSocket integration with NgRx?](#q16-how-do-you-implement-real-time-updates-and-websocket-integration-with-ngrx)
+  - [NgRx in Micro-frontends Architecture](#ngrx-in-micro-frontends-architecture)
+    - [Q17: How do you implement NgRx in a micro-frontends architecture with state sharing and isolation?](#q17-how-do-you-implement-ngrx-in-a-micro-frontends-architecture-with-state-sharing-and-isolation)
+  - [NgRx Migration Strategies](#ngrx-migration-strategies)
+    - [Q18: What are the best practices for migrating from legacy state management to NgRx or upgrading NgRx versions?](#q18-what-are-the-best-practices-for-migrating-from-legacy-state-management-to-ngrx-or-upgrading-ngrx-versions)
+  - [NgRx DevTools and Debugging](#ngrx-devtools-and-debugging)
+    - [Q19: How do you effectively use NgRx DevTools for debugging and what are advanced debugging techniques?](#q19-how-do-you-effectively-use-ngrx-devtools-for-debugging-and-what-are-advanced-debugging-techniques)
+  - [NgRx Enterprise Patterns](#ngrx-enterprise-patterns)
+    - [Q20: What are the best practices and patterns for implementing NgRx in large-scale enterprise applications?](#q20-what-are-the-best-practices-and-patterns-for-implementing-ngrx-in-large-scale-enterprise-applications)
 
 ---
 
@@ -4312,3 +4342,6848 @@ describe('UserEffects', () => {
 10. **Test State Immutability**: Verify that reducers don't mutate the original state
 
 This comprehensive testing strategy ensures robust, maintainable NgRx applications with high confidence in state management reliability.
+
+---
+
+## NgRx Component Store
+
+### Q11: What is NgRx Component Store and how does it differ from the global store?
+
+**Answer:**
+NgRx Component Store is a standalone library that provides local state management for Angular components, offering an alternative to the global NgRx store for component-specific state.
+
+**Key Differences:**
+
+| Feature | Global Store | Component Store |
+|---------|-------------|----------------|
+| Scope | Application-wide | Component-specific |
+| Lifecycle | Application lifetime | Component lifetime |
+| Boilerplate | High (actions, reducers, effects) | Low (direct methods) |
+| DevTools | Full support | Limited support |
+| Testing | Complex setup | Simple testing |
+| Performance | Global change detection | Local optimization |
+
+**Component Store Implementation:**
+```typescript
+// user-component.store.ts
+import { Injectable } from '@angular/core';
+import { ComponentStore } from '@ngrx/component-store';
+import { Observable, EMPTY } from 'rxjs';
+import { catchError, switchMap, tap } from 'rxjs/operators';
+import { UserService } from '../services/user.service';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'user';
+}
+
+export interface UserComponentState {
+  users: User[];
+  selectedUser: User | null;
+  loading: boolean;
+  error: string | null;
+  filters: {
+    search: string;
+    role: string | null;
+  };
+}
+
+const initialState: UserComponentState = {
+  users: [],
+  selectedUser: null,
+  loading: false,
+  error: null,
+  filters: {
+    search: '',
+    role: null
+  }
+};
+
+@Injectable()
+export class UserComponentStore extends ComponentStore<UserComponentState> {
+  constructor(private userService: UserService) {
+    super(initialState);
+  }
+
+  // Selectors
+  readonly users$ = this.select(state => state.users);
+  readonly selectedUser$ = this.select(state => state.selectedUser);
+  readonly loading$ = this.select(state => state.loading);
+  readonly error$ = this.select(state => state.error);
+  readonly filters$ = this.select(state => state.filters);
+  
+  // Computed selectors
+  readonly filteredUsers$ = this.select(
+    this.users$,
+    this.filters$,
+    (users, filters) => {
+      return users.filter(user => {
+        const matchesSearch = !filters.search || 
+          user.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+          user.email.toLowerCase().includes(filters.search.toLowerCase());
+        
+        const matchesRole = !filters.role || user.role === filters.role;
+        
+        return matchesSearch && matchesRole;
+      });
+    }
+  );
+  
+  readonly userCount$ = this.select(
+    this.filteredUsers$,
+    users => users.length
+  );
+  
+  readonly hasUsers$ = this.select(
+    this.users$,
+    users => users.length > 0
+  );
+
+  // Updaters (synchronous state updates)
+  readonly setLoading = this.updater((state, loading: boolean) => ({
+    ...state,
+    loading
+  }));
+  
+  readonly setError = this.updater((state, error: string | null) => ({
+    ...state,
+    error,
+    loading: false
+  }));
+  
+  readonly setUsers = this.updater((state, users: User[]) => ({
+    ...state,
+    users,
+    loading: false,
+    error: null
+  }));
+  
+  readonly addUser = this.updater((state, user: User) => ({
+    ...state,
+    users: [...state.users, user]
+  }));
+  
+  readonly updateUser = this.updater((state, updatedUser: User) => ({
+    ...state,
+    users: state.users.map(user => 
+      user.id === updatedUser.id ? updatedUser : user
+    ),
+    selectedUser: state.selectedUser?.id === updatedUser.id 
+      ? updatedUser 
+      : state.selectedUser
+  }));
+  
+  readonly removeUser = this.updater((state, userId: string) => ({
+    ...state,
+    users: state.users.filter(user => user.id !== userId),
+    selectedUser: state.selectedUser?.id === userId 
+      ? null 
+      : state.selectedUser
+  }));
+  
+  readonly selectUser = this.updater((state, user: User | null) => ({
+    ...state,
+    selectedUser: user
+  }));
+  
+  readonly updateFilters = this.updater((state, filters: Partial<UserComponentState['filters']>) => ({
+    ...state,
+    filters: { ...state.filters, ...filters }
+  }));
+  
+  readonly clearFilters = this.updater(state => ({
+    ...state,
+    filters: initialState.filters
+  }));
+
+  // Effects (asynchronous operations)
+  readonly loadUsers = this.effect((trigger$: Observable<void>) => {
+    return trigger$.pipe(
+      tap(() => this.setLoading(true)),
+      switchMap(() =>
+        this.userService.getUsers().pipe(
+          tap(users => this.setUsers(users)),
+          catchError(error => {
+            this.setError(error.message);
+            return EMPTY;
+          })
+        )
+      )
+    );
+  });
+  
+  readonly createUser = this.effect((user$: Observable<Omit<User, 'id'>>) => {
+    return user$.pipe(
+      tap(() => this.setLoading(true)),
+      switchMap(userData =>
+        this.userService.createUser(userData).pipe(
+          tap(user => {
+            this.addUser(user);
+            this.setLoading(false);
+          }),
+          catchError(error => {
+            this.setError(error.message);
+            return EMPTY;
+          })
+        )
+      )
+    );
+  });
+  
+  readonly updateUserEffect = this.effect((user$: Observable<User>) => {
+    return user$.pipe(
+      tap(() => this.setLoading(true)),
+      switchMap(user =>
+        this.userService.updateUser(user).pipe(
+          tap(updatedUser => {
+            this.updateUser(updatedUser);
+            this.setLoading(false);
+          }),
+          catchError(error => {
+            this.setError(error.message);
+            return EMPTY;
+          })
+        )
+      )
+    );
+  });
+  
+  readonly deleteUser = this.effect((userId$: Observable<string>) => {
+    return userId$.pipe(
+      tap(() => this.setLoading(true)),
+      switchMap(userId =>
+        this.userService.deleteUser(userId).pipe(
+          tap(() => {
+            this.removeUser(userId);
+            this.setLoading(false);
+          }),
+          catchError(error => {
+            this.setError(error.message);
+            return EMPTY;
+          })
+        )
+      )
+    );
+  });
+  
+  readonly searchUsers = this.effect((searchTerm$: Observable<string>) => {
+    return searchTerm$.pipe(
+      tap(search => this.updateFilters({ search }))
+    );
+  });
+}
+```
+
+**Component Usage:**
+```typescript
+// user-list.component.ts
+import { Component, OnInit } from '@angular/core';
+import { UserComponentStore } from './user-component.store';
+import { FormControl } from '@angular/forms';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+
+@Component({
+  selector: 'app-user-list',
+  template: `
+    <div class="user-list-container">
+      <!-- Search and Filters -->
+      <div class="filters">
+        <input 
+          [formControl]="searchControl"
+          placeholder="Search users..."
+          class="search-input"
+        >
+        
+        <select 
+          [value]="(filters$ | async)?.role || ''"
+          (change)="onRoleFilterChange($event)"
+          class="role-filter"
+        >
+          <option value="">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="user">User</option>
+        </select>
+        
+        <button (click)="clearFilters()" class="clear-filters">
+          Clear Filters
+        </button>
+      </div>
+      
+      <!-- User Count -->
+      <div class="user-count">
+        Total Users: {{ userCount$ | async }}
+      </div>
+      
+      <!-- Loading State -->
+      <div *ngIf="loading$ | async" class="loading">
+        Loading users...
+      </div>
+      
+      <!-- Error State -->
+      <div *ngIf="error$ | async as error" class="error">
+        Error: {{ error }}
+        <button (click)="retry()">Retry</button>
+      </div>
+      
+      <!-- User List -->
+      <div *ngIf="!(loading$ | async) && !(error$ | async)" class="user-grid">
+        <div 
+          *ngFor="let user of filteredUsers$ | async; trackBy: trackByUserId"
+          class="user-card"
+          [class.selected]="(selectedUser$ | async)?.id === user.id"
+          (click)="selectUser(user)"
+        >
+          <h3>{{ user.name }}</h3>
+          <p>{{ user.email }}</p>
+          <span class="role-badge" [class]="user.role">{{ user.role }}</span>
+          
+          <div class="user-actions">
+            <button (click)="editUser(user); $event.stopPropagation()">
+              Edit
+            </button>
+            <button 
+              (click)="deleteUser(user.id); $event.stopPropagation()"
+              class="delete-btn"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Add User Button -->
+      <button (click)="addNewUser()" class="add-user-btn">
+        Add New User
+      </button>
+      
+      <!-- Selected User Details -->
+      <div *ngIf="selectedUser$ | async as selectedUser" class="user-details">
+        <h2>Selected User</h2>
+        <p><strong>Name:</strong> {{ selectedUser.name }}</p>
+        <p><strong>Email:</strong> {{ selectedUser.email }}</p>
+        <p><strong>Role:</strong> {{ selectedUser.role }}</p>
+      </div>
+    </div>
+  `,
+  providers: [UserComponentStore],
+  styleUrls: ['./user-list.component.scss']
+})
+export class UserListComponent implements OnInit {
+  // Component Store observables
+  readonly users$ = this.userStore.users$;
+  readonly filteredUsers$ = this.userStore.filteredUsers$;
+  readonly selectedUser$ = this.userStore.selectedUser$;
+  readonly loading$ = this.userStore.loading$;
+  readonly error$ = this.userStore.error$;
+  readonly filters$ = this.userStore.filters$;
+  readonly userCount$ = this.userStore.userCount$;
+  readonly hasUsers$ = this.userStore.hasUsers$;
+  
+  // Form controls
+  searchControl = new FormControl('');
+  
+  constructor(private userStore: UserComponentStore) {}
+  
+  ngOnInit() {
+    // Load initial data
+    this.userStore.loadUsers();
+    
+    // Setup search functionality
+    this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(searchTerm => {
+      this.userStore.searchUsers(searchTerm || '');
+    });
+  }
+  
+  selectUser(user: User) {
+    this.userStore.selectUser(user);
+  }
+  
+  editUser(user: User) {
+    // Open edit dialog or navigate to edit page
+    const updatedUser = { ...user, name: user.name + ' (Updated)' };
+    this.userStore.updateUserEffect(updatedUser);
+  }
+  
+  deleteUser(userId: string) {
+    if (confirm('Are you sure you want to delete this user?')) {
+      this.userStore.deleteUser(userId);
+    }
+  }
+  
+  addNewUser() {
+    const newUser = {
+      name: 'New User',
+      email: 'new@example.com',
+      role: 'user' as const
+    };
+    this.userStore.createUser(newUser);
+  }
+  
+  onRoleFilterChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    const role = target.value || null;
+    this.userStore.updateFilters({ role });
+  }
+  
+  clearFilters() {
+    this.userStore.clearFilters();
+    this.searchControl.setValue('');
+  }
+  
+  retry() {
+    this.userStore.loadUsers();
+  }
+  
+  trackByUserId(index: number, user: User): string {
+    return user.id;
+  }
+}
+```
+
+**Testing Component Store:**
+```typescript
+// user-component.store.spec.ts
+import { TestBed } from '@angular/core/testing';
+import { UserComponentStore } from './user-component.store';
+import { UserService } from '../services/user.service';
+import { of, throwError } from 'rxjs';
+import { User } from './user-component.store';
+
+describe('UserComponentStore', () => {
+  let store: UserComponentStore;
+  let userService: jasmine.SpyObj<UserService>;
+  
+  const mockUsers: User[] = [
+    { id: '1', name: 'John', email: 'john@example.com', role: 'user' },
+    { id: '2', name: 'Jane', email: 'jane@example.com', role: 'admin' }
+  ];
+  
+  beforeEach(() => {
+    const spy = jasmine.createSpyObj('UserService', [
+      'getUsers', 'createUser', 'updateUser', 'deleteUser'
+    ]);
+    
+    TestBed.configureTestingModule({
+      providers: [
+        UserComponentStore,
+        { provide: UserService, useValue: spy }
+      ]
+    });
+    
+    store = TestBed.inject(UserComponentStore);
+    userService = TestBed.inject(UserService) as jasmine.SpyObj<UserService>;
+  });
+  
+  it('should initialize with default state', () => {
+    expect(store.get()).toEqual({
+      users: [],
+      selectedUser: null,
+      loading: false,
+      error: null,
+      filters: { search: '', role: null }
+    });
+  });
+  
+  it('should load users successfully', () => {
+    userService.getUsers.and.returnValue(of(mockUsers));
+    
+    store.loadUsers();
+    
+    expect(store.get().users).toEqual(mockUsers);
+    expect(store.get().loading).toBe(false);
+    expect(store.get().error).toBe(null);
+  });
+  
+  it('should handle load users error', () => {
+    const error = new Error('Failed to load');
+    userService.getUsers.and.returnValue(throwError(error));
+    
+    store.loadUsers();
+    
+    expect(store.get().error).toBe('Failed to load');
+    expect(store.get().loading).toBe(false);
+  });
+  
+  it('should filter users by search term', () => {
+    store.setUsers(mockUsers);
+    store.updateFilters({ search: 'john' });
+    
+    store.filteredUsers$.subscribe(filtered => {
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0].name).toBe('John');
+    });
+  });
+  
+  it('should filter users by role', () => {
+    store.setUsers(mockUsers);
+    store.updateFilters({ role: 'admin' });
+    
+    store.filteredUsers$.subscribe(filtered => {
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0].role).toBe('admin');
+    });
+  });
+});
+```
+
+**When to Use Component Store:**
+
+1. **Component-specific state**: State that doesn't need to be shared across the application
+2. **Form management**: Complex forms with local validation and state
+3. **UI state**: Modal states, accordion states, tab selections
+4. **Local caching**: Component-level data caching
+5. **Temporary state**: State that should be cleaned up when component is destroyed
+6. **Performance optimization**: Avoiding global state updates for local changes
+7. **Micro-frontends**: Isolated state management for independent components
+8. **Prototyping**: Quick state management without global store setup
+
+**Benefits of Component Store:**
+
+- **Reduced boilerplate**: No need for actions, reducers, or effects setup
+- **Better performance**: Local state changes don't trigger global change detection
+- **Easier testing**: Simpler test setup and isolation
+- **Automatic cleanup**: State is automatically cleaned up when component is destroyed
+- **Type safety**: Full TypeScript support with strong typing
+- **Reactive patterns**: Built on RxJS for powerful reactive programming
+- **Selective subscriptions**: Components can subscribe to specific state slices
+
+Component Store is ideal for local state management while the global store handles application-wide state, providing a balanced approach to state management in Angular applications.
+
+---
+
+## NgRx Data
+
+### Q12: What is NgRx Data and how does it simplify entity management?
+
+**Answer:**
+NgRx Data is an extension library that provides automated entity management for NgRx applications, reducing boilerplate code for common CRUD operations and entity state management.
+
+**Key Features:**
+
+1. **Automatic Entity Collections**: Pre-built reducers, actions, and effects for entities
+2. **EntityDataService**: HTTP operations with caching and optimistic updates
+3. **EntityMetadata**: Configuration for entity behavior and relationships
+4. **EntityCollectionService**: Simplified API for component interaction
+5. **Automatic Change Tracking**: Built-in dirty checking and change detection
+
+**Setup and Configuration:**
+```typescript
+// app.module.ts
+import { NgModule } from '@angular/core';
+import { EntityDataModule } from '@ngrx/data';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreModule } from '@ngrx/store';
+import { entityConfig } from './entity-metadata';
+
+@NgModule({
+  imports: [
+    StoreModule.forRoot({}),
+    EffectsModule.forRoot([]),
+    EntityDataModule.forRoot(entityConfig)
+  ]
+})
+export class AppModule {}
+```
+
+**Entity Metadata Configuration:**
+```typescript
+// entity-metadata.ts
+import { EntityMetadataMap, EntityDataModuleConfig } from '@ngrx/data';
+
+const entityMetadata: EntityMetadataMap = {
+  User: {
+    selectId: (user: User) => user.id,
+    sortComparer: (a: User, b: User) => a.name.localeCompare(b.name),
+    entityDispatcherOptions: {
+      optimisticAdd: true,
+      optimisticUpdate: true,
+      optimisticDelete: false
+    }
+  },
+  Product: {
+    selectId: (product: Product) => product.id,
+    sortComparer: (a: Product, b: Product) => a.name.localeCompare(b.name),
+    filterFn: (entities: Product[], pattern: string) => {
+      return entities.filter(product => 
+        product.name.toLowerCase().includes(pattern.toLowerCase()) ||
+        product.category.toLowerCase().includes(pattern.toLowerCase())
+      );
+    }
+  },
+  Order: {
+    selectId: (order: Order) => order.id,
+    sortComparer: (a: Order, b: Order) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    additionalCollectionState: {
+      selectedOrderId: null as string | null,
+      orderFilters: {
+        status: null as string | null,
+        dateRange: null as { start: Date; end: Date } | null
+      }
+    }
+  }
+};
+
+const pluralNames = {
+  User: 'Users',
+  Product: 'Products', 
+  Order: 'Orders'
+};
+
+export const entityConfig: EntityDataModuleConfig = {
+  entityMetadata,
+  pluralNames
+};
+```
+
+**Entity Models:**
+```typescript
+// models/user.model.ts
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'user' | 'manager';
+  department: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// models/product.model.ts
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  inStock: boolean;
+  quantity: number;
+  imageUrl: string;
+  tags: string[];
+}
+
+// models/order.model.ts
+export interface Order {
+  id: string;
+  userId: string;
+  products: OrderItem[];
+  totalAmount: number;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  shippingAddress: Address;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface OrderItem {
+  productId: string;
+  quantity: number;
+  price: number;
+}
+
+export interface Address {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+```
+
+**Custom EntityDataService:**
+```typescript
+// services/user-data.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { DefaultDataService, HttpUrlGenerator } from '@ngrx/data';
+import { Observable } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { User } from '../models/user.model';
+
+@Injectable()
+export class UserDataService extends DefaultDataService<User> {
+  constructor(
+    http: HttpClient,
+    httpUrlGenerator: HttpUrlGenerator
+  ) {
+    super('User', http, httpUrlGenerator);
+  }
+
+  // Override default getAll to add custom filtering
+  override getAll(): Observable<User[]> {
+    return this.http.get<{ users: User[]; total: number }>(`${this.entityUrl}?include=department`)
+      .pipe(
+        map(response => response.users),
+        catchError(this.handleError)
+      );
+  }
+
+  // Custom method for getting users by department
+  getUsersByDepartment(department: string): Observable<User[]> {
+    return this.http.get<User[]>(`${this.entityUrl}?department=${department}`);
+  }
+
+  // Custom method for bulk operations
+  bulkUpdate(users: Partial<User>[]): Observable<User[]> {
+    return this.http.put<User[]>(`${this.entityUrl}/bulk`, { users });
+  }
+
+  // Override add to include custom validation
+  override add(user: User): Observable<User> {
+    const userWithDefaults = {
+      ...user,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    return super.add(userWithDefaults);
+  }
+
+  // Custom search method
+  searchUsers(query: string): Observable<User[]> {
+    return this.http.get<User[]>(`${this.entityUrl}/search?q=${encodeURIComponent(query)}`);
+  }
+}
+```
+
+**EntityCollectionService Usage:**
+```typescript
+// services/user.service.ts
+import { Injectable } from '@angular/core';
+import { EntityCollectionServiceBase, EntityCollectionServiceElementsFactory } from '@ngrx/data';
+import { Observable } from 'rxjs';
+import { User } from '../models/user.model';
+import { UserDataService } from './user-data.service';
+
+@Injectable({ providedIn: 'root' })
+export class UserService extends EntityCollectionServiceBase<User> {
+  constructor(
+    serviceElementsFactory: EntityCollectionServiceElementsFactory,
+    private userDataService: UserDataService
+  ) {
+    super('User', serviceElementsFactory);
+  }
+
+  // Custom selectors
+  get activeUsers$(): Observable<User[]> {
+    return this.filteredEntities$.pipe(
+      map(users => users.filter(user => user.isActive))
+    );
+  }
+
+  get usersByDepartment$(): Observable<{ [department: string]: User[] }> {
+    return this.entities$.pipe(
+      map(users => 
+        users.reduce((acc, user) => {
+          if (!acc[user.department]) {
+            acc[user.department] = [];
+          }
+          acc[user.department].push(user);
+          return acc;
+        }, {} as { [department: string]: User[] })
+      )
+    );
+  }
+
+  get adminUsers$(): Observable<User[]> {
+    return this.filteredEntities$.pipe(
+      map(users => users.filter(user => user.role === 'admin'))
+    );
+  }
+
+  // Custom actions
+  loadUsersByDepartment(department: string): Observable<User[]> {
+    return this.userDataService.getUsersByDepartment(department);
+  }
+
+  searchUsers(query: string): void {
+    this.userDataService.searchUsers(query).subscribe(users => {
+      this.setFilter(user => 
+        users.some(searchUser => searchUser.id === user.id)
+      );
+    });
+  }
+
+  bulkUpdateUsers(updates: Partial<User>[]): Observable<User[]> {
+    return this.userDataService.bulkUpdate(updates);
+  }
+
+  activateUser(userId: string): void {
+    const user = this.getByKey(userId);
+    if (user) {
+      this.update({ ...user, isActive: true, updatedAt: new Date() });
+    }
+  }
+
+  deactivateUser(userId: string): void {
+    const user = this.getByKey(userId);
+    if (user) {
+      this.update({ ...user, isActive: false, updatedAt: new Date() });
+    }
+  }
+
+  // Batch operations
+  addMultipleUsers(users: User[]): void {
+    users.forEach(user => this.add(user));
+  }
+
+  deleteMultipleUsers(userIds: string[]): void {
+    userIds.forEach(id => this.delete(id));
+  }
+}
+```
+
+**Component Implementation:**
+```typescript
+// components/user-management.component.ts
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { UserService } from '../services/user.service';
+import { User } from '../models/user.model';
+
+@Component({
+  selector: 'app-user-management',
+  template: `
+    <div class="user-management">
+      <!-- Search and Filters -->
+      <div class="controls">
+        <input 
+          type="text"
+          placeholder="Search users..."
+          [formControl]="searchControl"
+          class="search-input"
+        >
+        
+        <select [formControl]="departmentFilter" class="department-filter">
+          <option value="">All Departments</option>
+          <option value="engineering">Engineering</option>
+          <option value="marketing">Marketing</option>
+          <option value="sales">Sales</option>
+          <option value="hr">HR</option>
+        </select>
+        
+        <button (click)="loadUsers()" class="refresh-btn">
+          Refresh
+        </button>
+        
+        <button (click)="openAddUserModal()" class="add-btn">
+          Add User
+        </button>
+      </div>
+      
+      <!-- Loading State -->
+      <div *ngIf="loading$ | async" class="loading">
+        Loading users...
+      </div>
+      
+      <!-- Error State -->
+      <div *ngIf="userService.errors$ | async as errors" class="errors">
+        <div *ngFor="let error of errors" class="error">
+          {{ error.message }}
+        </div>
+      </div>
+      
+      <!-- User Statistics -->
+      <div class="stats">
+        <div class="stat">
+          <span class="label">Total Users:</span>
+          <span class="value">{{ (users$ | async)?.length || 0 }}</span>
+        </div>
+        <div class="stat">
+          <span class="label">Active Users:</span>
+          <span class="value">{{ (activeUsers$ | async)?.length || 0 }}</span>
+        </div>
+        <div class="stat">
+          <span class="label">Admin Users:</span>
+          <span class="value">{{ (adminUsers$ | async)?.length || 0 }}</span>
+        </div>
+      </div>
+      
+      <!-- User List -->
+      <div class="user-grid">
+        <div 
+          *ngFor="let user of filteredUsers$ | async; trackBy: trackByUserId"
+          class="user-card"
+          [class.inactive]="!user.isActive"
+        >
+          <div class="user-info">
+            <h3>{{ user.name }}</h3>
+            <p>{{ user.email }}</p>
+            <span class="department">{{ user.department }}</span>
+            <span class="role" [class]="user.role">{{ user.role }}</span>
+            <span class="status" [class.active]="user.isActive">
+              {{ user.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+          
+          <div class="user-actions">
+            <button (click)="editUser(user)" class="edit-btn">
+              Edit
+            </button>
+            <button 
+              (click)="toggleUserStatus(user)"
+              [class]="user.isActive ? 'deactivate-btn' : 'activate-btn'"
+            >
+              {{ user.isActive ? 'Deactivate' : 'Activate' }}
+            </button>
+            <button (click)="deleteUser(user.id)" class="delete-btn">
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Add/Edit User Modal -->
+      <div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <h2>{{ editingUser ? 'Edit User' : 'Add User' }}</h2>
+          
+          <form [formGroup]="userForm" (ngSubmit)="saveUser()">
+            <div class="form-group">
+              <label for="name">Name:</label>
+              <input id="name" formControlName="name" type="text">
+            </div>
+            
+            <div class="form-group">
+              <label for="email">Email:</label>
+              <input id="email" formControlName="email" type="email">
+            </div>
+            
+            <div class="form-group">
+              <label for="role">Role:</label>
+              <select id="role" formControlName="role">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+                <option value="manager">Manager</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="department">Department:</label>
+              <select id="department" formControlName="department">
+                <option value="engineering">Engineering</option>
+                <option value="marketing">Marketing</option>
+                <option value="sales">Sales</option>
+                <option value="hr">HR</option>
+              </select>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" (click)="closeModal()">Cancel</button>
+              <button type="submit" [disabled]="userForm.invalid">
+                {{ editingUser ? 'Update' : 'Create' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  `,
+  styleUrls: ['./user-management.component.scss']
+})
+export class UserManagementComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+  
+  // Observables
+  users$ = this.userService.entities$;
+  activeUsers$ = this.userService.activeUsers$;
+  adminUsers$ = this.userService.adminUsers$;
+  loading$ = this.userService.loading$;
+  filteredUsers$ = this.userService.filteredEntities$;
+  
+  // Form controls
+  searchControl = this.fb.control('');
+  departmentFilter = this.fb.control('');
+  userForm: FormGroup;
+  
+  // Modal state
+  showModal = false;
+  editingUser: User | null = null;
+  
+  constructor(
+    public userService: UserService,
+    private fb: FormBuilder
+  ) {
+    this.userForm = this.createUserForm();
+  }
+  
+  ngOnInit() {
+    this.loadUsers();
+    this.setupFilters();
+  }
+  
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+  
+  private createUserForm(): FormGroup {
+    return this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(2)]],
+      email: ['', [Validators.required, Validators.email]],
+      role: ['user', Validators.required],
+      department: ['engineering', Validators.required]
+    });
+  }
+  
+  private setupFilters() {
+    // Search filter
+    this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(searchTerm => {
+      if (searchTerm) {
+        this.userService.searchUsers(searchTerm);
+      } else {
+        this.userService.clearFilter();
+      }
+    });
+    
+    // Department filter
+    this.departmentFilter.valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(department => {
+      if (department) {
+        this.userService.setFilter(user => user.department === department);
+      } else {
+        this.userService.clearFilter();
+      }
+    });
+  }
+  
+  loadUsers() {
+    this.userService.getAll();
+  }
+  
+  openAddUserModal() {
+    this.editingUser = null;
+    this.userForm.reset({
+      role: 'user',
+      department: 'engineering'
+    });
+    this.showModal = true;
+  }
+  
+  editUser(user: User) {
+    this.editingUser = user;
+    this.userForm.patchValue(user);
+    this.showModal = true;
+  }
+  
+  saveUser() {
+    if (this.userForm.valid) {
+      const userData = this.userForm.value;
+      
+      if (this.editingUser) {
+        this.userService.update({
+          ...this.editingUser,
+          ...userData,
+          updatedAt: new Date()
+        });
+      } else {
+        this.userService.add({
+          id: this.generateId(),
+          ...userData,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+      
+      this.closeModal();
+    }
+  }
+  
+  deleteUser(userId: string) {
+    if (confirm('Are you sure you want to delete this user?')) {
+      this.userService.delete(userId);
+    }
+  }
+  
+  toggleUserStatus(user: User) {
+    if (user.isActive) {
+      this.userService.deactivateUser(user.id);
+    } else {
+      this.userService.activateUser(user.id);
+    }
+  }
+  
+  closeModal() {
+    this.showModal = false;
+    this.editingUser = null;
+    this.userForm.reset();
+  }
+  
+  trackByUserId(index: number, user: User): string {
+    return user.id;
+  }
+  
+  private generateId(): string {
+    return Math.random().toString(36).substr(2, 9);
+  }
+}
+```
+
+**Benefits of NgRx Data:**
+
+1. **Reduced Boilerplate**: Eliminates need for manual actions, reducers, and effects
+2. **Automatic CRUD Operations**: Built-in create, read, update, delete functionality
+3. **Optimistic Updates**: Immediate UI updates with automatic rollback on errors
+4. **Caching**: Intelligent caching with configurable cache strategies
+5. **Change Tracking**: Automatic dirty checking and change detection
+6. **Relationship Management**: Support for entity relationships and foreign keys
+7. **Customizable**: Extensible with custom data services and metadata
+8. **Type Safety**: Full TypeScript support with strong typing
+
+**When to Use NgRx Data:**
+
+- Applications with many entity types requiring CRUD operations
+- RESTful APIs with standard HTTP patterns
+- Need for automatic caching and optimistic updates
+- Want to reduce NgRx boilerplate code
+- Require entity relationship management
+- Building data-driven applications with complex entity interactions
+
+NgRx Data significantly simplifies entity management while maintaining the benefits of NgRx's reactive state management pattern.
+
+---
+
+## NgRx Performance Optimization
+
+### Q13: How do you optimize NgRx performance and prevent common performance issues?
+
+**Answer:**
+NgRx performance optimization involves strategic selector design, efficient state structure, proper subscription management, and leveraging Angular's change detection optimizations.
+
+**1. Selector Optimization:**
+
+```typescript
+// selectors/user.selectors.ts
+import { createSelector, createFeatureSelector } from '@ngrx/store';
+import { UserState } from '../reducers/user.reducer';
+import { User } from '../models/user.model';
+
+// Feature selector
+export const selectUserState = createFeatureSelector<UserState>('users');
+
+// Basic selectors
+export const selectAllUsers = createSelector(
+  selectUserState,
+  state => state.users
+);
+
+export const selectUserLoading = createSelector(
+  selectUserState,
+  state => state.loading
+);
+
+// Memoized computed selectors
+export const selectActiveUsers = createSelector(
+  selectAllUsers,
+  users => users.filter(user => user.isActive) // Only recomputes when users array changes
+);
+
+// Parameterized selectors with proper memoization
+export const selectUsersByDepartment = createSelector(
+  selectAllUsers,
+  (users: User[], props: { department: string }) => 
+    users.filter(user => user.department === props.department)
+);
+
+// Complex computed selectors
+export const selectUserStatistics = createSelector(
+  selectAllUsers,
+  users => {
+    const stats = {
+      total: users.length,
+      active: 0,
+      inactive: 0,
+      byDepartment: {} as Record<string, number>,
+      byRole: {} as Record<string, number>
+    };
+    
+    users.forEach(user => {
+      if (user.isActive) stats.active++;
+      else stats.inactive++;
+      
+      stats.byDepartment[user.department] = 
+        (stats.byDepartment[user.department] || 0) + 1;
+      
+      stats.byRole[user.role] = 
+        (stats.byRole[user.role] || 0) + 1;
+    });
+    
+    return stats;
+  }
+);
+
+// Avoid creating objects in selectors - use factory pattern
+export const createUserSelectorFactory = () => {
+  const selectUserById = createSelector(
+    selectAllUsers,
+    (users: User[], props: { id: string }) => 
+      users.find(user => user.id === props.id)
+  );
+  
+  return selectUserById;
+};
+
+// Efficient filtering with indexes
+export const selectUserLookup = createSelector(
+  selectAllUsers,
+  users => users.reduce((lookup, user) => {
+    lookup[user.id] = user;
+    return lookup;
+  }, {} as Record<string, User>)
+);
+
+export const selectUserByIdOptimized = createSelector(
+  selectUserLookup,
+  (lookup: Record<string, User>, props: { id: string }) => lookup[props.id]
+);
+```
+
+**2. State Structure Optimization:**
+
+```typescript
+// reducers/optimized-user.reducer.ts
+import { createReducer, on } from '@ngrx/store';
+import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
+import { User } from '../models/user.model';
+import * as UserActions from '../actions/user.actions';
+
+// Use Entity Adapter for normalized state
+export interface UserState extends EntityState<User> {
+  selectedUserId: string | null;
+  loading: boolean;
+  error: string | null;
+  filters: {
+    department: string | null;
+    role: string | null;
+    search: string;
+  };
+  pagination: {
+    currentPage: number;
+    pageSize: number;
+    totalItems: number;
+  };
+  // Separate UI state from entity state
+  ui: {
+    showInactive: boolean;
+    sortBy: 'name' | 'email' | 'department';
+    sortDirection: 'asc' | 'desc';
+  };
+}
+
+// Entity adapter with custom sorting
+export const userAdapter: EntityAdapter<User> = createEntityAdapter<User>({
+  selectId: (user: User) => user.id,
+  sortComparer: (a: User, b: User) => a.name.localeCompare(b.name)
+});
+
+export const initialState: UserState = userAdapter.getInitialState({
+  selectedUserId: null,
+  loading: false,
+  error: null,
+  filters: {
+    department: null,
+    role: null,
+    search: ''
+  },
+  pagination: {
+    currentPage: 1,
+    pageSize: 20,
+    totalItems: 0
+  },
+  ui: {
+    showInactive: false,
+    sortBy: 'name',
+    sortDirection: 'asc'
+  }
+});
+
+export const userReducer = createReducer(
+  initialState,
+  
+  // Efficient bulk operations
+  on(UserActions.loadUsersSuccess, (state, { users, totalItems }) => 
+    userAdapter.setAll(users, {
+      ...state,
+      loading: false,
+      error: null,
+      pagination: {
+        ...state.pagination,
+        totalItems
+      }
+    })
+  ),
+  
+  // Optimistic updates
+  on(UserActions.addUser, (state, { user }) => 
+    userAdapter.addOne(user, {
+      ...state,
+      // Don't set loading for optimistic updates
+    })
+  ),
+  
+  on(UserActions.updateUser, (state, { update }) => 
+    userAdapter.updateOne(update, state)
+  ),
+  
+  on(UserActions.deleteUser, (state, { id }) => 
+    userAdapter.removeOne(id, state)
+  ),
+  
+  // Separate UI state updates
+  on(UserActions.setFilters, (state, { filters }) => ({
+    ...state,
+    filters: { ...state.filters, ...filters }
+  })),
+  
+  on(UserActions.setUiState, (state, { ui }) => ({
+    ...state,
+    ui: { ...state.ui, ...ui }
+  }))
+);
+
+// Export entity selectors
+export const {
+  selectIds,
+  selectEntities,
+  selectAll,
+  selectTotal
+} = userAdapter.getSelectors();
+```
+
+**3. Component Optimization:**
+
+```typescript
+// components/optimized-user-list.component.ts
+import { 
+  Component, 
+  OnInit, 
+  OnDestroy, 
+  ChangeDetectionStrategy,
+  TrackByFunction 
+} from '@angular/core';
+import { Observable, Subject, combineLatest } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
+import { Store } from '@ngrx/store';
+import { FormControl } from '@angular/forms';
+import { User } from '../models/user.model';
+import * as UserSelectors from '../selectors/user.selectors';
+import * as UserActions from '../actions/user.actions';
+
+@Component({
+  selector: 'app-optimized-user-list',
+  template: `
+    <div class="user-list">
+      <!-- Virtual scrolling for large lists -->
+      <cdk-virtual-scroll-viewport itemSize="80" class="user-viewport">
+        <div 
+          *cdkVirtualFor="let user of filteredUsers$ | async; trackBy: trackByUserId"
+          class="user-item"
+          [class.selected]="(selectedUserId$ | async) === user.id"
+        >
+          <app-user-card 
+            [user]="user"
+            [selected]="(selectedUserId$ | async) === user.id"
+            (select)="selectUser(user.id)"
+            (edit)="editUser(user)"
+            (delete)="deleteUser(user.id)"
+          ></app-user-card>
+        </div>
+      </cdk-virtual-scroll-viewport>
+      
+      <!-- Pagination -->
+      <app-pagination
+        [currentPage]="(pagination$ | async)?.currentPage || 1"
+        [pageSize]="(pagination$ | async)?.pageSize || 20"
+        [totalItems]="(pagination$ | async)?.totalItems || 0"
+        (pageChange)="onPageChange($event)"
+      ></app-pagination>
+    </div>
+  `,
+  styleUrls: ['./optimized-user-list.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush // Optimize change detection
+})
+export class OptimizedUserListComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+  
+  // Optimized observables
+  users$ = this.store.select(UserSelectors.selectAllUsers);
+  selectedUserId$ = this.store.select(UserSelectors.selectSelectedUserId);
+  loading$ = this.store.select(UserSelectors.selectUserLoading);
+  pagination$ = this.store.select(UserSelectors.selectPagination);
+  filters$ = this.store.select(UserSelectors.selectFilters);
+  
+  // Computed observables
+  filteredUsers$ = combineLatest([
+    this.users$,
+    this.filters$,
+    this.store.select(UserSelectors.selectUiState)
+  ]).pipe(
+    map(([users, filters, ui]) => this.filterAndSortUsers(users, filters, ui))
+  );
+  
+  // Form controls with debouncing
+  searchControl = new FormControl('');
+  departmentControl = new FormControl('');
+  
+  constructor(private store: Store) {}
+  
+  ngOnInit() {
+    this.setupFilters();
+    this.loadUsers();
+  }
+  
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+  
+  // Efficient TrackBy function
+  trackByUserId: TrackByFunction<User> = (index: number, user: User) => user.id;
+  
+  private setupFilters() {
+    // Debounced search
+    this.searchControl.valueChanges.pipe(
+      startWith(''),
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(search => {
+      this.store.dispatch(UserActions.setFilters({ filters: { search } }));
+    });
+    
+    // Department filter
+    this.departmentControl.valueChanges.pipe(
+      startWith(''),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(department => {
+      this.store.dispatch(UserActions.setFilters({ 
+        filters: { department: department || null } 
+      }));
+    });
+  }
+  
+  private filterAndSortUsers(
+    users: User[], 
+    filters: any, 
+    ui: any
+  ): User[] {
+    let filtered = users;
+    
+    // Apply filters
+    if (filters.search) {
+      const search = filters.search.toLowerCase();
+      filtered = filtered.filter(user => 
+        user.name.toLowerCase().includes(search) ||
+        user.email.toLowerCase().includes(search)
+      );
+    }
+    
+    if (filters.department) {
+      filtered = filtered.filter(user => user.department === filters.department);
+    }
+    
+    if (filters.role) {
+      filtered = filtered.filter(user => user.role === filters.role);
+    }
+    
+    if (!ui.showInactive) {
+      filtered = filtered.filter(user => user.isActive);
+    }
+    
+    // Apply sorting
+    return this.sortUsers(filtered, ui.sortBy, ui.sortDirection);
+  }
+  
+  private sortUsers(users: User[], sortBy: string, direction: 'asc' | 'desc'): User[] {
+    return [...users].sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'email':
+          comparison = a.email.localeCompare(b.email);
+          break;
+        case 'department':
+          comparison = a.department.localeCompare(b.department);
+          break;
+      }
+      
+      return direction === 'asc' ? comparison : -comparison;
+    });
+  }
+  
+  loadUsers() {
+    this.store.dispatch(UserActions.loadUsers());
+  }
+  
+  selectUser(userId: string) {
+    this.store.dispatch(UserActions.selectUser({ userId }));
+  }
+  
+  editUser(user: User) {
+    this.store.dispatch(UserActions.editUser({ user }));
+  }
+  
+  deleteUser(userId: string) {
+    this.store.dispatch(UserActions.deleteUser({ id: userId }));
+  }
+  
+  onPageChange(page: number) {
+    this.store.dispatch(UserActions.setPage({ page }));
+  }
+}
+```
+
+**4. Subscription Management:**
+
+```typescript
+// services/subscription-manager.service.ts
+import { Injectable, OnDestroy } from '@angular/core';
+import { Subject, Subscription, Observable } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
+@Injectable()
+export class SubscriptionManager implements OnDestroy {
+  private destroy$ = new Subject<void>();
+  private subscriptions = new Set<Subscription>();
+  
+  // Automatic cleanup with takeUntil
+  takeUntilDestroy<T>(source$: Observable<T>): Observable<T> {
+    return source$.pipe(takeUntil(this.destroy$));
+  }
+  
+  // Manual subscription management
+  add(subscription: Subscription): void {
+    this.subscriptions.add(subscription);
+  }
+  
+  // Cleanup
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.subscriptions.clear();
+  }
+}
+
+// Usage in components
+@Component({
+  providers: [SubscriptionManager]
+})
+export class MyComponent {
+  constructor(private subManager: SubscriptionManager) {}
+  
+  ngOnInit() {
+    // Automatic cleanup
+    this.subManager.takeUntilDestroy(this.someObservable$)
+      .subscribe(data => {
+        // Handle data
+      });
+    
+    // Manual subscription
+    const sub = this.anotherObservable$.subscribe();
+    this.subManager.add(sub);
+  }
+}
+```
+
+**5. Effect Optimization:**
+
+```typescript
+// effects/optimized-user.effects.ts
+import { Injectable } from '@angular/core';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
+import { of, EMPTY } from 'rxjs';
+import { 
+  switchMap, 
+  map, 
+  catchError, 
+  debounceTime, 
+  distinctUntilChanged,
+  withLatestFrom,
+  filter,
+  concatMap,
+  mergeMap
+} from 'rxjs/operators';
+import * as UserActions from '../actions/user.actions';
+import * as UserSelectors from '../selectors/user.selectors';
+import { UserService } from '../services/user.service';
+
+@Injectable()
+export class OptimizedUserEffects {
+  
+  // Debounced search effect
+  searchUsers$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UserActions.searchUsers),
+      debounceTime(300),
+      distinctUntilChanged((prev, curr) => prev.query === curr.query),
+      switchMap(({ query }) => {
+        if (!query.trim()) {
+          return of(UserActions.clearSearch());
+        }
+        
+        return this.userService.searchUsers(query).pipe(
+          map(users => UserActions.searchUsersSuccess({ users })),
+          catchError(error => of(UserActions.searchUsersFailure({ error: error.message })))
+        );
+      })
+    )
+  );
+  
+  // Optimized load with caching
+  loadUsers$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UserActions.loadUsers),
+      withLatestFrom(
+        this.store.select(UserSelectors.selectAllUsers),
+        this.store.select(UserSelectors.selectLastUpdated)
+      ),
+      filter(([action, users, lastUpdated]) => {
+        // Skip if data is fresh (less than 5 minutes old)
+        const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+        return !lastUpdated || lastUpdated < fiveMinutesAgo || users.length === 0;
+      }),
+      switchMap(() =>
+        this.userService.getUsers().pipe(
+          map(users => UserActions.loadUsersSuccess({ users })),
+          catchError(error => of(UserActions.loadUsersFailure({ error: error.message })))
+        )
+      )
+    )
+  );
+  
+  // Batch operations for better performance
+  batchUserUpdates$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UserActions.batchUpdateUsers),
+      concatMap(({ updates }) =>
+        this.userService.batchUpdate(updates).pipe(
+          map(users => UserActions.batchUpdateUsersSuccess({ users })),
+          catchError(error => of(UserActions.batchUpdateUsersFailure({ error: error.message })))
+        )
+      )
+    )
+  );
+  
+  // Optimistic updates with rollback
+  updateUser$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UserActions.updateUserOptimistic),
+      mergeMap(({ user, originalUser }) =>
+        this.userService.updateUser(user).pipe(
+          map(updatedUser => UserActions.updateUserSuccess({ user: updatedUser })),
+          catchError(error => {
+            // Rollback on error
+            return of(
+              UserActions.updateUserFailure({ error: error.message }),
+              UserActions.rollbackUserUpdate({ user: originalUser })
+            );
+          })
+        )
+      )
+    )
+  );
+  
+  constructor(
+    private actions$: Actions,
+    private store: Store,
+    private userService: UserService
+  ) {}
+}
+```
+
+**6. Performance Monitoring:**
+
+```typescript
+// utils/performance-monitor.ts
+import { Injectable } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { tap, timestamp, pairwise } from 'rxjs/operators';
+
+@Injectable({ providedIn: 'root' })
+export class PerformanceMonitor {
+  private metrics = new Map<string, number[]>();
+  
+  constructor(private store: Store) {}
+  
+  // Monitor selector performance
+  monitorSelector<T>(selectorName: string, selector$: Observable<T>) {
+    return selector$.pipe(
+      timestamp(),
+      pairwise(),
+      tap(([prev, curr]) => {
+        const timeDiff = curr.timestamp - prev.timestamp;
+        this.recordMetric(selectorName, timeDiff);
+        
+        if (timeDiff > 100) { // Log slow selectors
+          console.warn(`Slow selector ${selectorName}: ${timeDiff}ms`);
+        }
+      }),
+      map(([prev, curr]) => curr.value)
+    );
+  }
+  
+  // Monitor action dispatch performance
+  monitorAction(actionType: string) {
+    const startTime = performance.now();
+    
+    return {
+      complete: () => {
+        const duration = performance.now() - startTime;
+        this.recordMetric(`action_${actionType}`, duration);
+        
+        if (duration > 50) {
+          console.warn(`Slow action ${actionType}: ${duration}ms`);
+        }
+      }
+    };
+  }
+  
+  private recordMetric(name: string, value: number) {
+    if (!this.metrics.has(name)) {
+      this.metrics.set(name, []);
+    }
+    
+    const values = this.metrics.get(name)!;
+    values.push(value);
+    
+    // Keep only last 100 measurements
+    if (values.length > 100) {
+      values.shift();
+    }
+  }
+  
+  getMetrics() {
+    const report = new Map<string, any>();
+    
+    this.metrics.forEach((values, name) => {
+      const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
+      const max = Math.max(...values);
+      const min = Math.min(...values);
+      
+      report.set(name, { avg, max, min, count: values.length });
+    });
+    
+    return report;
+  }
+}
+```
+
+**Performance Best Practices:**
+
+1. **Use OnPush Change Detection**: Reduces unnecessary change detection cycles
+2. **Implement TrackBy Functions**: Optimizes *ngFor rendering
+3. **Leverage Virtual Scrolling**: For large lists
+4. **Normalize State Structure**: Use Entity adapters for flat, normalized state
+5. **Memoize Selectors**: Prevent unnecessary recomputations
+6. **Debounce User Input**: Reduce action dispatching frequency
+7. **Use Lazy Loading**: Load features and state on demand
+8. **Implement Pagination**: Limit data loaded at once
+9. **Cache API Responses**: Avoid redundant HTTP requests
+10. **Monitor Performance**: Track selector and action performance
+
+These optimizations ensure NgRx applications remain performant even with complex state management requirements.
+
+---
+
+## NgRx Advanced Patterns
+
+### Q14: What are advanced NgRx patterns for complex state management scenarios?
+
+**Answer:**
+Advanced NgRx patterns help manage complex state scenarios including feature composition, dynamic state, cross-feature communication, and sophisticated data flows.
+
+**1. Feature State Composition:**
+
+```typescript
+// state/app.state.ts
+import { ActionReducerMap, MetaReducer } from '@ngrx/store';
+import { environment } from '../../environments/environment';
+import * as fromAuth from '../auth/state/auth.reducer';
+import * as fromUser from '../user/state/user.reducer';
+import * as fromProduct from '../product/state/product.reducer';
+import * as fromCart from '../cart/state/cart.reducer';
+import * as fromOrder from '../order/state/order.reducer';
+
+// Root state interface
+export interface AppState {
+  auth: fromAuth.AuthState;
+  user: fromUser.UserState;
+  product: fromProduct.ProductState;
+  cart: fromCart.CartState;
+  order: fromOrder.OrderState;
+}
+
+// Root reducers
+export const reducers: ActionReducerMap<AppState> = {
+  auth: fromAuth.authReducer,
+  user: fromUser.userReducer,
+  product: fromProduct.productReducer,
+  cart: fromCart.cartReducer,
+  order: fromOrder.orderReducer
+};
+
+// Meta reducers for cross-cutting concerns
+export const metaReducers: MetaReducer<AppState>[] = !environment.production
+  ? [logger, storeFreeze]
+  : [hydrationMetaReducer];
+
+// Logger meta reducer
+function logger(reducer: ActionReducer<AppState>): ActionReducer<AppState> {
+  return (state, action) => {
+    const result = reducer(state, action);
+    console.groupCollapsed(action.type);
+    console.log('prev state', state);
+    console.log('action', action);
+    console.log('next state', result);
+    console.groupEnd();
+    return result;
+  };
+}
+
+// Hydration meta reducer for persistence
+function hydrationMetaReducer(reducer: ActionReducer<AppState>): ActionReducer<AppState> {
+  return (state, action) => {
+    if (action.type === '@ngrx/store/init') {
+      const storageValue = localStorage.getItem('appState');
+      if (storageValue) {
+        try {
+          const parsedState = JSON.parse(storageValue);
+          return { ...state, ...parsedState };
+        } catch {
+          localStorage.removeItem('appState');
+        }
+      }
+    }
+    
+    const nextState = reducer(state, action);
+    
+    // Persist specific slices
+    const persistedState = {
+      auth: nextState.auth,
+      user: { ...nextState.user, selectedUser: null }, // Exclude UI state
+      cart: nextState.cart
+    };
+    
+    localStorage.setItem('appState', JSON.stringify(persistedState));
+    return nextState;
+  };
+}
+```
+
+**2. Dynamic Feature Loading:**
+
+```typescript
+// services/dynamic-feature.service.ts
+import { Injectable, Injector } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Observable, of } from 'rxjs';
+import { map, switchMap, catchError } from 'rxjs/operators';
+
+export interface FeatureConfig {
+  name: string;
+  reducerKey: string;
+  effectsClass?: any;
+  initialState?: any;
+}
+
+@Injectable({ providedIn: 'root' })
+export class DynamicFeatureService {
+  private loadedFeatures = new Set<string>();
+  
+  constructor(
+    private store: Store,
+    private injector: Injector
+  ) {}
+  
+  loadFeature(config: FeatureConfig): Observable<boolean> {
+    if (this.loadedFeatures.has(config.name)) {
+      return of(true);
+    }
+    
+    return this.loadFeatureModule(config.name).pipe(
+      switchMap(module => {
+        // Register reducer
+        this.store.addReducer(config.reducerKey, module.reducer, config.initialState);
+        
+        // Register effects if provided
+        if (config.effectsClass && module.effects) {
+          const effects = this.injector.get(module.effects);
+          this.store.dispatch({ type: '@ngrx/effects/init', effects });
+        }
+        
+        this.loadedFeatures.add(config.name);
+        return of(true);
+      }),
+      catchError(error => {
+        console.error(`Failed to load feature ${config.name}:`, error);
+        return of(false);
+      })
+    );
+  }
+  
+  private loadFeatureModule(featureName: string): Observable<any> {
+    // Dynamic import based on feature name
+    switch (featureName) {
+      case 'analytics':
+        return import('../analytics/analytics.module').then(m => m.AnalyticsModule);
+      case 'reporting':
+        return import('../reporting/reporting.module').then(m => m.ReportingModule);
+      default:
+        throw new Error(`Unknown feature: ${featureName}`);
+    }
+  }
+  
+  unloadFeature(featureName: string, reducerKey: string): void {
+    if (this.loadedFeatures.has(featureName)) {
+      this.store.removeReducer(reducerKey);
+      this.loadedFeatures.delete(featureName);
+    }
+  }
+}
+
+// Usage in route guards
+@Injectable()
+export class FeatureGuard implements CanActivate {
+  constructor(private dynamicFeature: DynamicFeatureService) {}
+  
+  canActivate(route: ActivatedRouteSnapshot): Observable<boolean> {
+    const featureName = route.data['feature'];
+    const config: FeatureConfig = {
+      name: featureName,
+      reducerKey: featureName,
+      effectsClass: route.data['effects']
+    };
+    
+    return this.dynamicFeature.loadFeature(config);
+  }
+}
+```
+
+**3. Cross-Feature Communication:**
+
+```typescript
+// patterns/cross-feature-communication.ts
+import { Injectable } from '@angular/core';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
+import { of } from 'rxjs';
+import { map, withLatestFrom, filter, switchMap } from 'rxjs/operators';
+import * as AuthActions from '../auth/state/auth.actions';
+import * as UserActions from '../user/state/user.actions';
+import * as CartActions from '../cart/state/cart.actions';
+import * as NotificationActions from '../notification/state/notification.actions';
+
+// Global event bus for cross-feature communication
+export const GlobalEvents = {
+  userLoggedIn: '[Global] User Logged In',
+  userLoggedOut: '[Global] User Logged Out',
+  orderCompleted: '[Global] Order Completed',
+  paymentProcessed: '[Global] Payment Processed'
+};
+
+// Cross-feature effects
+@Injectable()
+export class CrossFeatureEffects {
+  
+  // When user logs in, load their profile and cart
+  userLoggedIn$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.loginSuccess),
+      map(({ user }) => ({
+        type: GlobalEvents.userLoggedIn,
+        payload: { userId: user.id, user }
+      }))
+    )
+  );
+  
+  // Load user data after login
+  loadUserDataOnLogin$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType({ type: GlobalEvents.userLoggedIn }),
+      switchMap(({ payload }) => [
+        UserActions.loadUserProfile({ userId: payload.userId }),
+        CartActions.loadCart({ userId: payload.userId })
+      ])
+    )
+  );
+  
+  // Clear data on logout
+  userLoggedOut$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.logout),
+      map(() => ({ type: GlobalEvents.userLoggedOut }))
+    )
+  );
+  
+  clearDataOnLogout$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType({ type: GlobalEvents.userLoggedOut }),
+      switchMap(() => [
+        UserActions.clearUserData(),
+        CartActions.clearCart(),
+        NotificationActions.clearNotifications()
+      ])
+    )
+  );
+  
+  // Order completion workflow
+  orderCompleted$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(OrderActions.createOrderSuccess),
+      withLatestFrom(this.store.select(selectCurrentUser)),
+      filter(([action, user]) => !!user),
+      switchMap(([{ order }, user]) => [
+        CartActions.clearCart(),
+        NotificationActions.showSuccess({
+          message: `Order #${order.id} completed successfully!`
+        }),
+        UserActions.updateUserStats({
+          userId: user.id,
+          stats: { totalOrders: user.stats.totalOrders + 1 }
+        }),
+        { type: GlobalEvents.orderCompleted, payload: { order, user } }
+      ])
+    )
+  );
+  
+  constructor(
+    private actions$: Actions,
+    private store: Store
+  ) {}
+}
+```
+
+**4. State Synchronization Patterns:**
+
+```typescript
+// patterns/state-synchronization.ts
+import { Injectable } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Observable, combineLatest, merge } from 'rxjs';
+import { map, distinctUntilChanged, filter, debounceTime } from 'rxjs/operators';
+
+// Derived state pattern
+@Injectable({ providedIn: 'root' })
+export class DerivedStateService {
+  
+  // Compute cart summary from cart items and products
+  cartSummary$ = combineLatest([
+    this.store.select(selectCartItems),
+    this.store.select(selectProductEntities),
+    this.store.select(selectTaxRate),
+    this.store.select(selectShippingCost)
+  ]).pipe(
+    map(([cartItems, products, taxRate, shippingCost]) => {
+      const subtotal = cartItems.reduce((sum, item) => {
+        const product = products[item.productId];
+        return sum + (product ? product.price * item.quantity : 0);
+      }, 0);
+      
+      const tax = subtotal * taxRate;
+      const total = subtotal + tax + shippingCost;
+      
+      return {
+        itemCount: cartItems.reduce((sum, item) => sum + item.quantity, 0),
+        subtotal,
+        tax,
+        shippingCost,
+        total,
+        items: cartItems.map(item => ({
+          ...item,
+          product: products[item.productId],
+          lineTotal: products[item.productId] ? 
+            products[item.productId].price * item.quantity : 0
+        }))
+      };
+    }),
+    distinctUntilChanged((prev, curr) => 
+      JSON.stringify(prev) === JSON.stringify(curr)
+    )
+  );
+  
+  // User dashboard data aggregation
+  userDashboard$ = combineLatest([
+    this.store.select(selectCurrentUser),
+    this.store.select(selectUserOrders),
+    this.store.select(selectUserWishlist),
+    this.store.select(selectUserReviews),
+    this.store.select(selectUserRewards)
+  ]).pipe(
+    filter(([user]) => !!user),
+    map(([user, orders, wishlist, reviews, rewards]) => ({
+      user,
+      stats: {
+        totalOrders: orders.length,
+        totalSpent: orders.reduce((sum, order) => sum + order.total, 0),
+        wishlistItems: wishlist.length,
+        reviewsWritten: reviews.length,
+        rewardPoints: rewards.totalPoints,
+        memberSince: user.createdAt
+      },
+      recentActivity: [
+        ...orders.slice(0, 3).map(order => ({
+          type: 'order',
+          date: order.createdAt,
+          description: `Order #${order.id} - $${order.total}`
+        })),
+        ...reviews.slice(0, 2).map(review => ({
+          type: 'review',
+          date: review.createdAt,
+          description: `Reviewed ${review.productName}`
+        }))
+      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    }))
+  );
+  
+  constructor(private store: Store) {}
+}
+```
+
+**5. Advanced Effect Patterns:**
+
+```typescript
+// effects/advanced-patterns.effects.ts
+import { Injectable } from '@angular/core';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
+import { of, timer, EMPTY, race } from 'rxjs';
+import { 
+  switchMap, 
+  map, 
+  catchError, 
+  withLatestFrom,
+  takeUntil,
+  retry,
+  retryWhen,
+  delay,
+  concatMap,
+  mergeMap,
+  exhaustMap,
+  bufferTime,
+  filter
+} from 'rxjs/operators';
+
+@Injectable()
+export class AdvancedEffects {
+  
+  // Retry with exponential backoff
+  loadDataWithRetry$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DataActions.loadData),
+      switchMap(({ id }) =>
+        this.dataService.getData(id).pipe(
+          map(data => DataActions.loadDataSuccess({ data })),
+          retryWhen(errors =>
+            errors.pipe(
+              concatMap((error, index) => {
+                if (index >= 3) {
+                  return throwError(error);
+                }
+                const delayTime = Math.pow(2, index) * 1000; // Exponential backoff
+                return timer(delayTime);
+              })
+            )
+          ),
+          catchError(error => of(DataActions.loadDataFailure({ error: error.message })))
+        )
+      )
+    )
+  );
+  
+  // Timeout pattern
+  loadWithTimeout$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DataActions.loadWithTimeout),
+      switchMap(({ id, timeout = 5000 }) =>
+        race([
+          this.dataService.getData(id).pipe(
+            map(data => DataActions.loadDataSuccess({ data }))
+          ),
+          timer(timeout).pipe(
+            map(() => DataActions.loadDataTimeout())
+          )
+        ]).pipe(
+          catchError(error => of(DataActions.loadDataFailure({ error: error.message })))
+        )
+      )
+    )
+  );
+  
+  // Batch operations
+  batchUpdates$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DataActions.queueUpdate),
+      bufferTime(1000), // Collect updates for 1 second
+      filter(actions => actions.length > 0),
+      switchMap(actions => {
+        const updates = actions.map(action => action.update);
+        return this.dataService.batchUpdate(updates).pipe(
+          map(results => DataActions.batchUpdateSuccess({ results })),
+          catchError(error => of(DataActions.batchUpdateFailure({ error: error.message })))
+        );
+      })
+    )
+  );
+  
+  // Cancellable operations
+  cancellableOperation$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DataActions.startOperation),
+      switchMap(({ operationId }) =>
+        this.dataService.longRunningOperation(operationId).pipe(
+          map(result => DataActions.operationSuccess({ result })),
+          takeUntil(
+            this.actions$.pipe(
+              ofType(DataActions.cancelOperation),
+              filter(action => action.operationId === operationId)
+            )
+          ),
+          catchError(error => of(DataActions.operationFailure({ error: error.message })))
+        )
+      )
+    )
+  );
+  
+  // Conditional effects based on state
+  conditionalLoad$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DataActions.conditionalLoad),
+      withLatestFrom(
+        this.store.select(selectDataCache),
+        this.store.select(selectUserPermissions)
+      ),
+      filter(([action, cache, permissions]) => {
+        // Only proceed if user has permission and data is not cached
+        return permissions.canRead && !cache[action.id];
+      }),
+      switchMap(([{ id }]) =>
+        this.dataService.getData(id).pipe(
+          map(data => DataActions.loadDataSuccess({ data })),
+          catchError(error => of(DataActions.loadDataFailure({ error: error.message })))
+        )
+      )
+    )
+  );
+  
+  // Optimistic updates with rollback
+  optimisticUpdate$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DataActions.optimisticUpdate),
+      concatMap(({ id, update, originalData }) =>
+        this.dataService.updateData(id, update).pipe(
+          map(updatedData => DataActions.updateSuccess({ data: updatedData })),
+          catchError(error => of(
+            DataActions.updateFailure({ error: error.message }),
+            DataActions.rollbackUpdate({ id, data: originalData })
+          ))
+        )
+      )
+    )
+  );
+  
+  constructor(
+    private actions$: Actions,
+    private store: Store,
+    private dataService: DataService
+  ) {}
+}
+```
+
+**6. State Machine Pattern:**
+
+```typescript
+// patterns/state-machine.ts
+import { createReducer, on } from '@ngrx/store';
+
+// Define states and transitions
+export enum OrderState {
+  DRAFT = 'draft',
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  PROCESSING = 'processing',
+  SHIPPED = 'shipped',
+  DELIVERED = 'delivered',
+  CANCELLED = 'cancelled',
+  REFUNDED = 'refunded'
+}
+
+export interface OrderStateMachine {
+  currentState: OrderState;
+  allowedTransitions: OrderState[];
+  history: { state: OrderState; timestamp: Date; reason?: string }[];
+}
+
+// State transition rules
+const stateTransitions: Record<OrderState, OrderState[]> = {
+  [OrderState.DRAFT]: [OrderState.PENDING, OrderState.CANCELLED],
+  [OrderState.PENDING]: [OrderState.CONFIRMED, OrderState.CANCELLED],
+  [OrderState.CONFIRMED]: [OrderState.PROCESSING, OrderState.CANCELLED],
+  [OrderState.PROCESSING]: [OrderState.SHIPPED, OrderState.CANCELLED],
+  [OrderState.SHIPPED]: [OrderState.DELIVERED],
+  [OrderState.DELIVERED]: [OrderState.REFUNDED],
+  [OrderState.CANCELLED]: [],
+  [OrderState.REFUNDED]: []
+};
+
+// State machine reducer
+export const orderStateMachineReducer = createReducer(
+  {
+    currentState: OrderState.DRAFT,
+    allowedTransitions: stateTransitions[OrderState.DRAFT],
+    history: []
+  } as OrderStateMachine,
+  
+  on(OrderActions.transitionState, (state, { newState, reason }) => {
+    // Validate transition
+    if (!state.allowedTransitions.includes(newState)) {
+      console.error(`Invalid transition from ${state.currentState} to ${newState}`);
+      return state;
+    }
+    
+    return {
+      currentState: newState,
+      allowedTransitions: stateTransitions[newState],
+      history: [
+        ...state.history,
+        {
+          state: newState,
+          timestamp: new Date(),
+          reason
+        }
+      ]
+    };
+  })
+);
+```
+
+These advanced patterns enable sophisticated state management for complex applications while maintaining clean architecture and predictable data flow.
+
+---
+
+## NgRx Error Handling and Resilience
+
+### Q15: How do you implement comprehensive error handling and resilience patterns in NgRx?
+
+**Answer:**
+Robust error handling in NgRx involves multiple layers of error management, graceful degradation, retry mechanisms, and user-friendly error reporting.
+
+**1. Centralized Error State Management:**
+
+```typescript
+// state/error.state.ts
+import { createReducer, on } from '@ngrx/store';
+import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
+
+export interface AppError {
+  id: string;
+  type: 'network' | 'validation' | 'business' | 'system';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  message: string;
+  details?: any;
+  timestamp: Date;
+  source: string; // Which feature/component caused the error
+  userMessage?: string; // User-friendly message
+  retryable: boolean;
+  retryCount: number;
+  maxRetries: number;
+  resolved: boolean;
+}
+
+export interface ErrorState extends EntityState<AppError> {
+  globalError: AppError | null;
+  networkStatus: 'online' | 'offline' | 'slow';
+  errorCounts: Record<string, number>;
+  suppressedErrors: string[]; // Error types to suppress
+}
+
+export const errorAdapter: EntityAdapter<AppError> = createEntityAdapter<AppError>({
+  selectId: (error: AppError) => error.id,
+  sortComparer: (a: AppError, b: AppError) => 
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+});
+
+export const initialErrorState: ErrorState = errorAdapter.getInitialState({
+  globalError: null,
+  networkStatus: 'online',
+  errorCounts: {},
+  suppressedErrors: []
+});
+
+export const errorReducer = createReducer(
+  initialErrorState,
+  
+  on(ErrorActions.addError, (state, { error }) => {
+    const errorWithId = {
+      ...error,
+      id: error.id || generateErrorId(),
+      timestamp: new Date(),
+      retryCount: 0,
+      resolved: false
+    };
+    
+    return errorAdapter.addOne(errorWithId, {
+      ...state,
+      globalError: error.severity === 'critical' ? errorWithId : state.globalError,
+      errorCounts: {
+        ...state.errorCounts,
+        [error.type]: (state.errorCounts[error.type] || 0) + 1
+      }
+    });
+  }),
+  
+  on(ErrorActions.resolveError, (state, { errorId }) => 
+    errorAdapter.updateOne(
+      { id: errorId, changes: { resolved: true } },
+      { ...state, globalError: state.globalError?.id === errorId ? null : state.globalError }
+    )
+  ),
+  
+  on(ErrorActions.retryError, (state, { errorId }) => 
+    errorAdapter.updateOne(
+      { id: errorId, changes: { retryCount: state.entities[errorId]!.retryCount + 1 } },
+      state
+    )
+  ),
+  
+  on(ErrorActions.clearErrors, (state) => 
+    errorAdapter.removeAll({ ...state, globalError: null, errorCounts: {} })
+  ),
+  
+  on(ErrorActions.setNetworkStatus, (state, { status }) => ({
+    ...state,
+    networkStatus: status
+  })),
+  
+  on(ErrorActions.suppressErrorType, (state, { errorType }) => ({
+    ...state,
+    suppressedErrors: [...state.suppressedErrors, errorType]
+  }))
+);
+
+function generateErrorId(): string {
+  return `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+```
+
+**2. Error Actions and Selectors:**
+
+```typescript
+// actions/error.actions.ts
+import { createAction, props } from '@ngrx/store';
+import { AppError } from '../state/error.state';
+
+export const addError = createAction(
+  '[Error] Add Error',
+  props<{ error: Partial<AppError> }>()
+);
+
+export const resolveError = createAction(
+  '[Error] Resolve Error',
+  props<{ errorId: string }>()
+);
+
+export const retryError = createAction(
+  '[Error] Retry Error',
+  props<{ errorId: string }>()
+);
+
+export const clearErrors = createAction('[Error] Clear All Errors');
+
+export const setNetworkStatus = createAction(
+  '[Error] Set Network Status',
+  props<{ status: 'online' | 'offline' | 'slow' }>()
+);
+
+export const suppressErrorType = createAction(
+  '[Error] Suppress Error Type',
+  props<{ errorType: string }>()
+);
+
+// selectors/error.selectors.ts
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { ErrorState, errorAdapter } from '../state/error.state';
+
+export const selectErrorState = createFeatureSelector<ErrorState>('errors');
+
+export const {
+  selectIds: selectErrorIds,
+  selectEntities: selectErrorEntities,
+  selectAll: selectAllErrors,
+  selectTotal: selectTotalErrors
+} = errorAdapter.getSelectors(selectErrorState);
+
+export const selectGlobalError = createSelector(
+  selectErrorState,
+  state => state.globalError
+);
+
+export const selectNetworkStatus = createSelector(
+  selectErrorState,
+  state => state.networkStatus
+);
+
+export const selectUnresolvedErrors = createSelector(
+  selectAllErrors,
+  errors => errors.filter(error => !error.resolved)
+);
+
+export const selectErrorsByType = createSelector(
+  selectAllErrors,
+  (errors, props: { type: string }) => 
+    errors.filter(error => error.type === props.type)
+);
+
+export const selectRetryableErrors = createSelector(
+  selectUnresolvedErrors,
+  errors => errors.filter(error => 
+    error.retryable && error.retryCount < error.maxRetries
+  )
+);
+
+export const selectErrorCounts = createSelector(
+  selectErrorState,
+  state => state.errorCounts
+);
+```
+
+**3. Error Handling Effects:**
+
+```typescript
+// effects/error.effects.ts
+import { Injectable } from '@angular/core';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
+import { of, timer, EMPTY } from 'rxjs';
+import { 
+  catchError, 
+  map, 
+  switchMap, 
+  withLatestFrom,
+  filter,
+  delay,
+  retryWhen,
+  concatMap,
+  tap
+} from 'rxjs/operators';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import * as ErrorActions from '../actions/error.actions';
+import * as ErrorSelectors from '../selectors/error.selectors';
+import { NotificationService } from '../services/notification.service';
+import { LoggingService } from '../services/logging.service';
+
+@Injectable()
+export class ErrorEffects {
+  
+  // Handle global errors
+  handleGlobalError$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ErrorActions.addError),
+      withLatestFrom(this.store.select(ErrorSelectors.selectErrorState)),
+      filter(([{ error }, errorState]) => 
+        !errorState.suppressedErrors.includes(error.type!)
+      ),
+      tap(([{ error }]) => {
+        // Log error
+        this.loggingService.logError(error);
+        
+        // Show user notification based on severity
+        switch (error.severity) {
+          case 'critical':
+            this.notificationService.showError(
+              error.userMessage || 'A critical error occurred. Please contact support.',
+              { duration: 0, action: 'Retry' }
+            );
+            break;
+          case 'high':
+            this.notificationService.showError(
+              error.userMessage || 'An error occurred. Please try again.',
+              { duration: 8000, action: 'Dismiss' }
+            );
+            break;
+          case 'medium':
+            this.notificationService.showWarning(
+              error.userMessage || 'Something went wrong.',
+              { duration: 5000 }
+            );
+            break;
+          case 'low':
+            // Silent logging only
+            break;
+        }
+      })
+    ),
+    { dispatch: false }
+  );
+  
+  // Auto-retry retryable errors
+  autoRetryErrors$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ErrorActions.addError),
+      filter(({ error }) => error.retryable && error.retryCount! < error.maxRetries!),
+      delay(this.calculateRetryDelay),
+      map(({ error }) => ErrorActions.retryError({ errorId: error.id! }))
+    )
+  );
+  
+  // Network status monitoring
+  monitorNetworkStatus$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType('@ngrx/store/init'),
+      switchMap(() => {
+        // Monitor online/offline status
+        const online$ = fromEvent(window, 'online').pipe(
+          map(() => ErrorActions.setNetworkStatus({ status: 'online' }))
+        );
+        
+        const offline$ = fromEvent(window, 'offline').pipe(
+          map(() => ErrorActions.setNetworkStatus({ status: 'offline' }))
+        );
+        
+        return merge(online$, offline$);
+      })
+    )
+  );
+  
+  // Clear resolved errors periodically
+  cleanupResolvedErrors$ = createEffect(() =>
+    timer(0, 300000).pipe( // Every 5 minutes
+      withLatestFrom(this.store.select(ErrorSelectors.selectAllErrors)),
+      filter(([, errors]) => errors.some(error => error.resolved)),
+      switchMap(([, errors]) => {
+        const oldResolvedErrors = errors.filter(error => 
+          error.resolved && 
+          new Date().getTime() - error.timestamp.getTime() > 600000 // 10 minutes old
+        );
+        
+        return oldResolvedErrors.map(error => 
+          ErrorActions.resolveError({ errorId: error.id })
+        );
+      })
+    )
+  );
+  
+  constructor(
+    private actions$: Actions,
+    private store: Store,
+    private notificationService: NotificationService,
+    private loggingService: LoggingService
+  ) {}
+  
+  private calculateRetryDelay(action: any): number {
+    const baseDelay = 1000;
+    const maxDelay = 30000;
+    const retryCount = action.error.retryCount || 0;
+    
+    // Exponential backoff with jitter
+    const exponentialDelay = Math.min(baseDelay * Math.pow(2, retryCount), maxDelay);
+    const jitter = Math.random() * 1000;
+    
+    return exponentialDelay + jitter;
+  }
+}
+```
+
+**4. HTTP Error Interceptor:**
+
+```typescript
+// interceptors/error.interceptor.ts
+import { Injectable } from '@angular/core';
+import { 
+  HttpInterceptor, 
+  HttpRequest, 
+  HttpHandler, 
+  HttpErrorResponse,
+  HttpEvent
+} from '@angular/common/http';
+import { Store } from '@ngrx/store';
+import { Observable, throwError, of } from 'rxjs';
+import { catchError, retry, retryWhen, delay, concatMap } from 'rxjs/operators';
+import * as ErrorActions from '../state/actions/error.actions';
+import { AppError } from '../state/error.state';
+
+@Injectable()
+export class ErrorInterceptor implements HttpInterceptor {
+  
+  constructor(private store: Store) {}
+  
+  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    return next.handle(req).pipe(
+      retryWhen(errors => 
+        errors.pipe(
+          concatMap((error, index) => {
+            if (this.shouldRetry(error, index)) {
+              const delayTime = this.calculateRetryDelay(index);
+              return of(error).pipe(delay(delayTime));
+            }
+            return throwError(error);
+          })
+        )
+      ),
+      catchError((error: HttpErrorResponse) => {
+        const appError = this.mapHttpErrorToAppError(error, req);
+        this.store.dispatch(ErrorActions.addError({ error: appError }));
+        
+        // Return a user-friendly error or empty response based on context
+        if (this.isNonCriticalRequest(req)) {
+          return of(this.createFallbackResponse(req));
+        }
+        
+        return throwError(error);
+      })
+    );
+  }
+  
+  private shouldRetry(error: HttpErrorResponse, attemptIndex: number): boolean {
+    const maxRetries = 3;
+    const retryableStatuses = [408, 429, 500, 502, 503, 504];
+    
+    return attemptIndex < maxRetries && 
+           retryableStatuses.includes(error.status);
+  }
+  
+  private calculateRetryDelay(attemptIndex: number): number {
+    return Math.min(1000 * Math.pow(2, attemptIndex), 10000);
+  }
+  
+  private mapHttpErrorToAppError(error: HttpErrorResponse, req: HttpRequest<any>): Partial<AppError> {
+    let errorType: AppError['type'] = 'network';
+    let severity: AppError['severity'] = 'medium';
+    let userMessage = 'An error occurred. Please try again.';
+    let retryable = false;
+    
+    switch (error.status) {
+      case 0:
+        errorType = 'network';
+        severity = 'high';
+        userMessage = 'Network connection failed. Please check your internet connection.';
+        retryable = true;
+        break;
+      case 400:
+        errorType = 'validation';
+        severity = 'medium';
+        userMessage = 'Invalid request. Please check your input.';
+        break;
+      case 401:
+        errorType = 'business';
+        severity = 'high';
+        userMessage = 'Authentication required. Please log in.';
+        break;
+      case 403:
+        errorType = 'business';
+        severity = 'medium';
+        userMessage = 'Access denied. You don\'t have permission for this action.';
+        break;
+      case 404:
+        errorType = 'business';
+        severity = 'low';
+        userMessage = 'The requested resource was not found.';
+        break;
+      case 408:
+      case 429:
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        errorType = 'network';
+        severity = 'high';
+        userMessage = 'Server error. Please try again in a moment.';
+        retryable = true;
+        break;
+      default:
+        errorType = 'system';
+        severity = 'medium';
+    }
+    
+    return {
+      type: errorType,
+      severity,
+      message: error.message,
+      details: {
+        status: error.status,
+        statusText: error.statusText,
+        url: req.url,
+        method: req.method,
+        body: error.error
+      },
+      source: this.extractSourceFromUrl(req.url),
+      userMessage,
+      retryable,
+      maxRetries: retryable ? 3 : 0
+    };
+  }
+  
+  private isNonCriticalRequest(req: HttpRequest<any>): boolean {
+    const nonCriticalEndpoints = ['/api/analytics', '/api/tracking', '/api/suggestions'];
+    return nonCriticalEndpoints.some(endpoint => req.url.includes(endpoint));
+  }
+  
+  private createFallbackResponse(req: HttpRequest<any>): any {
+    // Return appropriate fallback data based on request
+    if (req.url.includes('/api/suggestions')) {
+      return { suggestions: [] };
+    }
+    if (req.url.includes('/api/analytics')) {
+      return { data: null, cached: true };
+    }
+    return null;
+  }
+  
+  private extractSourceFromUrl(url: string): string {
+    const segments = url.split('/');
+    return segments[segments.length - 2] || 'unknown';
+  }
+}
+```
+
+**5. Error Boundary Component:**
+
+```typescript
+// components/error-boundary.component.ts
+import { 
+  Component, 
+  Input, 
+  OnInit, 
+  OnDestroy, 
+  ChangeDetectionStrategy 
+} from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil, filter } from 'rxjs/operators';
+import * as ErrorSelectors from '../selectors/error.selectors';
+import * as ErrorActions from '../actions/error.actions';
+import { AppError } from '../state/error.state';
+
+@Component({
+  selector: 'app-error-boundary',
+  template: `
+    <div class="error-boundary" *ngIf="hasErrors$ | async">
+      <div class="error-container">
+        <div class="error-header">
+          <mat-icon class="error-icon">error_outline</mat-icon>
+          <h3>{{ getErrorTitle() }}</h3>
+        </div>
+        
+        <div class="error-content">
+          <p>{{ getErrorMessage() }}</p>
+          
+          <div class="error-actions">
+            <button 
+              mat-raised-button 
+              color="primary"
+              *ngIf="canRetry()"
+              (click)="retryOperation()"
+              [disabled]="retrying"
+            >
+              <mat-icon *ngIf="retrying">refresh</mat-icon>
+              {{ retrying ? 'Retrying...' : 'Retry' }}
+            </button>
+            
+            <button 
+              mat-button
+              (click)="dismissError()"
+            >
+              Dismiss
+            </button>
+            
+            <button 
+              mat-button
+              *ngIf="showDetails"
+              (click)="toggleDetails()"
+            >
+              {{ showingDetails ? 'Hide' : 'Show' }} Details
+            </button>
+          </div>
+          
+          <div class="error-details" *ngIf="showingDetails">
+            <pre>{{ getErrorDetails() | json }}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Fallback content when there are errors -->
+    <div class="fallback-content" *ngIf="showFallback && (hasErrors$ | async)">
+      <ng-content select="[slot=fallback]"></ng-content>
+    </div>
+    
+    <!-- Normal content when no errors -->
+    <div class="normal-content" *ngIf="!(hasErrors$ | async)">
+      <ng-content></ng-content>
+    </div>
+  `,
+  styleUrls: ['./error-boundary.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class ErrorBoundaryComponent implements OnInit, OnDestroy {
+  @Input() errorTypes: string[] = [];
+  @Input() showFallback = false;
+  @Input() showDetails = false;
+  @Input() autoRetry = true;
+  
+  private destroy$ = new Subject<void>();
+  
+  hasErrors$: Observable<boolean>;
+  currentError$: Observable<AppError | null>;
+  
+  retrying = false;
+  showingDetails = false;
+  
+  constructor(private store: Store) {
+    this.hasErrors$ = this.store.select(ErrorSelectors.selectUnresolvedErrors).pipe(
+      map(errors => this.filterRelevantErrors(errors).length > 0)
+    );
+    
+    this.currentError$ = this.store.select(ErrorSelectors.selectUnresolvedErrors).pipe(
+      map(errors => {
+        const relevantErrors = this.filterRelevantErrors(errors);
+        return relevantErrors.length > 0 ? relevantErrors[0] : null;
+      })
+    );
+  }
+  
+  ngOnInit() {
+    if (this.autoRetry) {
+      this.setupAutoRetry();
+    }
+  }
+  
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+  
+  private filterRelevantErrors(errors: AppError[]): AppError[] {
+    if (this.errorTypes.length === 0) {
+      return errors;
+    }
+    return errors.filter(error => this.errorTypes.includes(error.type));
+  }
+  
+  private setupAutoRetry() {
+    this.store.select(ErrorSelectors.selectRetryableErrors).pipe(
+      filter(errors => errors.length > 0),
+      takeUntil(this.destroy$)
+    ).subscribe(errors => {
+      const error = errors[0];
+      if (error.retryCount < error.maxRetries) {
+        setTimeout(() => {
+          this.store.dispatch(ErrorActions.retryError({ errorId: error.id }));
+        }, this.calculateRetryDelay(error.retryCount));
+      }
+    });
+  }
+  
+  private calculateRetryDelay(retryCount: number): number {
+    return Math.min(1000 * Math.pow(2, retryCount), 10000);
+  }
+  
+  getErrorTitle(): string {
+    // Implementation to get appropriate error title
+    return 'Something went wrong';
+  }
+  
+  getErrorMessage(): string {
+    // Implementation to get user-friendly error message
+    return 'We encountered an issue. Please try again.';
+  }
+  
+  getErrorDetails(): any {
+    // Implementation to get error details for debugging
+    return {};
+  }
+  
+  canRetry(): boolean {
+    // Implementation to check if retry is possible
+    return true;
+  }
+  
+  retryOperation() {
+    this.retrying = true;
+    // Implementation to retry the failed operation
+    setTimeout(() => {
+      this.retrying = false;
+    }, 2000);
+  }
+  
+  dismissError() {
+    // Implementation to dismiss the current error
+  }
+  
+  toggleDetails() {
+    this.showingDetails = !this.showingDetails;
+  }
+}
+```
+
+**6. Resilience Service:**
+
+```typescript
+// services/resilience.service.ts
+import { Injectable } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Observable, of, throwError, timer } from 'rxjs';
+import { 
+  catchError, 
+  retry, 
+  retryWhen, 
+  delay, 
+  concatMap, 
+  switchMap,
+  timeout,
+  map
+} from 'rxjs/operators';
+import * as ErrorActions from '../actions/error.actions';
+
+export interface ResilienceConfig {
+  maxRetries?: number;
+  retryDelay?: number;
+  timeout?: number;
+  fallbackValue?: any;
+  circuitBreakerThreshold?: number;
+}
+
+@Injectable({ providedIn: 'root' })
+export class ResilienceService {
+  private circuitBreakers = new Map<string, CircuitBreaker>();
+  
+  constructor(private store: Store) {}
+  
+  // Wrap operations with resilience patterns
+  withResilience<T>(
+    operation: () => Observable<T>,
+    config: ResilienceConfig = {},
+    operationId?: string
+  ): Observable<T> {
+    const {
+      maxRetries = 3,
+      retryDelay = 1000,
+      timeout: timeoutMs = 10000,
+      fallbackValue,
+      circuitBreakerThreshold = 5
+    } = config;
+    
+    // Check circuit breaker
+    if (operationId && this.isCircuitOpen(operationId)) {
+      return fallbackValue !== undefined 
+        ? of(fallbackValue)
+        : throwError(new Error('Circuit breaker is open'));
+    }
+    
+    return operation().pipe(
+      timeout(timeoutMs),
+      retryWhen(errors => 
+        errors.pipe(
+          concatMap((error, index) => {
+            if (index >= maxRetries) {
+              // Record failure for circuit breaker
+              if (operationId) {
+                this.recordFailure(operationId);
+              }
+              return throwError(error);
+            }
+            
+            const delayTime = retryDelay * Math.pow(2, index);
+            return timer(delayTime);
+          })
+        )
+      ),
+      catchError(error => {
+        // Log error to store
+        this.store.dispatch(ErrorActions.addError({
+          error: {
+            type: 'system',
+            severity: 'high',
+            message: error.message,
+            source: operationId || 'unknown',
+            retryable: true,
+            maxRetries
+          }
+        }));
+        
+        // Return fallback if available
+        if (fallbackValue !== undefined) {
+          return of(fallbackValue);
+        }
+        
+        return throwError(error);
+      }),
+      map(result => {
+        // Record success for circuit breaker
+        if (operationId) {
+          this.recordSuccess(operationId);
+        }
+        return result;
+      })
+    );
+  }
+  
+  private isCircuitOpen(operationId: string): boolean {
+    const breaker = this.circuitBreakers.get(operationId);
+    return breaker ? breaker.isOpen() : false;
+  }
+  
+  private recordFailure(operationId: string) {
+    let breaker = this.circuitBreakers.get(operationId);
+    if (!breaker) {
+      breaker = new CircuitBreaker();
+      this.circuitBreakers.set(operationId, breaker);
+    }
+    breaker.recordFailure();
+  }
+  
+  private recordSuccess(operationId: string) {
+    const breaker = this.circuitBreakers.get(operationId);
+    if (breaker) {
+      breaker.recordSuccess();
+    }
+  }
+}
+
+class CircuitBreaker {
+  private failures = 0;
+  private lastFailureTime = 0;
+  private state: 'closed' | 'open' | 'half-open' = 'closed';
+  private readonly threshold = 5;
+  private readonly timeout = 60000; // 1 minute
+  
+  isOpen(): boolean {
+    if (this.state === 'open') {
+      if (Date.now() - this.lastFailureTime > this.timeout) {
+        this.state = 'half-open';
+        return false;
+      }
+      return true;
+    }
+    return false;
+  }
+  
+  recordFailure() {
+    this.failures++;
+    this.lastFailureTime = Date.now();
+    
+    if (this.failures >= this.threshold) {
+      this.state = 'open';
+    }
+  }
+  
+  recordSuccess() {
+    this.failures = 0;
+    this.state = 'closed';
+  }
+}
+```
+
+These comprehensive error handling and resilience patterns ensure your NgRx application can gracefully handle failures, provide meaningful feedback to users, and maintain system stability under adverse conditions.
+
+---
+
+## NgRx Real-time Updates and WebSocket Integration
+
+### Q16: How do you implement real-time updates and WebSocket integration with NgRx?
+
+**Answer:**
+Integrating real-time updates with NgRx involves managing WebSocket connections, handling real-time data streams, and maintaining synchronization between local and remote state.
+
+**1. WebSocket State Management:**
+
+```typescript
+// state/websocket.state.ts
+import { createReducer, on } from '@ngrx/store';
+import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
+
+export interface WebSocketConnection {
+  id: string;
+  url: string;
+  status: 'connecting' | 'connected' | 'disconnected' | 'error';
+  lastConnected?: Date;
+  reconnectAttempts: number;
+  maxReconnectAttempts: number;
+  subscriptions: string[];
+  heartbeatInterval?: number;
+  lastHeartbeat?: Date;
+}
+
+export interface RealtimeMessage {
+  id: string;
+  type: string;
+  payload: any;
+  timestamp: Date;
+  connectionId: string;
+  processed: boolean;
+}
+
+export interface WebSocketState extends EntityState<WebSocketConnection> {
+  messages: RealtimeMessage[];
+  globalConnectionStatus: 'online' | 'offline' | 'degraded';
+  messageQueue: RealtimeMessage[]; // For offline queuing
+  subscriptionTopics: Record<string, string[]>; // topic -> connectionIds
+}
+
+export const connectionAdapter: EntityAdapter<WebSocketConnection> = 
+  createEntityAdapter<WebSocketConnection>({
+    selectId: (connection: WebSocketConnection) => connection.id
+  });
+
+export const initialWebSocketState: WebSocketState = connectionAdapter.getInitialState({
+  messages: [],
+  globalConnectionStatus: 'offline',
+  messageQueue: [],
+  subscriptionTopics: {}
+});
+
+export const webSocketReducer = createReducer(
+  initialWebSocketState,
+  
+  on(WebSocketActions.connectRequest, (state, { connectionConfig }) => 
+    connectionAdapter.addOne({
+      id: connectionConfig.id,
+      url: connectionConfig.url,
+      status: 'connecting',
+      reconnectAttempts: 0,
+      maxReconnectAttempts: connectionConfig.maxReconnectAttempts || 5,
+      subscriptions: [],
+      heartbeatInterval: connectionConfig.heartbeatInterval
+    }, state)
+  ),
+  
+  on(WebSocketActions.connectionEstablished, (state, { connectionId }) => 
+    connectionAdapter.updateOne(
+      {
+        id: connectionId,
+        changes: {
+          status: 'connected',
+          lastConnected: new Date(),
+          reconnectAttempts: 0
+        }
+      },
+      {
+        ...state,
+        globalConnectionStatus: 'online'
+      }
+    )
+  ),
+  
+  on(WebSocketActions.connectionLost, (state, { connectionId, error }) => 
+    connectionAdapter.updateOne(
+      {
+        id: connectionId,
+        changes: {
+          status: 'disconnected',
+          reconnectAttempts: state.entities[connectionId]!.reconnectAttempts + 1
+        }
+      },
+      {
+        ...state,
+        globalConnectionStatus: 'degraded'
+      }
+    )
+  ),
+  
+  on(WebSocketActions.messageReceived, (state, { message }) => ({
+    ...state,
+    messages: [message, ...state.messages.slice(0, 99)] // Keep last 100 messages
+  })),
+  
+  on(WebSocketActions.subscribeToTopic, (state, { connectionId, topic }) => {
+    const connection = state.entities[connectionId];
+    if (!connection) return state;
+    
+    return connectionAdapter.updateOne(
+      {
+        id: connectionId,
+        changes: {
+          subscriptions: [...connection.subscriptions, topic]
+        }
+      },
+      {
+        ...state,
+        subscriptionTopics: {
+          ...state.subscriptionTopics,
+          [topic]: [...(state.subscriptionTopics[topic] || []), connectionId]
+        }
+      }
+    );
+  }),
+  
+  on(WebSocketActions.queueMessage, (state, { message }) => ({
+    ...state,
+    messageQueue: [...state.messageQueue, message]
+  })),
+  
+  on(WebSocketActions.processQueuedMessages, (state) => ({
+    ...state,
+    messages: [...state.messageQueue, ...state.messages],
+    messageQueue: []
+  }))
+);
+```
+
+**2. WebSocket Actions:**
+
+```typescript
+// actions/websocket.actions.ts
+import { createAction, props } from '@ngrx/store';
+import { RealtimeMessage, WebSocketConnection } from '../state/websocket.state';
+
+export interface ConnectionConfig {
+  id: string;
+  url: string;
+  protocols?: string[];
+  maxReconnectAttempts?: number;
+  heartbeatInterval?: number;
+  autoReconnect?: boolean;
+}
+
+// Connection Management
+export const connectRequest = createAction(
+  '[WebSocket] Connect Request',
+  props<{ connectionConfig: ConnectionConfig }>()
+);
+
+export const connectionEstablished = createAction(
+  '[WebSocket] Connection Established',
+  props<{ connectionId: string }>()
+);
+
+export const connectionLost = createAction(
+  '[WebSocket] Connection Lost',
+  props<{ connectionId: string; error?: any }>()
+);
+
+export const disconnect = createAction(
+  '[WebSocket] Disconnect',
+  props<{ connectionId: string }>()
+);
+
+export const reconnectAttempt = createAction(
+  '[WebSocket] Reconnect Attempt',
+  props<{ connectionId: string }>()
+);
+
+// Message Handling
+export const sendMessage = createAction(
+  '[WebSocket] Send Message',
+  props<{ connectionId: string; message: any }>()
+);
+
+export const messageReceived = createAction(
+  '[WebSocket] Message Received',
+  props<{ message: RealtimeMessage }>()
+);
+
+export const queueMessage = createAction(
+  '[WebSocket] Queue Message',
+  props<{ message: RealtimeMessage }>()
+);
+
+export const processQueuedMessages = createAction(
+  '[WebSocket] Process Queued Messages'
+);
+
+// Subscription Management
+export const subscribeToTopic = createAction(
+  '[WebSocket] Subscribe To Topic',
+  props<{ connectionId: string; topic: string; params?: any }>()
+);
+
+export const unsubscribeFromTopic = createAction(
+  '[WebSocket] Unsubscribe From Topic',
+  props<{ connectionId: string; topic: string }>()
+);
+
+// Heartbeat
+export const sendHeartbeat = createAction(
+  '[WebSocket] Send Heartbeat',
+  props<{ connectionId: string }>()
+);
+
+export const heartbeatReceived = createAction(
+  '[WebSocket] Heartbeat Received',
+  props<{ connectionId: string }>()
+);
+```
+
+**3. WebSocket Effects:**
+
+```typescript
+// effects/websocket.effects.ts
+import { Injectable } from '@angular/core';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
+import { 
+  EMPTY, 
+  fromEvent, 
+  interval, 
+  merge, 
+  of, 
+  timer, 
+  Subject,
+  WebSocketSubject,
+  webSocket
+} from 'rxjs';
+import {
+  catchError,
+  delay,
+  filter,
+  map,
+  mergeMap,
+  retryWhen,
+  switchMap,
+  takeUntil,
+  tap,
+  withLatestFrom
+} from 'rxjs/operators';
+import * as WebSocketActions from '../actions/websocket.actions';
+import * as WebSocketSelectors from '../selectors/websocket.selectors';
+import { RealtimeMessage } from '../state/websocket.state';
+
+@Injectable()
+export class WebSocketEffects {
+  private connections = new Map<string, WebSocketSubject<any>>();
+  private destroy$ = new Subject<void>();
+  
+  // Establish WebSocket connection
+  connect$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(WebSocketActions.connectRequest),
+      mergeMap(({ connectionConfig }) => {
+        const { id, url, protocols, heartbeatInterval } = connectionConfig;
+        
+        // Create WebSocket connection
+        const ws$ = webSocket({
+          url,
+          protocols,
+          openObserver: {
+            next: () => {
+              this.store.dispatch(
+                WebSocketActions.connectionEstablished({ connectionId: id })
+              );
+            }
+          },
+          closeObserver: {
+            next: (event) => {
+              this.store.dispatch(
+                WebSocketActions.connectionLost({ 
+                  connectionId: id, 
+                  error: event 
+                })
+              );
+            }
+          }
+        });
+        
+        // Store connection reference
+        this.connections.set(id, ws$);
+        
+        // Handle incoming messages
+        const messages$ = ws$.pipe(
+          map(data => {
+            const message: RealtimeMessage = {
+              id: this.generateMessageId(),
+              type: data.type || 'unknown',
+              payload: data.payload || data,
+              timestamp: new Date(),
+              connectionId: id,
+              processed: false
+            };
+            
+            return WebSocketActions.messageReceived({ message });
+          }),
+          catchError(error => {
+            console.error('WebSocket message error:', error);
+            return EMPTY;
+          })
+        );
+        
+        // Setup heartbeat if configured
+        const heartbeat$ = heartbeatInterval
+          ? interval(heartbeatInterval).pipe(
+              map(() => WebSocketActions.sendHeartbeat({ connectionId: id }))
+            )
+          : EMPTY;
+        
+        return merge(messages$, heartbeat$).pipe(
+          takeUntil(
+            this.actions$.pipe(
+              ofType(WebSocketActions.disconnect),
+              filter(action => action.connectionId === id)
+            )
+          ),
+          retryWhen(errors =>
+            errors.pipe(
+              withLatestFrom(
+                this.store.select(WebSocketSelectors.selectConnectionById(id))
+              ),
+              switchMap(([error, connection]) => {
+                if (!connection || 
+                    connection.reconnectAttempts >= connection.maxReconnectAttempts) {
+                  return EMPTY;
+                }
+                
+                const delay = Math.min(
+                  1000 * Math.pow(2, connection.reconnectAttempts),
+                  30000
+                );
+                
+                return timer(delay).pipe(
+                  tap(() => {
+                    this.store.dispatch(
+                      WebSocketActions.reconnectAttempt({ connectionId: id })
+                    );
+                  })
+                );
+              })
+            )
+          )
+        );
+      })
+    )
+  );
+  
+  // Send messages through WebSocket
+  sendMessage$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(WebSocketActions.sendMessage),
+      withLatestFrom(
+        this.store.select(WebSocketSelectors.selectGlobalConnectionStatus)
+      ),
+      switchMap(([{ connectionId, message }, connectionStatus]) => {
+        const connection = this.connections.get(connectionId);
+        
+        if (!connection || connectionStatus === 'offline') {
+          // Queue message for later sending
+          const queuedMessage: RealtimeMessage = {
+            id: this.generateMessageId(),
+            type: 'queued',
+            payload: message,
+            timestamp: new Date(),
+            connectionId,
+            processed: false
+          };
+          
+          return of(WebSocketActions.queueMessage({ message: queuedMessage }));
+        }
+        
+        try {
+          connection.next(message);
+          return EMPTY;
+        } catch (error) {
+          console.error('Failed to send WebSocket message:', error);
+          return of(
+            WebSocketActions.connectionLost({ 
+              connectionId, 
+              error 
+            })
+          );
+        }
+      })
+    )
+  );
+  
+  // Process queued messages when connection is restored
+  processQueuedMessages$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(WebSocketActions.connectionEstablished),
+      delay(1000), // Wait a bit for connection to stabilize
+      map(() => WebSocketActions.processQueuedMessages())
+    )
+  );
+  
+  // Handle topic subscriptions
+  subscribeToTopic$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(WebSocketActions.subscribeToTopic),
+      map(({ connectionId, topic, params }) => {
+        const subscriptionMessage = {
+          type: 'subscribe',
+          topic,
+          params
+        };
+        
+        return WebSocketActions.sendMessage({ 
+          connectionId, 
+          message: subscriptionMessage 
+        });
+      })
+    )
+  );
+  
+  // Handle heartbeat
+  sendHeartbeat$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(WebSocketActions.sendHeartbeat),
+      map(({ connectionId }) => {
+        const heartbeatMessage = {
+          type: 'ping',
+          timestamp: Date.now()
+        };
+        
+        return WebSocketActions.sendMessage({ 
+          connectionId, 
+          message: heartbeatMessage 
+        });
+      })
+    )
+  );
+  
+  // Disconnect WebSocket
+  disconnect$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(WebSocketActions.disconnect),
+      tap(({ connectionId }) => {
+        const connection = this.connections.get(connectionId);
+        if (connection) {
+          connection.complete();
+          this.connections.delete(connectionId);
+        }
+      })
+    ),
+    { dispatch: false }
+  );
+  
+  constructor(
+    private actions$: Actions,
+    private store: Store
+  ) {}
+  
+  private generateMessageId(): string {
+    return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+  
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    
+    // Close all connections
+    this.connections.forEach(connection => connection.complete());
+    this.connections.clear();
+  }
+}
+```
+
+**4. Real-time Data Integration:**
+
+```typescript
+// effects/realtime-data.effects.ts
+import { Injectable } from '@angular/core';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
+import { filter, map, switchMap, withLatestFrom } from 'rxjs/operators';
+import * as WebSocketActions from '../actions/websocket.actions';
+import * as UserActions from '../actions/user.actions';
+import * as NotificationActions from '../actions/notification.actions';
+import * as WebSocketSelectors from '../selectors/websocket.selectors';
+
+@Injectable()
+export class RealtimeDataEffects {
+  
+  // Handle real-time user updates
+  handleUserUpdates$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(WebSocketActions.messageReceived),
+      filter(({ message }) => message.type === 'user_update'),
+      map(({ message }) => {
+        const { action, user } = message.payload;
+        
+        switch (action) {
+          case 'created':
+            return UserActions.addUserSuccess({ user });
+          case 'updated':
+            return UserActions.updateUserSuccess({ user });
+          case 'deleted':
+            return UserActions.deleteUserSuccess({ userId: user.id });
+          default:
+            return UserActions.loadUsers(); // Refresh all users
+        }
+      })
+    )
+  );
+  
+  // Handle real-time notifications
+  handleNotifications$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(WebSocketActions.messageReceived),
+      filter(({ message }) => message.type === 'notification'),
+      map(({ message }) => 
+        NotificationActions.addNotification({ 
+          notification: {
+            id: message.id,
+            ...message.payload,
+            timestamp: message.timestamp,
+            realtime: true
+          }
+        })
+      )
+    )
+  );
+  
+  // Handle real-time chat messages
+  handleChatMessages$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(WebSocketActions.messageReceived),
+      filter(({ message }) => message.type === 'chat_message'),
+      withLatestFrom(
+        this.store.select(WebSocketSelectors.selectCurrentUser)
+      ),
+      filter(([{ message }, currentUser]) => 
+        message.payload.recipientId === currentUser?.id
+      ),
+      map(([{ message }]) => 
+        ChatActions.receiveMessage({ 
+          message: {
+            id: message.id,
+            ...message.payload,
+            timestamp: message.timestamp
+          }
+        })
+      )
+    )
+  );
+  
+  // Handle real-time system events
+  handleSystemEvents$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(WebSocketActions.messageReceived),
+      filter(({ message }) => message.type === 'system_event'),
+      switchMap(({ message }) => {
+        const { eventType, data } = message.payload;
+        
+        switch (eventType) {
+          case 'maintenance_mode':
+            return [SystemActions.setMaintenanceMode({ enabled: data.enabled })];
+          case 'feature_toggle':
+            return [SystemActions.updateFeatureFlag({ 
+              flag: data.flag, 
+              enabled: data.enabled 
+            })];
+          case 'cache_invalidation':
+            return [CacheActions.invalidateCache({ keys: data.keys })];
+          default:
+            return [];
+        }
+      })
+    )
+  );
+  
+  constructor(
+    private actions$: Actions,
+    private store: Store
+  ) {}
+}
+```
+
+**5. WebSocket Service:**
+
+```typescript
+// services/websocket.service.ts
+import { Injectable } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+import * as WebSocketActions from '../actions/websocket.actions';
+import * as WebSocketSelectors from '../selectors/websocket.selectors';
+import { ConnectionConfig, RealtimeMessage } from '../state/websocket.state';
+
+@Injectable({ providedIn: 'root' })
+export class WebSocketService {
+  
+  constructor(private store: Store) {}
+  
+  // Connect to WebSocket
+  connect(config: ConnectionConfig): void {
+    this.store.dispatch(
+      WebSocketActions.connectRequest({ connectionConfig: config })
+    );
+  }
+  
+  // Disconnect from WebSocket
+  disconnect(connectionId: string): void {
+    this.store.dispatch(
+      WebSocketActions.disconnect({ connectionId })
+    );
+  }
+  
+  // Send message
+  sendMessage(connectionId: string, message: any): void {
+    this.store.dispatch(
+      WebSocketActions.sendMessage({ connectionId, message })
+    );
+  }
+  
+  // Subscribe to topic
+  subscribeToTopic(connectionId: string, topic: string, params?: any): void {
+    this.store.dispatch(
+      WebSocketActions.subscribeToTopic({ connectionId, topic, params })
+    );
+  }
+  
+  // Unsubscribe from topic
+  unsubscribeFromTopic(connectionId: string, topic: string): void {
+    this.store.dispatch(
+      WebSocketActions.unsubscribeFromTopic({ connectionId, topic })
+    );
+  }
+  
+  // Get connection status
+  getConnectionStatus(connectionId: string): Observable<string> {
+    return this.store.select(
+      WebSocketSelectors.selectConnectionById(connectionId)
+    ).pipe(
+      map(connection => connection?.status || 'disconnected')
+    );
+  }
+  
+  // Get messages by type
+  getMessagesByType(messageType: string): Observable<RealtimeMessage[]> {
+    return this.store.select(WebSocketSelectors.selectAllMessages).pipe(
+      map(messages => messages.filter(msg => msg.type === messageType))
+    );
+  }
+  
+  // Get global connection status
+  getGlobalConnectionStatus(): Observable<string> {
+    return this.store.select(WebSocketSelectors.selectGlobalConnectionStatus);
+  }
+}
+```
+
+**6. Component Integration:**
+
+```typescript
+// components/realtime-dashboard.component.ts
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil, filter } from 'rxjs/operators';
+import { WebSocketService } from '../services/websocket.service';
+import * as WebSocketSelectors from '../selectors/websocket.selectors';
+import * as UserSelectors from '../selectors/user.selectors';
+import { RealtimeMessage } from '../state/websocket.state';
+
+@Component({
+  selector: 'app-realtime-dashboard',
+  template: `
+    <div class="realtime-dashboard">
+      <div class="connection-status">
+        <div class="status-indicator" 
+             [class.connected]="(connectionStatus$ | async) === 'online'"
+             [class.disconnected]="(connectionStatus$ | async) === 'offline'"
+             [class.degraded]="(connectionStatus$ | async) === 'degraded'">
+          {{ connectionStatus$ | async | titlecase }}
+        </div>
+      </div>
+      
+      <div class="realtime-content">
+        <div class="user-list">
+          <h3>Active Users</h3>
+          <div class="user-item" 
+               *ngFor="let user of activeUsers$ | async"
+               [class.online]="user.isOnline">
+            <div class="user-avatar">
+              <img [src]="user.avatar" [alt]="user.name">
+              <div class="status-dot" [class.online]="user.isOnline"></div>
+            </div>
+            <div class="user-info">
+              <div class="user-name">{{ user.name }}</div>
+              <div class="user-status">{{ user.status }}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="activity-feed">
+          <h3>Live Activity</h3>
+          <div class="activity-item" 
+               *ngFor="let message of recentMessages$ | async">
+            <div class="activity-time">
+              {{ message.timestamp | date:'short' }}
+            </div>
+            <div class="activity-content">
+              {{ formatActivityMessage(message) }}
+            </div>
+          </div>
+        </div>
+        
+        <div class="notifications">
+          <h3>Real-time Notifications</h3>
+          <div class="notification-item"
+               *ngFor="let notification of notifications$ | async"
+               [class]="notification.type">
+            <div class="notification-icon">
+              <mat-icon>{{ getNotificationIcon(notification.type) }}</mat-icon>
+            </div>
+            <div class="notification-content">
+              <div class="notification-title">{{ notification.title }}</div>
+              <div class="notification-message">{{ notification.message }}</div>
+            </div>
+            <div class="notification-time">
+              {{ notification.timestamp | date:'short' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  styleUrls: ['./realtime-dashboard.component.scss']
+})
+export class RealtimeDashboardComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+  
+  connectionStatus$: Observable<string>;
+  activeUsers$: Observable<any[]>;
+  recentMessages$: Observable<RealtimeMessage[]>;
+  notifications$: Observable<any[]>;
+  
+  constructor(
+    private store: Store,
+    private webSocketService: WebSocketService
+  ) {
+    this.connectionStatus$ = this.webSocketService.getGlobalConnectionStatus();
+    this.activeUsers$ = this.store.select(UserSelectors.selectActiveUsers);
+    this.recentMessages$ = this.store.select(WebSocketSelectors.selectRecentMessages);
+    this.notifications$ = this.store.select(WebSocketSelectors.selectRealtimeNotifications);
+  }
+  
+  ngOnInit() {
+    // Connect to WebSocket
+    this.webSocketService.connect({
+      id: 'main',
+      url: 'wss://api.example.com/ws',
+      maxReconnectAttempts: 5,
+      heartbeatInterval: 30000,
+      autoReconnect: true
+    });
+    
+    // Subscribe to relevant topics
+    this.webSocketService.subscribeToTopic('main', 'user_updates');
+    this.webSocketService.subscribeToTopic('main', 'notifications');
+    this.webSocketService.subscribeToTopic('main', 'system_events');
+    
+    // Handle connection status changes
+    this.connectionStatus$.pipe(
+      takeUntil(this.destroy$),
+      filter(status => status === 'offline')
+    ).subscribe(() => {
+      // Handle offline state
+      this.showOfflineMessage();
+    });
+  }
+  
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    
+    // Disconnect WebSocket
+    this.webSocketService.disconnect('main');
+  }
+  
+  formatActivityMessage(message: RealtimeMessage): string {
+    switch (message.type) {
+      case 'user_update':
+        return `User ${message.payload.user.name} ${message.payload.action}`;
+      case 'system_event':
+        return `System: ${message.payload.eventType}`;
+      default:
+        return message.payload.message || 'Unknown activity';
+    }
+  }
+  
+  getNotificationIcon(type: string): string {
+    const iconMap: Record<string, string> = {
+      info: 'info',
+      warning: 'warning',
+      error: 'error',
+      success: 'check_circle'
+    };
+    return iconMap[type] || 'notifications';
+  }
+  
+  private showOfflineMessage() {
+    // Show offline notification
+  }
+}
+```
+
+This comprehensive WebSocket integration with NgRx provides real-time capabilities while maintaining predictable state management, proper error handling, and offline resilience.
+
+---
+
+## NgRx in Micro-frontends Architecture
+
+### Q17: How do you implement NgRx in a micro-frontends architecture with state sharing and isolation?
+
+**Answer:**
+Implementing NgRx in micro-frontends requires careful consideration of state isolation, shared state management, and communication between different micro-frontend applications.
+
+**1. Micro-frontend State Architecture:**
+
+```typescript
+// shared/state/micro-frontend.state.ts
+import { createReducer, on } from '@ngrx/store';
+import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
+
+export interface MicroFrontend {
+  id: string;
+  name: string;
+  version: string;
+  status: 'loading' | 'loaded' | 'error' | 'unloaded';
+  mountPath: string;
+  remoteEntry: string;
+  exposedModule: string;
+  sharedDependencies: string[];
+  isolatedState: boolean;
+  sharedStateKeys: string[];
+}
+
+export interface SharedStateSlice {
+  key: string;
+  data: any;
+  version: number;
+  lastUpdated: Date;
+  ownerMicroFrontend: string;
+  subscribers: string[];
+}
+
+export interface MicroFrontendState extends EntityState<MicroFrontend> {
+  currentMicroFrontend: string | null;
+  sharedState: Record<string, SharedStateSlice>;
+  communicationChannels: Record<string, any>;
+  globalEvents: any[];
+  stateSync: {
+    enabled: boolean;
+    strategy: 'broadcast' | 'centralized' | 'peer-to-peer';
+    conflictResolution: 'last-write-wins' | 'merge' | 'manual';
+  };
+}
+
+export const microFrontendAdapter: EntityAdapter<MicroFrontend> = 
+  createEntityAdapter<MicroFrontend>({
+    selectId: (mf: MicroFrontend) => mf.id
+  });
+
+export const initialMicroFrontendState: MicroFrontendState = 
+  microFrontendAdapter.getInitialState({
+    currentMicroFrontend: null,
+    sharedState: {},
+    communicationChannels: {},
+    globalEvents: [],
+    stateSync: {
+      enabled: true,
+      strategy: 'broadcast',
+      conflictResolution: 'last-write-wins'
+    }
+  });
+
+export const microFrontendReducer = createReducer(
+  initialMicroFrontendState,
+  
+  on(MicroFrontendActions.registerMicroFrontend, (state, { microFrontend }) => 
+    microFrontendAdapter.addOne(microFrontend, state)
+  ),
+  
+  on(MicroFrontendActions.setCurrentMicroFrontend, (state, { microFrontendId }) => ({
+    ...state,
+    currentMicroFrontend: microFrontendId
+  })),
+  
+  on(MicroFrontendActions.updateSharedState, (state, { key, data, ownerMicroFrontend }) => ({
+    ...state,
+    sharedState: {
+      ...state.sharedState,
+      [key]: {
+        key,
+        data,
+        version: (state.sharedState[key]?.version || 0) + 1,
+        lastUpdated: new Date(),
+        ownerMicroFrontend,
+        subscribers: state.sharedState[key]?.subscribers || []
+      }
+    }
+  })),
+  
+  on(MicroFrontendActions.subscribeToSharedState, (state, { key, microFrontendId }) => {
+    const currentSlice = state.sharedState[key];
+    if (!currentSlice) return state;
+    
+    return {
+      ...state,
+      sharedState: {
+        ...state.sharedState,
+        [key]: {
+          ...currentSlice,
+          subscribers: [...new Set([...currentSlice.subscribers, microFrontendId])]
+        }
+      }
+    };
+  }),
+  
+  on(MicroFrontendActions.addGlobalEvent, (state, { event }) => ({
+    ...state,
+    globalEvents: [event, ...state.globalEvents.slice(0, 99)] // Keep last 100 events
+  }))
+);
+```
+
+**2. State Isolation Service:**
+
+```typescript
+// services/state-isolation.service.ts
+import { Injectable, Injector } from '@angular/core';
+import { Store, StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+
+export interface IsolatedStoreConfig {
+  microFrontendId: string;
+  isolatedReducers: any;
+  sharedReducers?: any;
+  effects?: any[];
+  sharedStateKeys?: string[];
+}
+
+@Injectable({ providedIn: 'root' })
+export class StateIsolationService {
+  private isolatedStores = new Map<string, Store>();
+  private storeConfigs = new Map<string, IsolatedStoreConfig>();
+  private sharedStateSubject = new BehaviorSubject<Record<string, any>>({});
+  
+  constructor(
+    private globalStore: Store,
+    private injector: Injector
+  ) {}
+  
+  // Create isolated store for micro-frontend
+  createIsolatedStore(config: IsolatedStoreConfig): Store {
+    const { microFrontendId, isolatedReducers, sharedReducers, effects } = config;
+    
+    // Combine isolated and shared reducers
+    const combinedReducers = {
+      ...isolatedReducers,
+      ...(sharedReducers || {}),
+      microFrontend: microFrontendReducer
+    };
+    
+    // Create isolated injector
+    const isolatedInjector = Injector.create({
+      providers: [
+        {
+          provide: Store,
+          useFactory: () => {
+            // Create store with combined reducers
+            const storeModule = StoreModule.forRoot(combinedReducers);
+            const effectsModule = effects ? EffectsModule.forRoot(effects) : null;
+            
+            // This is a simplified version - in practice, you'd need to
+            // properly bootstrap the store with the Angular module system
+            return new Store(combinedReducers, this.injector);
+          }
+        }
+      ],
+      parent: this.injector
+    });
+    
+    const isolatedStore = isolatedInjector.get(Store);
+    
+    // Store references
+    this.isolatedStores.set(microFrontendId, isolatedStore);
+    this.storeConfigs.set(microFrontendId, config);
+    
+    // Setup state synchronization
+    this.setupStateSynchronization(microFrontendId, isolatedStore, config);
+    
+    return isolatedStore;
+  }
+  
+  // Get isolated store for micro-frontend
+  getIsolatedStore(microFrontendId: string): Store | null {
+    return this.isolatedStores.get(microFrontendId) || null;
+  }
+  
+  // Setup bidirectional state synchronization
+  private setupStateSynchronization(
+    microFrontendId: string, 
+    isolatedStore: Store, 
+    config: IsolatedStoreConfig
+  ) {
+    const { sharedStateKeys = [] } = config;
+    
+    // Sync from isolated store to global store
+    sharedStateKeys.forEach(stateKey => {
+      isolatedStore.select(state => state[stateKey]).subscribe(stateSlice => {
+        if (stateSlice !== undefined) {
+          this.globalStore.dispatch(
+            MicroFrontendActions.updateSharedState({
+              key: stateKey,
+              data: stateSlice,
+              ownerMicroFrontend: microFrontendId
+            })
+          );
+        }
+      });
+    });
+    
+    // Sync from global store to isolated store
+    this.globalStore.select(state => state.microFrontend?.sharedState)
+      .pipe(
+        filter(sharedState => !!sharedState),
+        map(sharedState => {
+          const relevantState: Record<string, any> = {};
+          sharedStateKeys.forEach(key => {
+            if (sharedState[key] && 
+                sharedState[key].ownerMicroFrontend !== microFrontendId) {
+              relevantState[key] = sharedState[key].data;
+            }
+          });
+          return relevantState;
+        })
+      )
+      .subscribe(relevantState => {
+        Object.keys(relevantState).forEach(key => {
+          isolatedStore.dispatch({
+            type: `[Shared] Update ${key}`,
+            payload: relevantState[key]
+          });
+        });
+      });
+  }
+  
+  // Destroy isolated store
+  destroyIsolatedStore(microFrontendId: string) {
+    const store = this.isolatedStores.get(microFrontendId);
+    if (store) {
+      // Cleanup subscriptions and references
+      this.isolatedStores.delete(microFrontendId);
+      this.storeConfigs.delete(microFrontendId);
+    }
+  }
+  
+  // Get shared state observable
+  getSharedState(): Observable<Record<string, any>> {
+    return this.sharedStateSubject.asObservable();
+  }
+  
+  // Update shared state
+  updateSharedState(key: string, data: any, microFrontendId: string) {
+    this.globalStore.dispatch(
+      MicroFrontendActions.updateSharedState({
+        key,
+        data,
+        ownerMicroFrontend: microFrontendId
+      })
+    );
+  }
+}
+```
+
+**3. Inter-Micro-Frontend Communication:**
+
+```typescript
+// services/micro-frontend-communication.service.ts
+import { Injectable } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Observable, Subject, fromEvent } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+
+export interface MicroFrontendMessage {
+  id: string;
+  type: string;
+  payload: any;
+  source: string;
+  target?: string; // specific micro-frontend or 'all'
+  timestamp: Date;
+  priority: 'low' | 'medium' | 'high';
+}
+
+@Injectable({ providedIn: 'root' })
+export class MicroFrontendCommunicationService {
+  private messageSubject = new Subject<MicroFrontendMessage>();
+  private currentMicroFrontendId: string;
+  
+  constructor(private store: Store) {
+    this.setupGlobalMessageListener();
+  }
+  
+  // Set current micro-frontend ID
+  setCurrentMicroFrontend(microFrontendId: string) {
+    this.currentMicroFrontendId = microFrontendId;
+    this.store.dispatch(
+      MicroFrontendActions.setCurrentMicroFrontend({ microFrontendId })
+    );
+  }
+  
+  // Send message to other micro-frontends
+  sendMessage(message: Omit<MicroFrontendMessage, 'id' | 'source' | 'timestamp'>) {
+    const fullMessage: MicroFrontendMessage = {
+      ...message,
+      id: this.generateMessageId(),
+      source: this.currentMicroFrontendId,
+      timestamp: new Date()
+    };
+    
+    // Dispatch to global store
+    this.store.dispatch(
+      MicroFrontendActions.addGlobalEvent({ event: fullMessage })
+    );
+    
+    // Broadcast via custom events
+    this.broadcastMessage(fullMessage);
+    
+    // Emit to local subscribers
+    this.messageSubject.next(fullMessage);
+  }
+  
+  // Listen for messages
+  onMessage(messageType?: string, source?: string): Observable<MicroFrontendMessage> {
+    return this.messageSubject.asObservable().pipe(
+      filter(message => {
+        // Filter by target
+        if (message.target && 
+            message.target !== 'all' && 
+            message.target !== this.currentMicroFrontendId) {
+          return false;
+        }
+        
+        // Filter by type
+        if (messageType && message.type !== messageType) {
+          return false;
+        }
+        
+        // Filter by source
+        if (source && message.source !== source) {
+          return false;
+        }
+        
+        // Don't receive own messages
+        return message.source !== this.currentMicroFrontendId;
+      })
+    );
+  }
+  
+  // Request-Response pattern
+  sendRequest<T>(request: {
+    type: string;
+    payload: any;
+    target?: string;
+  }): Observable<T> {
+    const requestId = this.generateMessageId();
+    const responseType = `${request.type}_RESPONSE`;
+    
+    // Send request
+    this.sendMessage({
+      ...request,
+      type: request.type,
+      payload: {
+        ...request.payload,
+        requestId
+      },
+      priority: 'medium'
+    });
+    
+    // Wait for response
+    return this.onMessage(responseType).pipe(
+      filter(message => message.payload.requestId === requestId),
+      map(message => message.payload.data)
+    );
+  }
+  
+  // Send response to request
+  sendResponse(requestMessage: MicroFrontendMessage, responseData: any) {
+    this.sendMessage({
+      type: `${requestMessage.type}_RESPONSE`,
+      payload: {
+        requestId: requestMessage.payload.requestId,
+        data: responseData
+      },
+      target: requestMessage.source,
+      priority: 'medium'
+    });
+  }
+  
+  // Broadcast message via custom events (for cross-origin communication)
+  private broadcastMessage(message: MicroFrontendMessage) {
+    // Use CustomEvent for same-origin communication
+    window.dispatchEvent(new CustomEvent('micro-frontend-message', {
+      detail: message
+    }));
+    
+    // Use postMessage for cross-origin communication
+    if (window.parent !== window) {
+      window.parent.postMessage({
+        type: 'micro-frontend-message',
+        data: message
+      }, '*');
+    }
+    
+    // Broadcast to all iframes
+    const iframes = document.querySelectorAll('iframe');
+    iframes.forEach(iframe => {
+      try {
+        iframe.contentWindow?.postMessage({
+          type: 'micro-frontend-message',
+          data: message
+        }, '*');
+      } catch (error) {
+        // Handle cross-origin restrictions
+        console.warn('Could not send message to iframe:', error);
+      }
+    });
+  }
+  
+  // Setup global message listener
+  private setupGlobalMessageListener() {
+    // Listen for custom events
+    fromEvent<CustomEvent>(window, 'micro-frontend-message')
+      .pipe(
+        map(event => event.detail as MicroFrontendMessage)
+      )
+      .subscribe(message => {
+        this.messageSubject.next(message);
+      });
+    
+    // Listen for postMessage events
+    fromEvent<MessageEvent>(window, 'message')
+      .pipe(
+        filter(event => event.data?.type === 'micro-frontend-message'),
+        map(event => event.data.data as MicroFrontendMessage)
+      )
+      .subscribe(message => {
+        this.messageSubject.next(message);
+      });
+  }
+  
+  private generateMessageId(): string {
+    return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+}
+```
+
+**4. Micro-Frontend Store Factory:**
+
+```typescript
+// factories/micro-frontend-store.factory.ts
+import { Injectable, Injector } from '@angular/core';
+import { Store, StoreModule, ActionReducer, MetaReducer } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+import { StateIsolationService } from '../services/state-isolation.service';
+import { MicroFrontendCommunicationService } from '../services/micro-frontend-communication.service';
+
+export interface MicroFrontendStoreConfig {
+  microFrontendId: string;
+  reducers: any;
+  effects?: any[];
+  sharedStateKeys?: string[];
+  enableDevTools?: boolean;
+  metaReducers?: MetaReducer<any>[];
+  isolationLevel: 'full' | 'partial' | 'shared';
+}
+
+@Injectable({ providedIn: 'root' })
+export class MicroFrontendStoreFactory {
+  
+  constructor(
+    private stateIsolationService: StateIsolationService,
+    private communicationService: MicroFrontendCommunicationService,
+    private injector: Injector
+  ) {}
+  
+  // Create store for micro-frontend
+  createStore(config: MicroFrontendStoreConfig): Store {
+    const {
+      microFrontendId,
+      reducers,
+      effects = [],
+      sharedStateKeys = [],
+      enableDevTools = false,
+      metaReducers = [],
+      isolationLevel
+    } = config;
+    
+    // Set current micro-frontend
+    this.communicationService.setCurrentMicroFrontend(microFrontendId);
+    
+    // Add communication meta-reducer
+    const communicationMetaReducer = this.createCommunicationMetaReducer(
+      microFrontendId
+    );
+    const allMetaReducers = [communicationMetaReducer, ...metaReducers];
+    
+    switch (isolationLevel) {
+      case 'full':
+        return this.createFullyIsolatedStore(config, allMetaReducers);
+      case 'partial':
+        return this.createPartiallyIsolatedStore(config, allMetaReducers);
+      case 'shared':
+        return this.createSharedStore(config, allMetaReducers);
+      default:
+        throw new Error(`Unknown isolation level: ${isolationLevel}`);
+    }
+  }
+  
+  // Create fully isolated store
+  private createFullyIsolatedStore(
+    config: MicroFrontendStoreConfig,
+    metaReducers: MetaReducer<any>[]
+  ): Store {
+    const { microFrontendId, reducers, effects, enableDevTools } = config;
+    
+    // Create completely isolated store
+    const isolatedInjector = Injector.create({
+      providers: [
+        StoreModule.forRoot(reducers, { metaReducers }).providers || [],
+        EffectsModule.forRoot(effects).providers || [],
+        ...(enableDevTools ? 
+          StoreDevtoolsModule.instrument({
+            name: `MicroFrontend: ${microFrontendId}`
+          }).providers || [] : []
+        )
+      ],
+      parent: this.injector
+    });
+    
+    return isolatedInjector.get(Store);
+  }
+  
+  // Create partially isolated store (shares some state)
+  private createPartiallyIsolatedStore(
+    config: MicroFrontendStoreConfig,
+    metaReducers: MetaReducer<any>[]
+  ): Store {
+    return this.stateIsolationService.createIsolatedStore({
+      microFrontendId: config.microFrontendId,
+      isolatedReducers: config.reducers,
+      effects: config.effects,
+      sharedStateKeys: config.sharedStateKeys
+    });
+  }
+  
+  // Create shared store (uses global store)
+  private createSharedStore(
+    config: MicroFrontendStoreConfig,
+    metaReducers: MetaReducer<any>[]
+  ): Store {
+    // Register micro-frontend with global store
+    const globalStore = this.injector.get(Store);
+    
+    globalStore.dispatch(
+      MicroFrontendActions.registerMicroFrontend({
+        microFrontend: {
+          id: config.microFrontendId,
+          name: config.microFrontendId,
+          version: '1.0.0',
+          status: 'loaded',
+          mountPath: window.location.pathname,
+          remoteEntry: '',
+          exposedModule: '',
+          sharedDependencies: [],
+          isolatedState: false,
+          sharedStateKeys: config.sharedStateKeys || []
+        }
+      })
+    );
+    
+    return globalStore;
+  }
+  
+  // Create meta-reducer for communication
+  private createCommunicationMetaReducer(
+    microFrontendId: string
+  ): MetaReducer<any> {
+    return (reducer: ActionReducer<any>): ActionReducer<any> => {
+      return (state, action) => {
+        // Intercept actions for communication
+        if (action.type.startsWith('[Communication]')) {
+          this.communicationService.sendMessage({
+            type: 'state_action',
+            payload: {
+              action,
+              microFrontendId
+            },
+            priority: 'medium'
+          });
+        }
+        
+        return reducer(state, action);
+      };
+    };
+  }
+}
+```
+
+**5. Micro-Frontend Module:**
+
+```typescript
+// modules/micro-frontend.module.ts
+import { NgModule, ModuleWithProviders } from '@angular/core';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import { MicroFrontendStoreFactory, MicroFrontendStoreConfig } from '../factories/micro-frontend-store.factory';
+import { StateIsolationService } from '../services/state-isolation.service';
+import { MicroFrontendCommunicationService } from '../services/micro-frontend-communication.service';
+import { microFrontendReducer } from '../state/micro-frontend.state';
+import { MicroFrontendEffects } from '../effects/micro-frontend.effects';
+
+@NgModule({
+  imports: [
+    StoreModule.forFeature('microFrontend', microFrontendReducer),
+    EffectsModule.forFeature([MicroFrontendEffects])
+  ],
+  providers: [
+    StateIsolationService,
+    MicroFrontendCommunicationService,
+    MicroFrontendStoreFactory
+  ]
+})
+export class MicroFrontendModule {
+  
+  static forRoot(): ModuleWithProviders<MicroFrontendModule> {
+    return {
+      ngModule: MicroFrontendModule,
+      providers: [
+        StateIsolationService,
+        MicroFrontendCommunicationService,
+        MicroFrontendStoreFactory
+      ]
+    };
+  }
+  
+  static forChild(config: MicroFrontendStoreConfig): ModuleWithProviders<MicroFrontendModule> {
+    return {
+      ngModule: MicroFrontendModule,
+      providers: [
+        {
+          provide: 'MICRO_FRONTEND_CONFIG',
+          useValue: config
+        },
+        {
+          provide: Store,
+          useFactory: (factory: MicroFrontendStoreFactory) => {
+            return factory.createStore(config);
+          },
+          deps: [MicroFrontendStoreFactory]
+        }
+      ]
+    };
+  }
+}
+```
+
+**6. Usage Example:**
+
+```typescript
+// micro-frontend-app.module.ts
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { MicroFrontendModule } from './micro-frontend.module';
+import { userReducer } from './state/user.reducer';
+import { UserEffects } from './effects/user.effects';
+
+@NgModule({
+  imports: [
+    BrowserModule,
+    MicroFrontendModule.forChild({
+      microFrontendId: 'user-management',
+      reducers: {
+        users: userReducer
+      },
+      effects: [UserEffects],
+      sharedStateKeys: ['currentUser', 'permissions'],
+      isolationLevel: 'partial',
+      enableDevTools: true
+    })
+  ],
+  // ... rest of module configuration
+})
+export class MicroFrontendAppModule {}
+```
+
+This architecture provides flexible state management for micro-frontends with configurable isolation levels, inter-application communication, and shared state synchronization while maintaining the benefits of NgRx's predictable state management.
+
+---
+
+## NgRx Migration Strategies
+
+### Q18: What are the best practices for migrating from legacy state management to NgRx or upgrading NgRx versions?
+
+**Answer:**
+Migrating to NgRx or upgrading NgRx versions requires careful planning, incremental implementation, and proper testing strategies to ensure smooth transitions.
+
+**1. Migration from Legacy State Management:**
+
+```typescript
+// migration/legacy-state-adapter.service.ts
+import { Injectable } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { map, distinctUntilChanged } from 'rxjs/operators';
+
+export interface LegacyStateConfig {
+  legacyServiceName: string;
+  ngrxFeatureName: string;
+  stateMapping: Record<string, string>;
+  actionMapping: Record<string, string>;
+  migrationPhase: 'preparation' | 'dual-write' | 'dual-read' | 'cleanup';
+}
+
+@Injectable({ providedIn: 'root' })
+export class LegacyStateAdapterService {
+  private migrationConfigs = new Map<string, LegacyStateConfig>();
+  private legacyServices = new Map<string, any>();
+  
+  constructor(private store: Store) {}
+  
+  // Register legacy service for migration
+  registerLegacyService(config: LegacyStateConfig, legacyService: any) {
+    this.migrationConfigs.set(config.legacyServiceName, config);
+    this.legacyServices.set(config.legacyServiceName, legacyService);
+    
+    // Setup bidirectional sync based on migration phase
+    this.setupMigrationSync(config, legacyService);
+  }
+  
+  // Setup synchronization between legacy and NgRx
+  private setupMigrationSync(config: LegacyStateConfig, legacyService: any) {
+    const { migrationPhase, stateMapping, actionMapping } = config;
+    
+    switch (migrationPhase) {
+      case 'preparation':
+        this.setupPreparationPhase(config, legacyService);
+        break;
+      case 'dual-write':
+        this.setupDualWritePhase(config, legacyService);
+        break;
+      case 'dual-read':
+        this.setupDualReadPhase(config, legacyService);
+        break;
+      case 'cleanup':
+        this.setupCleanupPhase(config, legacyService);
+        break;
+    }
+  }
+  
+  // Phase 1: Preparation - Setup NgRx alongside legacy
+  private setupPreparationPhase(config: LegacyStateConfig, legacyService: any) {
+    // Initialize NgRx state with current legacy state
+    const currentLegacyState = this.extractLegacyState(legacyService, config.stateMapping);
+    
+    this.store.dispatch({
+      type: `[Migration] Initialize ${config.ngrxFeatureName}`,
+      payload: currentLegacyState
+    });
+    
+    console.log(`Migration Phase 1 (Preparation) setup for ${config.legacyServiceName}`);
+  }
+  
+  // Phase 2: Dual Write - Write to both legacy and NgRx
+  private setupDualWritePhase(config: LegacyStateConfig, legacyService: any) {
+    // Intercept legacy service methods
+    const originalMethods = this.interceptLegacyMethods(legacyService, config);
+    
+    // Override methods to write to both systems
+    Object.keys(config.actionMapping).forEach(legacyMethod => {
+      const ngrxAction = config.actionMapping[legacyMethod];
+      const originalMethod = originalMethods[legacyMethod];
+      
+      legacyService[legacyMethod] = (...args: any[]) => {
+        // Execute original legacy method
+        const result = originalMethod.apply(legacyService, args);
+        
+        // Dispatch corresponding NgRx action
+        this.store.dispatch({
+          type: ngrxAction,
+          payload: this.transformArgsToPayload(args, legacyMethod)
+        });
+        
+        return result;
+      };
+    });
+    
+    console.log(`Migration Phase 2 (Dual Write) setup for ${config.legacyServiceName}`);
+  }
+  
+  // Phase 3: Dual Read - Read from NgRx, fallback to legacy
+  private setupDualReadPhase(config: LegacyStateConfig, legacyService: any) {
+    // Create adapter methods that read from NgRx first
+    Object.keys(config.stateMapping).forEach(legacyProperty => {
+      const ngrxSelector = config.stateMapping[legacyProperty];
+      
+      // Create getter that reads from NgRx
+      Object.defineProperty(legacyService, legacyProperty, {
+        get: () => {
+          let ngrxValue: any;
+          this.store.select(ngrxSelector).pipe(
+            map(value => value),
+            distinctUntilChanged()
+          ).subscribe(value => ngrxValue = value).unsubscribe();
+          
+          return ngrxValue;
+        },
+        configurable: true
+      });
+    });
+    
+    console.log(`Migration Phase 3 (Dual Read) setup for ${config.legacyServiceName}`);
+  }
+  
+  // Phase 4: Cleanup - Remove legacy dependencies
+  private setupCleanupPhase(config: LegacyStateConfig, legacyService: any) {
+    // Mark legacy service as deprecated
+    console.warn(`Legacy service ${config.legacyServiceName} is deprecated. Use NgRx selectors and actions instead.`);
+    
+    // Optionally, throw errors for legacy method calls
+    Object.keys(config.actionMapping).forEach(legacyMethod => {
+      legacyService[legacyMethod] = () => {
+        throw new Error(`Method ${legacyMethod} is deprecated. Use NgRx action ${config.actionMapping[legacyMethod]} instead.`);
+      };
+    });
+  }
+  
+  // Extract current state from legacy service
+  private extractLegacyState(legacyService: any, stateMapping: Record<string, string>): any {
+    const state: any = {};
+    
+    Object.keys(stateMapping).forEach(legacyProperty => {
+      const ngrxProperty = stateMapping[legacyProperty];
+      state[ngrxProperty] = legacyService[legacyProperty];
+    });
+    
+    return state;
+  }
+  
+  // Intercept legacy methods for dual-write
+  private interceptLegacyMethods(legacyService: any, config: LegacyStateConfig): Record<string, Function> {
+    const originalMethods: Record<string, Function> = {};
+    
+    Object.keys(config.actionMapping).forEach(methodName => {
+      originalMethods[methodName] = legacyService[methodName].bind(legacyService);
+    });
+    
+    return originalMethods;
+  }
+  
+  // Transform method arguments to NgRx action payload
+  private transformArgsToPayload(args: any[], methodName: string): any {
+    // Implement transformation logic based on method signature
+    switch (methodName) {
+      case 'updateUser':
+        return { user: args[0] };
+      case 'deleteUser':
+        return { userId: args[0] };
+      case 'loadUsers':
+        return { filters: args[0] || {} };
+      default:
+        return args.length === 1 ? args[0] : args;
+    }
+  }
+  
+  // Get migration progress
+  getMigrationProgress(): Record<string, LegacyStateConfig> {
+    const progress: Record<string, LegacyStateConfig> = {};
+    
+    this.migrationConfigs.forEach((config, serviceName) => {
+      progress[serviceName] = config;
+    });
+    
+    return progress;
+  }
+  
+  // Update migration phase
+  updateMigrationPhase(serviceName: string, newPhase: LegacyStateConfig['migrationPhase']) {
+    const config = this.migrationConfigs.get(serviceName);
+    const legacyService = this.legacyServices.get(serviceName);
+    
+    if (config && legacyService) {
+      config.migrationPhase = newPhase;
+      this.setupMigrationSync(config, legacyService);
+    }
+  }
+}
+```
+
+**2. NgRx Version Migration Service:**
+
+```typescript
+// migration/ngrx-version-migration.service.ts
+import { Injectable } from '@angular/core';
+import { Store } from '@ngrx/store';
+
+export interface NgRxMigrationConfig {
+  fromVersion: string;
+  toVersion: string;
+  features: string[];
+  breakingChanges: BreakingChange[];
+  migrationSteps: MigrationStep[];
+}
+
+export interface BreakingChange {
+  type: 'action' | 'selector' | 'effect' | 'reducer' | 'entity';
+  description: string;
+  oldPattern: string;
+  newPattern: string;
+  autoFixable: boolean;
+}
+
+export interface MigrationStep {
+  id: string;
+  description: string;
+  type: 'manual' | 'automatic';
+  files: string[];
+  commands?: string[];
+  validation?: () => boolean;
+}
+
+@Injectable({ providedIn: 'root' })
+export class NgRxVersionMigrationService {
+  private migrationConfigs: NgRxMigrationConfig[] = [
+    {
+      fromVersion: '13.x',
+      toVersion: '14.x',
+      features: ['Standalone APIs', 'Functional Guards', 'Optional Injectors'],
+      breakingChanges: [
+        {
+          type: 'action',
+          description: 'createAction props function signature changed',
+          oldPattern: 'createAction(type, props<T>())',
+          newPattern: 'createAction(type, props<{payload: T}>())',
+          autoFixable: true
+        }
+      ],
+      migrationSteps: [
+        {
+          id: 'update-dependencies',
+          description: 'Update NgRx dependencies to version 14',
+          type: 'automatic',
+          files: ['package.json'],
+          commands: ['ng update @ngrx/store@14']
+        },
+        {
+          id: 'migrate-actions',
+          description: 'Update action creators to new signature',
+          type: 'automatic',
+          files: ['**/*.actions.ts']
+        }
+      ]
+    },
+    {
+      fromVersion: '14.x',
+      toVersion: '15.x',
+      features: ['Standalone Components', 'Functional Effects', 'Signal Store'],
+      breakingChanges: [
+        {
+          type: 'effect',
+          description: 'Effects can now be functional',
+          oldPattern: '@Injectable() class Effects { @Effect() effect$ = ... }',
+          newPattern: 'export const effect = createEffect(() => ...)',
+          autoFixable: false
+        }
+      ],
+      migrationSteps: [
+        {
+          id: 'update-dependencies',
+          description: 'Update NgRx dependencies to version 15',
+          type: 'automatic',
+          files: ['package.json'],
+          commands: ['ng update @ngrx/store@15']
+        },
+        {
+          id: 'migrate-to-standalone',
+          description: 'Migrate to standalone components',
+          type: 'manual',
+          files: ['**/*.component.ts', '**/*.module.ts']
+        }
+      ]
+    }
+  ];
+  
+  constructor(private store: Store) {}
+  
+  // Get migration path between versions
+  getMigrationPath(fromVersion: string, toVersion: string): NgRxMigrationConfig[] {
+    const path: NgRxMigrationConfig[] = [];
+    
+    // Find all migration configs in the path
+    let currentVersion = fromVersion;
+    
+    while (currentVersion !== toVersion) {
+      const nextMigration = this.migrationConfigs.find(
+        config => config.fromVersion === currentVersion
+      );
+      
+      if (!nextMigration) {
+        throw new Error(`No migration path found from ${currentVersion} to ${toVersion}`);
+      }
+      
+      path.push(nextMigration);
+      currentVersion = nextMigration.toVersion;
+    }
+    
+    return path;
+  }
+  
+  // Execute migration
+  async executeMigration(fromVersion: string, toVersion: string): Promise<void> {
+    const migrationPath = this.getMigrationPath(fromVersion, toVersion);
+    
+    for (const migration of migrationPath) {
+      console.log(`Starting migration from ${migration.fromVersion} to ${migration.toVersion}`);
+      
+      // Execute migration steps
+      for (const step of migration.migrationSteps) {
+        await this.executeStep(step, migration);
+      }
+      
+      // Validate migration
+      if (await this.validateMigration(migration)) {
+        console.log(`Migration to ${migration.toVersion} completed successfully`);
+      } else {
+        throw new Error(`Migration to ${migration.toVersion} failed validation`);
+      }
+    }
+  }
+  
+  // Execute individual migration step
+  private async executeStep(step: MigrationStep, migration: NgRxMigrationConfig): Promise<void> {
+    console.log(`Executing step: ${step.description}`);
+    
+    switch (step.type) {
+      case 'automatic':
+        await this.executeAutomaticStep(step);
+        break;
+      case 'manual':
+        this.logManualStep(step);
+        break;
+    }
+    
+    // Run validation if provided
+    if (step.validation && !step.validation()) {
+      throw new Error(`Step ${step.id} validation failed`);
+    }
+  }
+  
+  // Execute automatic migration step
+  private async executeAutomaticStep(step: MigrationStep): Promise<void> {
+    if (step.commands) {
+      for (const command of step.commands) {
+        console.log(`Running command: ${command}`);
+        // In a real implementation, you would execute the command
+        // using child_process or similar
+      }
+    }
+    
+    // Apply code transformations
+    await this.applyCodeTransformations(step);
+  }
+  
+  // Apply code transformations
+  private async applyCodeTransformations(step: MigrationStep): Promise<void> {
+    switch (step.id) {
+      case 'migrate-actions':
+        await this.migrateActionCreators(step.files);
+        break;
+      case 'migrate-effects':
+        await this.migrateEffects(step.files);
+        break;
+      case 'migrate-selectors':
+        await this.migrateSelectors(step.files);
+        break;
+    }
+  }
+  
+  // Migrate action creators
+  private async migrateActionCreators(files: string[]): Promise<void> {
+    // Implementation would use AST transformations
+    console.log('Migrating action creators...');
+    
+    // Example transformation:
+    // createAction('type', props<User>()) -> createAction('type', props<{user: User}>())
+  }
+  
+  // Migrate effects
+  private async migrateEffects(files: string[]): Promise<void> {
+    console.log('Migrating effects...');
+    
+    // Example: Convert class-based effects to functional effects
+  }
+  
+  // Migrate selectors
+  private async migrateSelectors(files: string[]): Promise<void> {
+    console.log('Migrating selectors...');
+    
+    // Example: Update selector signatures
+  }
+  
+  // Log manual migration step
+  private logManualStep(step: MigrationStep): void {
+    console.log(`\n=== MANUAL STEP REQUIRED ===`);
+    console.log(`Description: ${step.description}`);
+    console.log(`Files to update: ${step.files.join(', ')}`);
+    console.log(`Please complete this step manually before continuing.`);
+    console.log(`===============================\n`);
+  }
+  
+  // Validate migration
+  private async validateMigration(migration: NgRxMigrationConfig): Promise<boolean> {
+    console.log(`Validating migration to ${migration.toVersion}...`);
+    
+    // Run tests
+    const testsPass = await this.runTests();
+    if (!testsPass) {
+      console.error('Tests failed after migration');
+      return false;
+    }
+    
+    // Check for breaking changes
+    const breakingChangesResolved = await this.checkBreakingChanges(migration.breakingChanges);
+    if (!breakingChangesResolved) {
+      console.error('Breaking changes not properly resolved');
+      return false;
+    }
+    
+    return true;
+  }
+  
+  // Run tests
+  private async runTests(): Promise<boolean> {
+    // Implementation would run actual tests
+    console.log('Running tests...');
+    return true; // Placeholder
+  }
+  
+  // Check breaking changes
+  private async checkBreakingChanges(breakingChanges: BreakingChange[]): Promise<boolean> {
+    for (const change of breakingChanges) {
+      if (!change.autoFixable) {
+        console.warn(`Manual verification required for: ${change.description}`);
+      }
+    }
+    
+    return true; // Placeholder
+  }
+  
+  // Get migration report
+  getMigrationReport(fromVersion: string, toVersion: string): any {
+    const migrationPath = this.getMigrationPath(fromVersion, toVersion);
+    
+    return {
+      fromVersion,
+      toVersion,
+      steps: migrationPath.length,
+      features: migrationPath.flatMap(m => m.features),
+      breakingChanges: migrationPath.flatMap(m => m.breakingChanges),
+      estimatedTime: this.estimateMigrationTime(migrationPath)
+    };
+  }
+  
+  // Estimate migration time
+  private estimateMigrationTime(migrationPath: NgRxMigrationConfig[]): string {
+    const totalSteps = migrationPath.reduce((sum, m) => sum + m.migrationSteps.length, 0);
+    const manualSteps = migrationPath.reduce(
+      (sum, m) => sum + m.migrationSteps.filter(s => s.type === 'manual').length, 
+      0
+    );
+    
+    const automaticTime = (totalSteps - manualSteps) * 5; // 5 minutes per automatic step
+    const manualTime = manualSteps * 30; // 30 minutes per manual step
+    
+    return `${automaticTime + manualTime} minutes`;
+  }
+}
+```
+
+**3. Migration Testing Strategy:**
+
+```typescript
+// testing/migration-testing.service.ts
+import { Injectable } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { Store } from '@ngrx/store';
+import { provideMockStore, MockStore } from '@ngrx/store/testing';
+
+@Injectable({ providedIn: 'root' })
+export class MigrationTestingService {
+  
+  // Test legacy to NgRx migration
+  async testLegacyMigration(legacyService: any, ngrxActions: any[], ngrxSelectors: any[]): Promise<boolean> {
+    const testResults: boolean[] = [];
+    
+    // Test state synchronization
+    testResults.push(await this.testStateSynchronization(legacyService, ngrxSelectors));
+    
+    // Test action mapping
+    testResults.push(await this.testActionMapping(legacyService, ngrxActions));
+    
+    // Test data consistency
+    testResults.push(await this.testDataConsistency(legacyService, ngrxSelectors));
+    
+    return testResults.every(result => result);
+  }
+  
+  // Test state synchronization
+  private async testStateSynchronization(legacyService: any, selectors: any[]): Promise<boolean> {
+    const mockStore = TestBed.inject(MockStore);
+    
+    // Test each selector
+    for (const selector of selectors) {
+      const legacyValue = legacyService.getValue();
+      const ngrxValue = mockStore.select(selector);
+      
+      // Compare values
+      if (JSON.stringify(legacyValue) !== JSON.stringify(ngrxValue)) {
+        console.error(`State synchronization failed for selector: ${selector.name}`);
+        return false;
+      }
+    }
+    
+    return true;
+  }
+  
+  // Test action mapping
+  private async testActionMapping(legacyService: any, actions: any[]): Promise<boolean> {
+    const mockStore = TestBed.inject(MockStore);
+    spyOn(mockStore, 'dispatch');
+    
+    // Test each action
+    for (const action of actions) {
+      // Trigger legacy method
+      legacyService.triggerAction(action.type, action.payload);
+      
+      // Verify NgRx action was dispatched
+      expect(mockStore.dispatch).toHaveBeenCalledWith(action);
+    }
+    
+    return true;
+  }
+  
+  // Test data consistency
+  private async testDataConsistency(legacyService: any, selectors: any[]): Promise<boolean> {
+    // Perform operations and verify consistency
+    const initialState = legacyService.getState();
+    
+    // Perform mutations
+    legacyService.updateData({ id: 1, name: 'Test' });
+    
+    // Verify both systems have same state
+    const legacyState = legacyService.getState();
+    const ngrxState = {}; // Get from selectors
+    
+    return JSON.stringify(legacyState) === JSON.stringify(ngrxState);
+  }
+}
+```
+
+**4. Migration CLI Tool:**
+
+```typescript
+// cli/migration-cli.ts
+import { Command } from 'commander';
+import { NgRxVersionMigrationService } from '../migration/ngrx-version-migration.service';
+
+const program = new Command();
+const migrationService = new NgRxVersionMigrationService(null as any);
+
+program
+  .name('ngrx-migrate')
+  .description('NgRx Migration Tool')
+  .version('1.0.0');
+
+program
+  .command('analyze')
+  .description('Analyze current NgRx usage and migration requirements')
+  .option('-f, --from <version>', 'Current NgRx version')
+  .option('-t, --to <version>', 'Target NgRx version')
+  .action((options) => {
+    const report = migrationService.getMigrationReport(options.from, options.to);
+    console.log('Migration Analysis Report:');
+    console.log(JSON.stringify(report, null, 2));
+  });
+
+program
+  .command('migrate')
+  .description('Execute NgRx migration')
+  .option('-f, --from <version>', 'Current NgRx version')
+  .option('-t, --to <version>', 'Target NgRx version')
+  .option('--dry-run', 'Show what would be changed without making changes')
+  .action(async (options) => {
+    if (options.dryRun) {
+      console.log('Dry run mode - no changes will be made');
+      const report = migrationService.getMigrationReport(options.from, options.to);
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      await migrationService.executeMigration(options.from, options.to);
+    }
+  });
+
+program
+  .command('validate')
+  .description('Validate migration results')
+  .option('-v, --version <version>', 'NgRx version to validate')
+  .action((options) => {
+    console.log(`Validating NgRx ${options.version} migration...`);
+    // Implementation would run validation checks
+  });
+
+program.parse();
+```
+
+This comprehensive migration strategy provides tools and services for both legacy-to-NgRx migrations and NgRx version upgrades, with proper testing, validation, and automation capabilities.
+
+---
+
+## NgRx DevTools and Debugging
+
+### Q19: How do you effectively use NgRx DevTools for debugging and what are advanced debugging techniques?
+
+**Answer:**
+NgRx DevTools provide powerful debugging capabilities for state management, action tracking, time-travel debugging, and performance monitoring.
+
+**1. Advanced DevTools Configuration:**
+
+```typescript
+// app.module.ts
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+import { environment } from '../environments/environment';
+
+@NgModule({
+  imports: [
+    StoreDevtoolsModule.instrument({
+      name: 'MyApp DevTools',
+      maxAge: 50, // Retain last 50 states
+      logOnly: environment.production, // Restrict extension to log-only mode in production
+      autoPause: true, // Pauses recording actions and state changes when extension window is not open
+      trace: !environment.production, // Include stack trace for every dispatched action
+      traceLimit: 75, // Maximum stack trace frames to be stored
+      connectInZone: true, // Connect in Angular zone for better performance
+      
+      // Custom action sanitizer
+      actionSanitizer: (action: any) => {
+        if (action.type === '[Auth] Login Success') {
+          return {
+            ...action,
+            payload: {
+              ...action.payload,
+              token: '***SANITIZED***' // Hide sensitive data
+            }
+          };
+        }
+        return action;
+      },
+      
+      // Custom state sanitizer
+      stateSanitizer: (state: any) => {
+        return {
+          ...state,
+          auth: {
+            ...state.auth,
+            token: state.auth?.token ? '***SANITIZED***' : null,
+            refreshToken: state.auth?.refreshToken ? '***SANITIZED***' : null
+          }
+        };
+      },
+      
+      // Predicate to determine which actions to include
+      predicate: (state: any, action: any) => {
+        // Exclude noisy actions from DevTools
+        const excludedActions = [
+          '[Router] Navigation',
+          '[UI] Mouse Move',
+          '[WebSocket] Heartbeat'
+        ];
+        return !excludedActions.some(excluded => action.type.includes(excluded));
+      },
+      
+      // Features configuration
+      features: {
+        pause: true, // Start/pause recording of actions
+        lock: true, // Lock/unlock dispatching actions and side effects
+        persist: true, // Persist states on page reloading
+        export: true, // Export history of actions in a file
+        import: 'custom', // Import history of actions from a file
+        jump: true, // Jump back and forth (time travelling)
+        skip: true, // Skip (cancel) actions
+        reorder: true, // Drag and drop actions in the history list
+        dispatch: true, // Dispatch custom actions or action creators
+        test: true // Generate tests for the selected actions
+      }
+    })
+  ]
+})
+export class AppModule {}
+```
+
+**2. Custom DevTools Extensions:**
+
+```typescript
+// debugging/custom-devtools.service.ts
+import { Injectable } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Actions } from '@ngrx/effects';
+import { Observable, Subject } from 'rxjs';
+import { filter, map, tap, withLatestFrom } from 'rxjs/operators';
+
+export interface DebugSession {
+  id: string;
+  name: string;
+  startTime: Date;
+  endTime?: Date;
+  actions: any[];
+  states: any[];
+  performance: PerformanceMetrics;
+  annotations: DebugAnnotation[];
+}
+
+export interface PerformanceMetrics {
+  actionCount: number;
+  averageActionTime: number;
+  slowestActions: { action: any; duration: number }[];
+  stateSize: number;
+  memoryUsage: number;
+}
+
+export interface DebugAnnotation {
+  timestamp: Date;
+  type: 'info' | 'warning' | 'error' | 'bookmark';
+  message: string;
+  action?: any;
+  state?: any;
+}
+
+@Injectable({ providedIn: 'root' })
+export class CustomDevToolsService {
+  private debugSessions = new Map<string, DebugSession>();
+  private currentSession: DebugSession | null = null;
+  private actionTimings = new Map<string, number>();
+  private annotationSubject = new Subject<DebugAnnotation>();
+  
+  constructor(
+    private store: Store,
+    private actions$: Actions
+  ) {
+    this.setupActionMonitoring();
+    this.setupPerformanceMonitoring();
+  }
+  
+  // Start debug session
+  startDebugSession(name: string): string {
+    const sessionId = this.generateSessionId();
+    const session: DebugSession = {
+      id: sessionId,
+      name,
+      startTime: new Date(),
+      actions: [],
+      states: [],
+      performance: {
+        actionCount: 0,
+        averageActionTime: 0,
+        slowestActions: [],
+        stateSize: 0,
+        memoryUsage: 0
+      },
+      annotations: []
+    };
+    
+    this.debugSessions.set(sessionId, session);
+    this.currentSession = session;
+    
+    this.addAnnotation({
+      type: 'info',
+      message: `Debug session '${name}' started`
+    });
+    
+    return sessionId;
+  }
+  
+  // End debug session
+  endDebugSession(sessionId: string): DebugSession | null {
+    const session = this.debugSessions.get(sessionId);
+    if (session) {
+      session.endTime = new Date();
+      this.addAnnotation({
+        type: 'info',
+        message: `Debug session '${session.name}' ended`
+      });
+      
+      if (this.currentSession?.id === sessionId) {
+        this.currentSession = null;
+      }
+    }
+    return session;
+  }
+  
+  // Add annotation
+  addAnnotation(annotation: Omit<DebugAnnotation, 'timestamp'>) {
+    const fullAnnotation: DebugAnnotation = {
+      ...annotation,
+      timestamp: new Date()
+    };
+    
+    if (this.currentSession) {
+      this.currentSession.annotations.push(fullAnnotation);
+    }
+    
+    this.annotationSubject.next(fullAnnotation);
+    
+    // Send to DevTools
+    this.sendToDevTools('annotation', fullAnnotation);
+  }
+  
+  // Setup action monitoring
+  private setupActionMonitoring() {
+    this.actions$.pipe(
+      withLatestFrom(this.store),
+      tap(([action, state]) => {
+        if (this.currentSession) {
+          this.currentSession.actions.push({
+            ...action,
+            timestamp: new Date()
+          });
+          
+          this.currentSession.states.push({
+            state: this.sanitizeState(state),
+            timestamp: new Date()
+          });
+          
+          this.currentSession.performance.actionCount++;
+        }
+        
+        // Track action timing
+        this.trackActionTiming(action);
+      })
+    ).subscribe();
+  }
+  
+  // Setup performance monitoring
+  private setupPerformanceMonitoring() {
+    // Monitor action performance
+    this.actions$.pipe(
+      tap(action => {
+        const startTime = performance.now();
+        this.actionTimings.set(action.type, startTime);
+        
+        // Use setTimeout to measure action completion time
+        setTimeout(() => {
+          const endTime = performance.now();
+          const duration = endTime - startTime;
+          
+          if (this.currentSession) {
+            this.updatePerformanceMetrics(action, duration);
+          }
+          
+          // Warn about slow actions
+          if (duration > 100) {
+            this.addAnnotation({
+              type: 'warning',
+              message: `Slow action detected: ${action.type} took ${duration.toFixed(2)}ms`,
+              action
+            });
+          }
+        }, 0);
+      })
+    ).subscribe();
+    
+    // Monitor memory usage
+    setInterval(() => {
+      if (this.currentSession && (performance as any).memory) {
+        this.currentSession.performance.memoryUsage = (performance as any).memory.usedJSHeapSize;
+      }
+    }, 5000);
+  }
+  
+  // Track action timing
+  private trackActionTiming(action: any) {
+    const actionType = action.type;
+    const timestamp = performance.now();
+    
+    // Store timing for analysis
+    this.actionTimings.set(`${actionType}_${timestamp}`, timestamp);
+  }
+  
+  // Update performance metrics
+  private updatePerformanceMetrics(action: any, duration: number) {
+    if (!this.currentSession) return;
+    
+    const metrics = this.currentSession.performance;
+    
+    // Update average action time
+    const totalTime = metrics.averageActionTime * (metrics.actionCount - 1) + duration;
+    metrics.averageActionTime = totalTime / metrics.actionCount;
+    
+    // Track slowest actions
+    metrics.slowestActions.push({ action, duration });
+    metrics.slowestActions.sort((a, b) => b.duration - a.duration);
+    metrics.slowestActions = metrics.slowestActions.slice(0, 10); // Keep top 10
+  }
+  
+  // Sanitize state for storage
+  private sanitizeState(state: any): any {
+    // Remove circular references and large objects
+    return JSON.parse(JSON.stringify(state, (key, value) => {
+      if (key.includes('password') || key.includes('token')) {
+        return '***SANITIZED***';
+      }
+      return value;
+    }));
+  }
+  
+  // Send data to DevTools
+  private sendToDevTools(type: string, data: any) {
+    if (typeof window !== 'undefined' && (window as any).__REDUX_DEVTOOLS_EXTENSION__) {
+      (window as any).__REDUX_DEVTOOLS_EXTENSION__.send(
+        { type: `[Debug] ${type}`, payload: data },
+        data
+      );
+    }
+  }
+  
+  // Generate session ID
+  private generateSessionId(): string {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+  
+  // Get debug session
+  getDebugSession(sessionId: string): DebugSession | undefined {
+    return this.debugSessions.get(sessionId);
+  }
+  
+  // Get all debug sessions
+  getAllDebugSessions(): DebugSession[] {
+    return Array.from(this.debugSessions.values());
+  }
+  
+  // Export debug session
+  exportDebugSession(sessionId: string): string {
+    const session = this.debugSessions.get(sessionId);
+    if (!session) {
+      throw new Error(`Debug session ${sessionId} not found`);
+    }
+    
+    return JSON.stringify(session, null, 2);
+  }
+  
+  // Import debug session
+  importDebugSession(sessionData: string): string {
+    const session: DebugSession = JSON.parse(sessionData);
+    const newSessionId = this.generateSessionId();
+    session.id = newSessionId;
+    
+    this.debugSessions.set(newSessionId, session);
+    return newSessionId;
+  }
+  
+  // Get annotations observable
+  getAnnotations(): Observable<DebugAnnotation> {
+    return this.annotationSubject.asObservable();
+  }
+}
+```
+
+**3. State Inspection Utilities:**
+
+```typescript
+// debugging/state-inspector.service.ts
+import { Injectable } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
+import { map, distinctUntilChanged, debounceTime } from 'rxjs/operators';
+
+export interface StateInspectionResult {
+  path: string;
+  value: any;
+  type: string;
+  size: number;
+  lastChanged: Date;
+  changeFrequency: number;
+}
+
+export interface StateDiff {
+  path: string;
+  oldValue: any;
+  newValue: any;
+  changeType: 'added' | 'removed' | 'modified';
+  timestamp: Date;
+}
+
+@Injectable({ providedIn: 'root' })
+export class StateInspectorService {
+  private stateHistory: any[] = [];
+  private changeTracking = new Map<string, { count: number; lastChange: Date }>();
+  
+  constructor(private store: Store) {
+    this.setupStateTracking();
+  }
+  
+  // Setup state change tracking
+  private setupStateTracking() {
+    this.store.pipe(
+      debounceTime(100),
+      distinctUntilChanged()
+    ).subscribe(state => {
+      this.stateHistory.push({
+        state: this.deepClone(state),
+        timestamp: new Date()
+      });
+      
+      // Keep only last 100 states
+      if (this.stateHistory.length > 100) {
+        this.stateHistory.shift();
+      }
+      
+      this.trackStateChanges(state);
+    });
+  }
+  
+  // Inspect state at path
+  inspectState(path: string): Observable<StateInspectionResult> {
+    return this.store.pipe(
+      map(state => this.getValueAtPath(state, path)),
+      distinctUntilChanged(),
+      map(value => {
+        const tracking = this.changeTracking.get(path);
+        return {
+          path,
+          value,
+          type: this.getValueType(value),
+          size: this.calculateSize(value),
+          lastChanged: tracking?.lastChange || new Date(),
+          changeFrequency: tracking?.count || 0
+        };
+      })
+    );
+  }
+  
+  // Get state differences between two points in time
+  getStateDiff(fromIndex: number, toIndex: number): StateDiff[] {
+    if (fromIndex >= this.stateHistory.length || toIndex >= this.stateHistory.length) {
+      throw new Error('Invalid state history index');
+    }
+    
+    const fromState = this.stateHistory[fromIndex].state;
+    const toState = this.stateHistory[toIndex].state;
+    
+    return this.calculateDiff(fromState, toState, '');
+  }
+  
+  // Calculate differences between two states
+  private calculateDiff(oldState: any, newState: any, basePath: string): StateDiff[] {
+    const diffs: StateDiff[] = [];
+    
+    // Check for added/modified properties
+    for (const key in newState) {
+      const currentPath = basePath ? `${basePath}.${key}` : key;
+      const oldValue = oldState?.[key];
+      const newValue = newState[key];
+      
+      if (!(key in oldState)) {
+        diffs.push({
+          path: currentPath,
+          oldValue: undefined,
+          newValue,
+          changeType: 'added',
+          timestamp: new Date()
+        });
+      } else if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+        if (typeof newValue === 'object' && newValue !== null) {
+          diffs.push(...this.calculateDiff(oldValue, newValue, currentPath));
+        } else {
+          diffs.push({
+            path: currentPath,
+            oldValue,
+            newValue,
+            changeType: 'modified',
+            timestamp: new Date()
+          });
+        }
+      }
+    }
+    
+    // Check for removed properties
+    for (const key in oldState) {
+      if (!(key in newState)) {
+        const currentPath = basePath ? `${basePath}.${key}` : key;
+        diffs.push({
+          path: currentPath,
+          oldValue: oldState[key],
+          newValue: undefined,
+          changeType: 'removed',
+          timestamp: new Date()
+        });
+      }
+    }
+    
+    return diffs;
+  }
+  
+  // Track state changes
+  private trackStateChanges(state: any) {
+    this.traverseState(state, '', (path, value) => {
+      const existing = this.changeTracking.get(path);
+      if (existing) {
+        existing.count++;
+        existing.lastChange = new Date();
+      } else {
+        this.changeTracking.set(path, {
+          count: 1,
+          lastChange: new Date()
+        });
+      }
+    });
+  }
+  
+  // Traverse state object
+  private traverseState(obj: any, basePath: string, callback: (path: string, value: any) => void) {
+    for (const key in obj) {
+      const currentPath = basePath ? `${basePath}.${key}` : key;
+      const value = obj[key];
+      
+      callback(currentPath, value);
+      
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        this.traverseState(value, currentPath, callback);
+      }
+    }
+  }
+  
+  // Get value at path
+  private getValueAtPath(obj: any, path: string): any {
+    return path.split('.').reduce((current, key) => current?.[key], obj);
+  }
+  
+  // Get value type
+  private getValueType(value: any): string {
+    if (value === null) return 'null';
+    if (Array.isArray(value)) return 'array';
+    return typeof value;
+  }
+  
+  // Calculate object size
+  private calculateSize(obj: any): number {
+    return JSON.stringify(obj).length;
+  }
+  
+  // Deep clone object
+  private deepClone(obj: any): any {
+    return JSON.parse(JSON.stringify(obj));
+  }
+  
+  // Get state history
+  getStateHistory(): any[] {
+    return this.stateHistory;
+  }
+  
+  // Get change frequency report
+  getChangeFrequencyReport(): { path: string; frequency: number; lastChange: Date }[] {
+    return Array.from(this.changeTracking.entries())
+      .map(([path, tracking]) => ({
+        path,
+        frequency: tracking.count,
+        lastChange: tracking.lastChange
+      }))
+      .sort((a, b) => b.frequency - a.frequency);
+  }
+  
+  // Clear tracking data
+  clearTracking() {
+    this.stateHistory = [];
+    this.changeTracking.clear();
+  }
+}
+```
+
+**4. Action Replay and Testing:**
+
+```typescript
+// debugging/action-replay.service.ts
+import { Injectable } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Actions } from '@ngrx/effects';
+import { Observable, Subject, timer } from 'rxjs';
+import { take, delay } from 'rxjs/operators';
+
+export interface ActionRecording {
+  id: string;
+  name: string;
+  actions: RecordedAction[];
+  initialState: any;
+  finalState: any;
+  duration: number;
+  createdAt: Date;
+}
+
+export interface RecordedAction {
+  action: any;
+  timestamp: number;
+  relativeTime: number;
+  resultingState?: any;
+}
+
+@Injectable({ providedIn: 'root' })
+export class ActionReplayService {
+  private recordings = new Map<string, ActionRecording>();
+  private currentRecording: ActionRecording | null = null;
+  private recordingStartTime: number = 0;
+  private replaySubject = new Subject<{ action: any; delay: number }>();
+  
+  constructor(
+    private store: Store,
+    private actions$: Actions
+  ) {}
+  
+  // Start recording actions
+  startRecording(name: string): string {
+    const recordingId = this.generateRecordingId();
+    
+    // Get initial state
+    let initialState: any;
+    this.store.pipe(take(1)).subscribe(state => {
+      initialState = this.deepClone(state);
+    });
+    
+    this.currentRecording = {
+      id: recordingId,
+      name,
+      actions: [],
+      initialState,
+      finalState: null,
+      duration: 0,
+      createdAt: new Date()
+    };
+    
+    this.recordingStartTime = performance.now();
+    
+    // Subscribe to actions
+    this.actions$.subscribe(action => {
+      if (this.currentRecording) {
+        const timestamp = performance.now();
+        const relativeTime = timestamp - this.recordingStartTime;
+        
+        this.currentRecording.actions.push({
+          action: this.deepClone(action),
+          timestamp,
+          relativeTime
+        });
+      }
+    });
+    
+    return recordingId;
+  }
+  
+  // Stop recording
+  stopRecording(): ActionRecording | null {
+    if (!this.currentRecording) {
+      return null;
+    }
+    
+    // Get final state
+    this.store.pipe(take(1)).subscribe(state => {
+      if (this.currentRecording) {
+        this.currentRecording.finalState = this.deepClone(state);
+        this.currentRecording.duration = performance.now() - this.recordingStartTime;
+      }
+    });
+    
+    // Store recording
+    this.recordings.set(this.currentRecording.id, this.currentRecording);
+    
+    const recording = this.currentRecording;
+    this.currentRecording = null;
+    
+    return recording;
+  }
+  
+  // Replay actions
+  async replayActions(recordingId: string, options: {
+    speed?: number; // 1 = normal speed, 2 = 2x speed, 0.5 = half speed
+    skipDelay?: boolean;
+    startFromAction?: number;
+    endAtAction?: number;
+  } = {}): Promise<void> {
+    const recording = this.recordings.get(recordingId);
+    if (!recording) {
+      throw new Error(`Recording ${recordingId} not found`);
+    }
+    
+    const {
+      speed = 1,
+      skipDelay = false,
+      startFromAction = 0,
+      endAtAction = recording.actions.length
+    } = options;
+    
+    // Reset to initial state
+    this.store.dispatch({
+      type: '[Replay] Reset State',
+      payload: recording.initialState
+    });
+    
+    // Replay actions
+    const actionsToReplay = recording.actions.slice(startFromAction, endAtAction);
+    
+    for (let i = 0; i < actionsToReplay.length; i++) {
+      const recordedAction = actionsToReplay[i];
+      const nextAction = actionsToReplay[i + 1];
+      
+      // Dispatch action
+      this.store.dispatch(recordedAction.action);
+      
+      // Wait for next action if not skipping delay
+      if (!skipDelay && nextAction) {
+        const delay = (nextAction.relativeTime - recordedAction.relativeTime) / speed;
+        await timer(delay).pipe(take(1)).toPromise();
+      }
+    }
+  }
+  
+  // Generate test cases from recording
+  generateTestCases(recordingId: string): string {
+    const recording = this.recordings.get(recordingId);
+    if (!recording) {
+      throw new Error(`Recording ${recordingId} not found`);
+    }
+    
+    let testCode = `
+// Generated test for recording: ${recording.name}
+describe('${recording.name}', () => {
+  let store: MockStore;
+  
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [provideMockStore({ initialState: ${JSON.stringify(recording.initialState, null, 6)} })]
+    });
+    store = TestBed.inject(MockStore);
+  });
+  
+  it('should replay actions correctly', () => {
+`;
+    
+    recording.actions.forEach((recordedAction, index) => {
+      testCode += `
+    // Action ${index + 1}: ${recordedAction.action.type}
+    store.dispatch(${JSON.stringify(recordedAction.action, null, 6)});
+`;
+    });
+    
+    testCode += `
+    // Verify final state
+    store.pipe(take(1)).subscribe(state => {
+      expect(state).toEqual(${JSON.stringify(recording.finalState, null, 6)});
+    });
+  });
+});
+`;
+    
+    return testCode;
+  }
+  
+  // Get recording
+  getRecording(recordingId: string): ActionRecording | undefined {
+    return this.recordings.get(recordingId);
+  }
+  
+  // Get all recordings
+  getAllRecordings(): ActionRecording[] {
+    return Array.from(this.recordings.values());
+  }
+  
+  // Export recording
+  exportRecording(recordingId: string): string {
+    const recording = this.recordings.get(recordingId);
+    if (!recording) {
+      throw new Error(`Recording ${recordingId} not found`);
+    }
+    
+    return JSON.stringify(recording, null, 2);
+  }
+  
+  // Import recording
+  importRecording(recordingData: string): string {
+    const recording: ActionRecording = JSON.parse(recordingData);
+    const newRecordingId = this.generateRecordingId();
+    recording.id = newRecordingId;
+    
+    this.recordings.set(newRecordingId, recording);
+    return newRecordingId;
+  }
+  
+  // Delete recording
+  deleteRecording(recordingId: string): boolean {
+    return this.recordings.delete(recordingId);
+  }
+  
+  // Generate recording ID
+  private generateRecordingId(): string {
+    return `recording_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+  
+  // Deep clone object
+  private deepClone(obj: any): any {
+    return JSON.parse(JSON.stringify(obj));
+  }
+}
+```
+
+These advanced debugging tools provide comprehensive state inspection, action recording/replay, performance monitoring, and automated test generation capabilities for NgRx applications.
+
+---
+
+## NgRx Enterprise Patterns
+
+### Q20: What are the best practices and patterns for implementing NgRx in large-scale enterprise applications?
+
+**Answer:**
+Enterprise NgRx applications require sophisticated patterns for scalability, maintainability, team collaboration, and performance optimization.
+
+**1. Enterprise State Architecture:**
+
+```typescript
+// shared/state/enterprise-state.interface.ts
+export interface EnterpriseAppState {
+  // Core application state
+  core: CoreState;
+  
+  // Feature modules state
+  features: {
+    [featureName: string]: any;
+  };
+  
+  // Shared state across features
+  shared: SharedState;
+  
+  // Runtime configuration
+  runtime: RuntimeState;
+  
+  // User context and permissions
+  user: UserState;
+  
+  // Application metadata
+  metadata: MetadataState;
+}
+
+export interface CoreState {
+  loading: LoadingState;
+  errors: ErrorState;
+  notifications: NotificationState;
+  navigation: NavigationState;
+  theme: ThemeState;
+}
+
+export interface SharedState {
+  cache: CacheState;
+  lookup: LookupState;
+  configuration: ConfigurationState;
+  audit: AuditState;
+}
+
+export interface RuntimeState {
+  environment: EnvironmentInfo;
+  features: FeatureFlags;
+  performance: PerformanceMetrics;
+  monitoring: MonitoringState;
+}
+
+export interface UserState {
+  profile: UserProfile;
+  permissions: Permission[];
+  preferences: UserPreferences;
+  session: SessionInfo;
+  roles: Role[];
+}
+
+export interface MetadataState {
+  version: string;
+  buildInfo: BuildInfo;
+  dependencies: DependencyInfo[];
+  healthChecks: HealthCheck[];
+}
+```
+
+**2. Feature Module State Management:**
+
+```typescript
+// shared/state/feature-state.factory.ts
+import { Injectable, InjectionToken } from '@angular/core';
+import { ActionReducerMap, MetaReducer, createFeatureSelector } from '@ngrx/store';
+import { environment } from '../../../environments/environment';
+
+export const FEATURE_STATE_TOKEN = new InjectionToken<string>('FeatureStateToken');
+
+export interface FeatureStateConfig {
+  featureName: string;
+  reducers: ActionReducerMap<any>;
+  effects?: any[];
+  metaReducers?: MetaReducer<any>[];
+  initialState?: any;
+  storageKeys?: string[];
+  permissions?: string[];
+}
+
+@Injectable({ providedIn: 'root' })
+export class FeatureStateFactory {
+  private registeredFeatures = new Map<string, FeatureStateConfig>();
+  
+  // Register feature state
+  registerFeature(config: FeatureStateConfig): void {
+    if (this.registeredFeatures.has(config.featureName)) {
+      console.warn(`Feature ${config.featureName} is already registered`);
+      return;
+    }
+    
+    // Validate feature configuration
+    this.validateFeatureConfig(config);
+    
+    // Add enterprise meta-reducers
+    config.metaReducers = [
+      ...config.metaReducers || [],
+      this.createAuditMetaReducer(config.featureName),
+      this.createPerformanceMetaReducer(config.featureName),
+      this.createValidationMetaReducer(config.featureName)
+    ];
+    
+    this.registeredFeatures.set(config.featureName, config);
+    
+    console.log(`Feature ${config.featureName} registered successfully`);
+  }
+  
+  // Get feature configuration
+  getFeatureConfig(featureName: string): FeatureStateConfig | undefined {
+    return this.registeredFeatures.get(featureName);
+  }
+  
+  // Create feature selector
+  createFeatureSelector<T>(featureName: string) {
+    return createFeatureSelector<T>(featureName);
+  }
+  
+  // Validate feature configuration
+  private validateFeatureConfig(config: FeatureStateConfig): void {
+    if (!config.featureName) {
+      throw new Error('Feature name is required');
+    }
+    
+    if (!config.reducers) {
+      throw new Error('Feature reducers are required');
+    }
+    
+    // Validate naming conventions
+    if (!/^[a-z][a-zA-Z0-9]*$/.test(config.featureName)) {
+      throw new Error('Feature name must follow camelCase convention');
+    }
+  }
+  
+  // Create audit meta-reducer
+  private createAuditMetaReducer(featureName: string): MetaReducer<any> {
+    return (reducer) => {
+      return (state, action) => {
+        const newState = reducer(state, action);
+        
+        // Log state changes for audit
+        if (!environment.production && state !== newState) {
+          console.log(`[${featureName}] State changed:`, {
+            action: action.type,
+            previousState: state,
+            newState,
+            timestamp: new Date().toISOString()
+          });
+        }
+        
+        return newState;
+      };
+    };
+  }
+  
+  // Create performance meta-reducer
+  private createPerformanceMetaReducer(featureName: string): MetaReducer<any> {
+    return (reducer) => {
+      return (state, action) => {
+        const startTime = performance.now();
+        const newState = reducer(state, action);
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+        
+        // Warn about slow reducers
+        if (duration > 10) {
+          console.warn(`[${featureName}] Slow reducer detected:`, {
+            action: action.type,
+            duration: `${duration.toFixed(2)}ms`
+          });
+        }
+        
+        return newState;
+      };
+    };
+  }
+  
+  // Create validation meta-reducer
+  private createValidationMetaReducer(featureName: string): MetaReducer<any> {
+    return (reducer) => {
+      return (state, action) => {
+        try {
+          const newState = reducer(state, action);
+          
+          // Validate state structure
+          this.validateStateStructure(newState, featureName);
+          
+          return newState;
+        } catch (error) {
+          console.error(`[${featureName}] State validation failed:`, error);
+          return state; // Return previous state on validation error
+        }
+      };
+    };
+  }
+  
+  // Validate state structure
+  private validateStateStructure(state: any, featureName: string): void {
+    if (state === null || state === undefined) {
+      throw new Error(`State cannot be null or undefined for feature ${featureName}`);
+    }
+    
+    // Check for circular references
+    try {
+      JSON.stringify(state);
+    } catch (error) {
+      throw new Error(`Circular reference detected in ${featureName} state`);
+    }
+  }
+}
+```
+
+**3. Enterprise Effects Management:**
+
+```typescript
+// shared/effects/enterprise-effects.service.ts
+import { Injectable } from '@angular/core';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { Store } from '@ngrx/store';
+import { Observable, of, timer, EMPTY } from 'rxjs';
+import { catchError, map, mergeMap, switchMap, debounceTime, retry, timeout, withLatestFrom } from 'rxjs/operators';
+
+export interface EffectConfig {
+  retryAttempts?: number;
+  retryDelay?: number;
+  timeout?: number;
+  debounce?: number;
+  requiresAuth?: boolean;
+  requiresPermission?: string[];
+  cacheable?: boolean;
+  cacheKey?: string;
+  priority?: 'high' | 'medium' | 'low';
+}
+
+@Injectable()
+export class EnterpriseEffectsService {
+  private effectsRegistry = new Map<string, EffectConfig>();
+  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+  
+  constructor(
+    private actions$: Actions,
+    private store: Store
+  ) {}
+  
+  // Create enterprise effect with advanced configuration
+  createEffect<T>(
+    effectName: string,
+    actionType: string,
+    effectFn: (action: any) => Observable<any>,
+    config: EffectConfig = {}
+  ): Observable<any> {
+    this.effectsRegistry.set(effectName, config);
+    
+    return createEffect(() =>
+      this.actions$.pipe(
+        ofType(actionType),
+        
+        // Apply debouncing if configured
+        config.debounce ? debounceTime(config.debounce) : (source) => source,
+        
+        // Check authentication and permissions
+        withLatestFrom(this.store),
+        mergeMap(([action, state]) => {
+          // Check authentication
+          if (config.requiresAuth && !this.isAuthenticated(state)) {
+            return of({ type: '[Auth] Authentication Required', payload: { action } });
+          }
+          
+          // Check permissions
+          if (config.requiresPermission && !this.hasPermissions(state, config.requiresPermission)) {
+            return of({ type: '[Auth] Insufficient Permissions', payload: { action, requiredPermissions: config.requiresPermission } });
+          }
+          
+          // Check cache if cacheable
+          if (config.cacheable && config.cacheKey) {
+            const cacheKey = this.generateCacheKey(config.cacheKey, action);
+            const cachedData = this.getFromCache(cacheKey);
+            if (cachedData) {
+              return of({ type: `${actionType} Success`, payload: cachedData });
+            }
+          }
+          
+          // Execute effect with error handling and retry logic
+          return effectFn(action).pipe(
+            // Apply timeout if configured
+            config.timeout ? timeout(config.timeout) : (source) => source,
+            
+            // Apply retry logic
+            retry({
+              count: config.retryAttempts || 3,
+              delay: (error, retryCount) => {
+                const delay = (config.retryDelay || 1000) * Math.pow(2, retryCount - 1);
+                console.warn(`Effect ${effectName} retry ${retryCount}/${config.retryAttempts || 3} after ${delay}ms`, error);
+                return timer(delay);
+              }
+            }),
+            
+            // Handle success
+            map(result => {
+              // Cache result if cacheable
+              if (config.cacheable && config.cacheKey) {
+                const cacheKey = this.generateCacheKey(config.cacheKey, action);
+                this.setCache(cacheKey, result, 300000); // 5 minutes default TTL
+              }
+              
+              return { type: `${actionType} Success`, payload: result };
+            }),
+            
+            // Handle errors
+            catchError(error => {
+              console.error(`Effect ${effectName} failed:`, error);
+              
+              return of({
+                type: `${actionType} Failure`,
+                payload: {
+                  error: this.sanitizeError(error),
+                  action,
+                  effectName,
+                  timestamp: new Date().toISOString()
+                }
+              });
+            })
+          );
+        })
+      )
+    );
+  }
+  
+  // Check if user is authenticated
+  private isAuthenticated(state: any): boolean {
+    return state.user?.session?.isAuthenticated || false;
+  }
+  
+  // Check if user has required permissions
+  private hasPermissions(state: any, requiredPermissions: string[]): boolean {
+    const userPermissions = state.user?.permissions || [];
+    return requiredPermissions.every(permission => 
+      userPermissions.some((userPerm: any) => userPerm.name === permission)
+    );
+  }
+  
+  // Generate cache key
+  private generateCacheKey(template: string, action: any): string {
+    return template.replace(/\{([^}]+)\}/g, (match, key) => {
+      return action.payload?.[key] || action[key] || match;
+    });
+  }
+  
+  // Get from cache
+  private getFromCache(key: string): any {
+    const cached = this.cache.get(key);
+    if (cached && Date.now() - cached.timestamp < cached.ttl) {
+      return cached.data;
+    }
+    
+    if (cached) {
+      this.cache.delete(key); // Remove expired cache
+    }
+    
+    return null;
+  }
+  
+  // Set cache
+  private setCache(key: string, data: any, ttl: number): void {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl
+    });
+  }
+  
+  // Sanitize error for logging
+  private sanitizeError(error: any): any {
+    return {
+      message: error.message,
+      status: error.status,
+      statusText: error.statusText,
+      url: error.url,
+      timestamp: new Date().toISOString()
+    };
+  }
+  
+  // Clear cache
+  clearCache(pattern?: string): void {
+    if (pattern) {
+      const regex = new RegExp(pattern);
+      for (const key of this.cache.keys()) {
+        if (regex.test(key)) {
+          this.cache.delete(key);
+        }
+      }
+    } else {
+      this.cache.clear();
+    }
+  }
+  
+  // Get effect statistics
+  getEffectStatistics(): { name: string; config: EffectConfig }[] {
+    return Array.from(this.effectsRegistry.entries()).map(([name, config]) => ({ name, config }));
+  }
+}
+```
+
+**4. Enterprise State Persistence:**
+
+```typescript
+// shared/state/state-persistence.service.ts
+import { Injectable } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Observable, fromEvent, merge } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
+
+export interface PersistenceConfig {
+  key: string;
+  storage: 'localStorage' | 'sessionStorage' | 'indexedDB';
+  whitelist?: string[];
+  blacklist?: string[];
+  encrypt?: boolean;
+  compress?: boolean;
+  version?: number;
+  migrate?: (state: any, version: number) => any;
+  throttle?: number;
+}
+
+@Injectable({ providedIn: 'root' })
+export class StatePersistenceService {
+  private persistenceConfigs = new Map<string, PersistenceConfig>();
+  private encryptionKey = 'enterprise-app-key'; // Should be from secure config
+  
+  constructor(private store: Store) {
+    this.setupAutoSave();
+    this.setupVisibilityHandling();
+  }
+  
+  // Configure state persistence
+  configurePersistence(config: PersistenceConfig): void {
+    this.persistenceConfigs.set(config.key, config);
+    
+    // Load persisted state
+    this.loadPersistedState(config);
+    
+    // Setup state saving
+    this.setupStateSaving(config);
+  }
+  
+  // Load persisted state
+  private async loadPersistedState(config: PersistenceConfig): Promise<void> {
+    try {
+      const persistedData = await this.getFromStorage(config.key, config.storage);
+      
+      if (persistedData) {
+        let state = persistedData.state;
+        
+        // Handle version migration
+        if (config.version && persistedData.version !== config.version) {
+          if (config.migrate) {
+            state = config.migrate(state, persistedData.version);
+          } else {
+            console.warn(`State version mismatch for ${config.key}. Skipping load.`);
+            return;
+          }
+        }
+        
+        // Decrypt if needed
+        if (config.encrypt) {
+          state = this.decrypt(state);
+        }
+        
+        // Decompress if needed
+        if (config.compress) {
+          state = this.decompress(state);
+        }
+        
+        // Filter state based on whitelist/blacklist
+        state = this.filterState(state, config);
+        
+        // Dispatch restore action
+        this.store.dispatch({
+          type: '[Persistence] Restore State',
+          payload: { key: config.key, state }
+        });
+      }
+    } catch (error) {
+      console.error(`Failed to load persisted state for ${config.key}:`, error);
+    }
+  }
+  
+  // Setup state saving
+  private setupStateSaving(config: PersistenceConfig): void {
+    this.store.pipe(
+      debounceTime(config.throttle || 1000),
+      distinctUntilChanged(),
+      filter(state => this.shouldPersistState(state, config))
+    ).subscribe(async state => {
+      try {
+        await this.saveState(state, config);
+      } catch (error) {
+        console.error(`Failed to save state for ${config.key}:`, error);
+      }
+    });
+  }
+  
+  // Save state
+  private async saveState(state: any, config: PersistenceConfig): Promise<void> {
+    let stateToSave = this.filterState(state, config);
+    
+    // Compress if needed
+    if (config.compress) {
+      stateToSave = this.compress(stateToSave);
+    }
+    
+    // Encrypt if needed
+    if (config.encrypt) {
+      stateToSave = this.encrypt(stateToSave);
+    }
+    
+    const persistData = {
+      state: stateToSave,
+      version: config.version || 1,
+      timestamp: Date.now()
+    };
+    
+    await this.setToStorage(config.key, persistData, config.storage);
+  }
+  
+  // Filter state based on whitelist/blacklist
+  private filterState(state: any, config: PersistenceConfig): any {
+    if (config.whitelist) {
+      const filtered: any = {};
+      config.whitelist.forEach(key => {
+        if (state[key] !== undefined) {
+          filtered[key] = state[key];
+        }
+      });
+      return filtered;
+    }
+    
+    if (config.blacklist) {
+      const filtered = { ...state };
+      config.blacklist.forEach(key => {
+        delete filtered[key];
+      });
+      return filtered;
+    }
+    
+    return state;
+  }
+  
+  // Check if state should be persisted
+  private shouldPersistState(state: any, config: PersistenceConfig): boolean {
+    // Add custom logic to determine if state should be persisted
+    // For example, don't persist if user is not authenticated
+    return true;
+  }
+  
+  // Storage operations
+  private async getFromStorage(key: string, storage: string): Promise<any> {
+    switch (storage) {
+      case 'localStorage':
+        const localData = localStorage.getItem(key);
+        return localData ? JSON.parse(localData) : null;
+        
+      case 'sessionStorage':
+        const sessionData = sessionStorage.getItem(key);
+        return sessionData ? JSON.parse(sessionData) : null;
+        
+      case 'indexedDB':
+        return this.getFromIndexedDB(key);
+        
+      default:
+        throw new Error(`Unsupported storage type: ${storage}`);
+    }
+  }
+  
+  private async setToStorage(key: string, data: any, storage: string): Promise<void> {
+    const serializedData = JSON.stringify(data);
+    
+    switch (storage) {
+      case 'localStorage':
+        localStorage.setItem(key, serializedData);
+        break;
+        
+      case 'sessionStorage':
+        sessionStorage.setItem(key, serializedData);
+        break;
+        
+      case 'indexedDB':
+        await this.setToIndexedDB(key, data);
+        break;
+        
+      default:
+        throw new Error(`Unsupported storage type: ${storage}`);
+    }
+  }
+  
+  // IndexedDB operations
+  private async getFromIndexedDB(key: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('EnterpriseAppDB', 1);
+      
+      request.onerror = () => reject(request.error);
+      
+      request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction(['state'], 'readonly');
+        const store = transaction.objectStore('state');
+        const getRequest = store.get(key);
+        
+        getRequest.onsuccess = () => resolve(getRequest.result?.data);
+        getRequest.onerror = () => reject(getRequest.error);
+      };
+      
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains('state')) {
+          db.createObjectStore('state', { keyPath: 'key' });
+        }
+      };
+    });
+  }
+  
+  private async setToIndexedDB(key: string, data: any): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('EnterpriseAppDB', 1);
+      
+      request.onerror = () => reject(request.error);
+      
+      request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction(['state'], 'readwrite');
+        const store = transaction.objectStore('state');
+        const putRequest = store.put({ key, data });
+        
+        putRequest.onsuccess = () => resolve();
+        putRequest.onerror = () => reject(putRequest.error);
+      };
+    });
+  }
+  
+  // Encryption/Decryption (simplified - use proper crypto library in production)
+  private encrypt(data: any): string {
+    // Implement proper encryption
+    return btoa(JSON.stringify(data));
+  }
+  
+  private decrypt(encryptedData: string): any {
+    // Implement proper decryption
+    return JSON.parse(atob(encryptedData));
+  }
+  
+  // Compression/Decompression (simplified)
+  private compress(data: any): string {
+    // Implement proper compression (e.g., using pako)
+    return JSON.stringify(data);
+  }
+  
+  private decompress(compressedData: string): any {
+    // Implement proper decompression
+    return JSON.parse(compressedData);
+  }
+  
+  // Setup auto-save on page unload
+  private setupAutoSave(): void {
+    fromEvent(window, 'beforeunload').subscribe(() => {
+      // Force save all configured states
+      this.persistenceConfigs.forEach(async (config) => {
+        this.store.pipe().subscribe(async state => {
+          await this.saveState(state, config);
+        });
+      });
+    });
+  }
+  
+  // Setup visibility change handling
+  private setupVisibilityHandling(): void {
+    fromEvent(document, 'visibilitychange').subscribe(() => {
+      if (document.hidden) {
+        // Save state when page becomes hidden
+        this.persistenceConfigs.forEach(async (config) => {
+          this.store.pipe().subscribe(async state => {
+            await this.saveState(state, config);
+          });
+        });
+      }
+    });
+  }
+  
+  // Clear persisted state
+  async clearPersistedState(key: string): Promise<void> {
+    const config = this.persistenceConfigs.get(key);
+    if (config) {
+      switch (config.storage) {
+        case 'localStorage':
+          localStorage.removeItem(key);
+          break;
+        case 'sessionStorage':
+          sessionStorage.removeItem(key);
+          break;
+        case 'indexedDB':
+          // Implement IndexedDB removal
+          break;
+      }
+    }
+  }
+  
+  // Get persistence statistics
+  getPersistenceStatistics(): { key: string; size: number; lastSaved: number }[] {
+    const stats: { key: string; size: number; lastSaved: number }[] = [];
+    
+    this.persistenceConfigs.forEach((config, key) => {
+      let size = 0;
+      let lastSaved = 0;
+      
+      try {
+        const data = localStorage.getItem(key) || sessionStorage.getItem(key);
+        if (data) {
+          size = new Blob([data]).size;
+          const parsed = JSON.parse(data);
+          lastSaved = parsed.timestamp || 0;
+        }
+      } catch (error) {
+        console.warn(`Failed to get statistics for ${key}:`, error);
+      }
+      
+      stats.push({ key, size, lastSaved });
+    });
+    
+    return stats;
+  }
+}
+```
+
+These enterprise patterns provide comprehensive solutions for large-scale NgRx applications including advanced state architecture, feature management, effects handling, and state persistence with encryption and compression capabilities.

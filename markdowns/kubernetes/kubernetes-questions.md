@@ -16544,4 +16544,2543 @@ kubectl describe limitrange -n <namespace>
 
 ---
 
-This comprehensive Kubernetes guide covers architecture, networking, and practical implementation examples for modern container orchestration.
+## Service Mesh and Istio
+
+## Q17: How do you implement and manage a service mesh with Istio in Kubernetes?
+**Difficulty: Expert**
+
+**Answer:**
+
+Istio is a service mesh that provides traffic management, security, and observability for microservices. It uses a sidecar proxy pattern with Envoy proxies to intercept and manage service-to-service communication.
+
+### Istio Architecture and Installation
+
+```bash
+# Install Istio using istioctl
+curl -L https://istio.io/downloadIstio | sh -
+cd istio-*
+export PATH=$PWD/bin:$PATH
+
+# Install Istio with demo profile
+istioctl install --set values.defaultRevision=default
+
+# Enable sidecar injection for namespace
+kubectl label namespace default istio-injection=enabled
+
+# Verify installation
+kubectl get pods -n istio-system
+istioctl verify-install
+```
+
+### Service Mesh Configuration
+
+```yaml
+# Gateway for external traffic
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: bookinfo-gateway
+  namespace: default
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "bookinfo.example.com"
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: bookinfo-tls
+    hosts:
+    - "bookinfo.example.com"
+
+---
+# Virtual Service for traffic routing
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: bookinfo-vs
+  namespace: default
+spec:
+  hosts:
+  - "bookinfo.example.com"
+  gateways:
+  - bookinfo-gateway
+  http:
+  - match:
+    - headers:
+        user-type:
+          exact: premium
+    route:
+    - destination:
+        host: productpage
+        subset: v2
+      weight: 100
+  - match:
+    - uri:
+        prefix: "/api/v1"
+    route:
+    - destination:
+        host: productpage
+        subset: v1
+      weight: 90
+    - destination:
+        host: productpage
+        subset: v2
+      weight: 10
+    fault:
+      delay:
+        percentage:
+          value: 0.1
+        fixedDelay: 5s
+  - route:
+    - destination:
+        host: productpage
+        subset: v1
+
+---
+# Destination Rule for load balancing
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: productpage-dr
+  namespace: default
+spec:
+  host: productpage
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 10
+    circuitBreaker:
+      consecutiveErrors: 3
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+  subsets:
+  - name: v1
+    labels:
+      version: v1
+    trafficPolicy:
+      portLevelSettings:
+      - port:
+          number: 9080
+        connectionPool:
+          tcp:
+            maxConnections: 50
+  - name: v2
+    labels:
+      version: v2
+    trafficPolicy:
+      outlierDetection:
+        consecutiveErrors: 2
+        interval: 10s
+```
+
+### Security Policies
+
+```yaml
+# PeerAuthentication for mTLS
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: default
+spec:
+  mtls:
+    mode: STRICT
+
+---
+# AuthorizationPolicy for access control
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: productpage-authz
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: productpage
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/default/sa/bookinfo-gateway"]
+  - to:
+    - operation:
+        methods: ["GET", "POST"]
+        paths: ["/productpage", "/api/*"]
+  - when:
+    - key: request.headers[user-role]
+      values: ["admin", "user"]
+
+---
+# RequestAuthentication for JWT validation
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: jwt-auth
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: productpage
+  jwtRules:
+  - issuer: "https://auth.example.com"
+    jwksUri: "https://auth.example.com/.well-known/jwks.json"
+    audiences:
+    - "bookinfo-api"
+    forwardOriginalToken: true
+```
+
+### Observability Configuration
+
+```python
+#!/usr/bin/env python3
+"""
+Istio Observability and Monitoring Setup
+"""
+
+import yaml
+import requests
+from typing import Dict, List, Any
+import json
+from datetime import datetime, timedelta
+
+class IstioObservability:
+    def __init__(self, prometheus_url: str, jaeger_url: str, kiali_url: str):
+        self.prometheus_url = prometheus_url
+        self.jaeger_url = jaeger_url
+        self.kiali_url = kiali_url
+    
+    def get_service_metrics(self, service_name: str, namespace: str = "default", duration: str = "5m") -> Dict:
+        """
+        Get service metrics from Prometheus
+        """
+        queries = {
+            'request_rate': f'rate(istio_requests_total{{destination_service_name="{service_name}",destination_service_namespace="{namespace}"}}[{duration}])',
+            'error_rate': f'rate(istio_requests_total{{destination_service_name="{service_name}",destination_service_namespace="{namespace}",response_code!~"2.*"}}[{duration}])',
+            'response_time_p99': f'histogram_quantile(0.99, rate(istio_request_duration_milliseconds_bucket{{destination_service_name="{service_name}",destination_service_namespace="{namespace}"}}[{duration}]))',
+            'response_time_p95': f'histogram_quantile(0.95, rate(istio_request_duration_milliseconds_bucket{{destination_service_name="{service_name}",destination_service_namespace="{namespace}"}}[{duration}]))',
+            'response_time_p50': f'histogram_quantile(0.50, rate(istio_request_duration_milliseconds_bucket{{destination_service_name="{service_name}",destination_service_namespace="{namespace}"}}[{duration}]))'
+        }
+        
+        metrics = {}
+        for metric_name, query in queries.items():
+            try:
+                response = requests.get(f"{self.prometheus_url}/api/v1/query", 
+                                      params={'query': query})
+                if response.status_code == 200:
+                    data = response.json()
+                    if data['data']['result']:
+                        metrics[metric_name] = data['data']['result'][0]['value'][1]
+                    else:
+                        metrics[metric_name] = "0"
+                else:
+                    metrics[metric_name] = "error"
+            except Exception as e:
+                metrics[metric_name] = f"error: {str(e)}"
+        
+        return metrics
+    
+    def get_service_topology(self, namespace: str = "default") -> Dict:
+        """
+        Get service topology from Kiali
+        """
+        try:
+            response = requests.get(f"{self.kiali_url}/api/namespaces/{namespace}/graph",
+                                  params={
+                                      'graphType': 'service',
+                                      'duration': '600s',
+                                      'includeIdleEdges': 'false'
+                                  })
+            if response.status_code == 200:
+                return response.json()
+            else:
+                return {'error': f'Failed to get topology: {response.status_code}'}
+        except Exception as e:
+            return {'error': f'Exception getting topology: {str(e)}'}
+    
+    def get_distributed_traces(self, service_name: str, limit: int = 20) -> List[Dict]:
+        """
+        Get distributed traces from Jaeger
+        """
+        try:
+            response = requests.get(f"{self.jaeger_url}/api/traces",
+                                  params={
+                                      'service': service_name,
+                                      'limit': limit,
+                                      'lookback': '1h'
+                                  })
+            if response.status_code == 200:
+                return response.json()['data']
+            else:
+                return []
+        except Exception as e:
+            return [{'error': f'Exception getting traces: {str(e)}'}]
+    
+    def analyze_service_health(self, service_name: str, namespace: str = "default") -> Dict:
+        """
+        Comprehensive service health analysis
+        """
+        metrics = self.get_service_metrics(service_name, namespace)
+        topology = self.get_service_topology(namespace)
+        traces = self.get_distributed_traces(service_name)
+        
+        # Calculate health score
+        health_score = 100
+        issues = []
+        
+        # Check error rate
+        try:
+            error_rate = float(metrics.get('error_rate', 0))
+            if error_rate > 0.05:  # 5% error rate threshold
+                health_score -= 30
+                issues.append(f"High error rate: {error_rate:.2%}")
+            elif error_rate > 0.01:  # 1% error rate threshold
+                health_score -= 10
+                issues.append(f"Elevated error rate: {error_rate:.2%}")
+        except (ValueError, TypeError):
+            issues.append("Unable to determine error rate")
+        
+        # Check response time
+        try:
+            p99_latency = float(metrics.get('response_time_p99', 0))
+            if p99_latency > 1000:  # 1 second threshold
+                health_score -= 20
+                issues.append(f"High P99 latency: {p99_latency:.0f}ms")
+            elif p99_latency > 500:  # 500ms threshold
+                health_score -= 10
+                issues.append(f"Elevated P99 latency: {p99_latency:.0f}ms")
+        except (ValueError, TypeError):
+            issues.append("Unable to determine response time")
+        
+        # Check request rate
+        try:
+            request_rate = float(metrics.get('request_rate', 0))
+            if request_rate == 0:
+                health_score -= 50
+                issues.append("No traffic detected")
+        except (ValueError, TypeError):
+            issues.append("Unable to determine request rate")
+        
+        return {
+            'service': service_name,
+            'namespace': namespace,
+            'health_score': max(0, health_score),
+            'status': 'healthy' if health_score >= 80 else 'degraded' if health_score >= 50 else 'unhealthy',
+            'issues': issues,
+            'metrics': metrics,
+            'trace_count': len(traces),
+            'timestamp': datetime.now().isoformat()
+        }
+
+# Telemetry Configuration
+telemetry_config = """
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: custom-metrics
+  namespace: default
+spec:
+  metrics:
+  - providers:
+    - name: prometheus
+  - overrides:
+    - match:
+        metric: ALL_METRICS
+      tagOverrides:
+        request_id:
+          value: "%{REQUEST_ID}"
+        user_id:
+          value: "%{REQUEST_HEADERS['user-id']}"
+  accessLogging:
+  - providers:
+    - name: otel
+  tracing:
+  - providers:
+    - name: jaeger
+    customTags:
+      user_id:
+        header:
+          name: user-id
+      request_id:
+        header:
+          name: x-request-id
+"""
+
+print("Istio Observability Configuration:")
+print(telemetry_config)
+```
+
+### Traffic Management and Canary Deployments
+
+```yaml
+# Canary deployment with traffic splitting
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: canary-deployment
+  namespace: default
+spec:
+  hosts:
+  - productpage
+  http:
+  - match:
+    - headers:
+        canary-user:
+          exact: "true"
+    route:
+    - destination:
+        host: productpage
+        subset: canary
+      weight: 100
+  - route:
+    - destination:
+        host: productpage
+        subset: stable
+      weight: 90
+    - destination:
+        host: productpage
+        subset: canary
+      weight: 10
+    fault:
+      abort:
+        percentage:
+          value: 0.1
+        httpStatus: 500
+
+---
+# Service Entry for external services
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-api
+  namespace: default
+spec:
+  hosts:
+  - api.external.com
+  ports:
+  - number: 443
+    name: https
+    protocol: HTTPS
+  - number: 80
+    name: http
+    protocol: HTTP
+  location: MESH_EXTERNAL
+  resolution: DNS
+
+---
+# Sidecar configuration for resource optimization
+apiVersion: networking.istio.io/v1beta1
+kind: Sidecar
+metadata:
+  name: productpage-sidecar
+  namespace: default
+spec:
+  workloadSelector:
+    labels:
+      app: productpage
+  egress:
+  - hosts:
+    - "./reviews.default.svc.cluster.local"
+    - "./details.default.svc.cluster.local"
+    - "istio-system/*"
+  - port:
+      number: 443
+      protocol: HTTPS
+      name: external-https
+    hosts:
+    - "api.external.com"
+```
+
+**Service Mesh Best Practices:**
+
+1. **Gradual Rollout**: Implement service mesh incrementally
+2. **Security First**: Enable mTLS and proper authorization policies
+3. **Observability**: Configure comprehensive monitoring and tracing
+4. **Traffic Management**: Use canary deployments and circuit breakers
+5. **Resource Optimization**: Configure sidecars to minimize resource usage
+6. **Policy Enforcement**: Implement consistent security and traffic policies
+7. **Performance Monitoring**: Regularly monitor latency and throughput
+8. **Disaster Recovery**: Plan for service mesh component failures
+
+---
+
+## GitOps and ArgoCD
+
+## Q18: How do you implement GitOps workflows with ArgoCD in Kubernetes?
+**Difficulty: Expert**
+
+**Answer:**
+
+GitOps is a declarative approach to continuous deployment where Git repositories serve as the single source of truth for infrastructure and application configuration. ArgoCD is a declarative GitOps continuous delivery tool for Kubernetes.
+
+### ArgoCD Installation and Setup
+
+```bash
+# Install ArgoCD
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+# Wait for ArgoCD to be ready
+kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
+
+# Get initial admin password
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+
+# Port forward to access ArgoCD UI
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+
+# Install ArgoCD CLI
+curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+sudo install -m 555 argocd-linux-amd64 /usr/local/bin/argocd
+```
+
+### GitOps Repository Structure
+
+```yaml
+# Repository structure for GitOps
+# apps/
+# ├── base/
+# │   ├── kustomization.yaml
+# │   ├── deployment.yaml
+# │   ├── service.yaml
+# │   └── configmap.yaml
+# ├── overlays/
+# │   ├── development/
+# │   │   ├── kustomization.yaml
+# │   │   └── patches/
+# │   ├── staging/
+# │   │   ├── kustomization.yaml
+# │   │   └── patches/
+# │   └── production/
+# │       ├── kustomization.yaml
+# │       └── patches/
+# └── argocd/
+#     ├── applications/
+#     └── projects/
+
+# base/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- deployment.yaml
+- service.yaml
+- configmap.yaml
+
+commonLabels:
+  app: web-application
+  version: v1.0.0
+
+images:
+- name: web-app
+  newTag: latest
+
+---
+# base/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-application
+  labels:
+    app: web-application
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-application
+  template:
+    metadata:
+      labels:
+        app: web-application
+    spec:
+      containers:
+      - name: web-app
+        image: web-app:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: database-url
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: api-key
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+---
+# overlays/production/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: production
+
+resources:
+- ../../base
+
+patchesStrategicMerge:
+- patches/deployment-patch.yaml
+- patches/hpa-patch.yaml
+
+images:
+- name: web-app
+  newTag: v1.2.3
+
+replicas:
+- name: web-application
+  count: 5
+
+---
+# overlays/production/patches/deployment-patch.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-application
+spec:
+  template:
+    spec:
+      containers:
+      - name: web-app
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: LOG_LEVEL
+          value: "info"
+```
+
+### ArgoCD Application Configuration
+
+```yaml
+# argocd/applications/web-app-production.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: web-app-production
+  namespace: argocd
+  labels:
+    environment: production
+    team: platform
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: production-apps
+  source:
+    repoURL: https://github.com/company/k8s-manifests
+    targetRevision: main
+    path: apps/overlays/production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+    - CreateNamespace=true
+    - PrunePropagationPolicy=foreground
+    - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 10
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /spec/replicas
+  - group: ""
+    kind: Secret
+    jsonPointers:
+    - /data
+
+---
+# argocd/projects/production-apps.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: production-apps
+  namespace: argocd
+spec:
+  description: Production applications project
+  sourceRepos:
+  - 'https://github.com/company/k8s-manifests'
+  - 'https://helm.company.com/*'
+  destinations:
+  - namespace: 'production'
+    server: https://kubernetes.default.svc
+  - namespace: 'monitoring'
+    server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+  - group: ''
+    kind: Namespace
+  - group: rbac.authorization.k8s.io
+    kind: ClusterRole
+  - group: rbac.authorization.k8s.io
+    kind: ClusterRoleBinding
+  namespaceResourceWhitelist:
+  - group: ''
+    kind: ConfigMap
+  - group: ''
+    kind: Secret
+  - group: ''
+    kind: Service
+  - group: apps
+    kind: Deployment
+  - group: apps
+    kind: ReplicaSet
+  - group: networking.k8s.io
+    kind: Ingress
+  roles:
+  - name: production-admin
+    description: Admin access to production applications
+    policies:
+    - p, proj:production-apps:production-admin, applications, *, production-apps/*, allow
+    - p, proj:production-apps:production-admin, repositories, *, *, allow
+    groups:
+    - company:production-admins
+  - name: production-developer
+    description: Developer access to production applications
+    policies:
+    - p, proj:production-apps:production-developer, applications, get, production-apps/*, allow
+    - p, proj:production-apps:production-developer, applications, sync, production-apps/*, allow
+    groups:
+    - company:developers
+```
+
+### Advanced GitOps Patterns
+
+```python
+#!/usr/bin/env python3
+"""
+Advanced GitOps Automation with ArgoCD
+"""
+
+import yaml
+import git
+import requests
+import json
+from typing import Dict, List, Any
+from datetime import datetime
+import subprocess
+import os
+
+class GitOpsManager:
+    def __init__(self, repo_url: str, argocd_server: str, argocd_token: str):
+        self.repo_url = repo_url
+        self.argocd_server = argocd_server
+        self.argocd_token = argocd_token
+        self.headers = {
+            'Authorization': f'Bearer {argocd_token}',
+            'Content-Type': 'application/json'
+        }
+    
+    def promote_application(self, app_name: str, from_env: str, to_env: str, image_tag: str) -> Dict:
+        """
+        Promote application from one environment to another
+        """
+        try:
+            # Clone repository
+            repo_path = f"/tmp/{app_name}-gitops"
+            if os.path.exists(repo_path):
+                repo = git.Repo(repo_path)
+                repo.remotes.origin.pull()
+            else:
+                repo = git.Repo.clone_from(self.repo_url, repo_path)
+            
+            # Update kustomization file
+            kustomization_path = f"{repo_path}/apps/overlays/{to_env}/kustomization.yaml"
+            
+            with open(kustomization_path, 'r') as f:
+                kustomization = yaml.safe_load(f)
+            
+            # Update image tag
+            for image in kustomization.get('images', []):
+                if image['name'] == app_name:
+                    image['newTag'] = image_tag
+                    break
+            else:
+                # Add new image if not exists
+                if 'images' not in kustomization:
+                    kustomization['images'] = []
+                kustomization['images'].append({
+                    'name': app_name,
+                    'newTag': image_tag
+                })
+            
+            # Write updated kustomization
+            with open(kustomization_path, 'w') as f:
+                yaml.dump(kustomization, f, default_flow_style=False)
+            
+            # Commit and push changes
+            repo.index.add([kustomization_path])
+            commit_message = f"Promote {app_name} to {to_env}: {image_tag}"
+            repo.index.commit(commit_message)
+            repo.remotes.origin.push()
+            
+            # Trigger ArgoCD sync
+            sync_result = self.sync_application(f"{app_name}-{to_env}")
+            
+            return {
+                'status': 'success',
+                'message': f'Successfully promoted {app_name} to {to_env}',
+                'commit': repo.head.commit.hexsha,
+                'sync_result': sync_result
+            }
+            
+        except Exception as e:
+            return {
+                'status': 'error',
+                'message': f'Failed to promote {app_name}: {str(e)}'
+            }
+    
+    def sync_application(self, app_name: str, revision: str = None) -> Dict:
+        """
+        Trigger ArgoCD application sync
+        """
+        sync_request = {
+            'revision': revision or 'HEAD',
+            'prune': True,
+            'dryRun': False,
+            'strategy': {
+                'hook': {
+                    'force': True
+                }
+            }
+        }
+        
+        try:
+            response = requests.post(
+                f"{self.argocd_server}/api/v1/applications/{app_name}/sync",
+                headers=self.headers,
+                json=sync_request
+            )
+            
+            if response.status_code == 200:
+                return response.json()
+            else:
+                return {
+                    'status': 'error',
+                    'message': f'Sync failed: {response.text}'
+                }
+        except Exception as e:
+            return {
+                'status': 'error',
+                'message': f'Sync request failed: {str(e)}'
+            }
+    
+    def get_application_status(self, app_name: str) -> Dict:
+        """
+        Get ArgoCD application status
+        """
+        try:
+            response = requests.get(
+                f"{self.argocd_server}/api/v1/applications/{app_name}",
+                headers=self.headers
+            )
+            
+            if response.status_code == 200:
+                app_data = response.json()
+                return {
+                    'name': app_data['metadata']['name'],
+                    'health': app_data['status']['health']['status'],
+                    'sync': app_data['status']['sync']['status'],
+                    'revision': app_data['status']['sync']['revision'][:8],
+                    'last_sync': app_data['status']['operationState'].get('finishedAt', 'Never'),
+                    'resources': len(app_data['status'].get('resources', []))
+                }
+            else:
+                return {
+                    'status': 'error',
+                    'message': f'Failed to get application status: {response.text}'
+                }
+        except Exception as e:
+            return {
+                'status': 'error',
+                'message': f'Request failed: {str(e)}'
+            }
+    
+    def create_application_from_template(self, app_name: str, environment: str, 
+                                       repo_path: str, namespace: str) -> Dict:
+        """
+        Create new ArgoCD application from template
+        """
+        application = {
+            'apiVersion': 'argoproj.io/v1alpha1',
+            'kind': 'Application',
+            'metadata': {
+                'name': f"{app_name}-{environment}",
+                'namespace': 'argocd',
+                'labels': {
+                    'app': app_name,
+                    'environment': environment
+                }
+            },
+            'spec': {
+                'project': f"{environment}-apps",
+                'source': {
+                    'repoURL': self.repo_url,
+                    'targetRevision': 'main',
+                    'path': f"apps/overlays/{environment}/{repo_path}"
+                },
+                'destination': {
+                    'server': 'https://kubernetes.default.svc',
+                    'namespace': namespace
+                },
+                'syncPolicy': {
+                    'automated': {
+                        'prune': True,
+                        'selfHeal': True
+                    },
+                    'syncOptions': [
+                        'CreateNamespace=true'
+                    ]
+                }
+            }
+        }
+        
+        try:
+            response = requests.post(
+                f"{self.argocd_server}/api/v1/applications",
+                headers=self.headers,
+                json=application
+            )
+            
+            if response.status_code == 200:
+                return {
+                    'status': 'success',
+                    'message': f'Application {app_name}-{environment} created successfully',
+                    'application': response.json()
+                }
+            else:
+                return {
+                    'status': 'error',
+                    'message': f'Failed to create application: {response.text}'
+                }
+        except Exception as e:
+            return {
+                'status': 'error',
+                'message': f'Request failed: {str(e)}'
+            }
+    
+    def rollback_application(self, app_name: str, revision: str) -> Dict:
+        """
+        Rollback application to specific revision
+        """
+        rollback_request = {
+            'revision': revision,
+            'prune': True,
+            'dryRun': False
+        }
+        
+        try:
+            response = requests.post(
+                f"{self.argocd_server}/api/v1/applications/{app_name}/rollback",
+                headers=self.headers,
+                json=rollback_request
+            )
+            
+            if response.status_code == 200:
+                return {
+                    'status': 'success',
+                    'message': f'Rollback initiated for {app_name} to revision {revision}'
+                }
+            else:
+                return {
+                    'status': 'error',
+                    'message': f'Rollback failed: {response.text}'
+                }
+        except Exception as e:
+            return {
+                'status': 'error',
+                'message': f'Rollback request failed: {str(e)}'
+            }
+
+# Example usage
+if __name__ == "__main__":
+    gitops = GitOpsManager(
+        repo_url="https://github.com/company/k8s-manifests",
+        argocd_server="https://argocd.company.com",
+        argocd_token="your-argocd-token"
+    )
+    
+    # Promote application
+    result = gitops.promote_application(
+        app_name="web-app",
+        from_env="staging",
+        to_env="production",
+        image_tag="v1.2.3"
+    )
+    print(json.dumps(result, indent=2))
+    
+    # Check application status
+    status = gitops.get_application_status("web-app-production")
+    print(json.dumps(status, indent=2))
+```
+
+### Multi-Environment GitOps Pipeline
+
+```yaml
+# .github/workflows/gitops-pipeline.yaml
+name: GitOps Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+    
+    - name: Build and push
+      id: build
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  deploy-dev:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - name: Checkout GitOps repo
+      uses: actions/checkout@v3
+      with:
+        repository: company/k8s-manifests
+        token: ${{ secrets.GITOPS_TOKEN }}
+        path: gitops
+    
+    - name: Update development manifests
+      run: |
+        cd gitops
+        yq eval '.images[0].newTag = "${{ needs.build-and-test.outputs.image-tag }}"' -i apps/overlays/development/kustomization.yaml
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add .
+        git commit -m "Update development image to ${{ needs.build-and-test.outputs.image-tag }}"
+        git push
+
+  deploy-staging:
+    needs: [build-and-test, deploy-dev]
+    runs-on: ubuntu-latest
+    environment: staging
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - name: Checkout GitOps repo
+      uses: actions/checkout@v3
+      with:
+        repository: company/k8s-manifests
+        token: ${{ secrets.GITOPS_TOKEN }}
+        path: gitops
+    
+    - name: Update staging manifests
+      run: |
+        cd gitops
+        yq eval '.images[0].newTag = "${{ needs.build-and-test.outputs.image-tag }}"' -i apps/overlays/staging/kustomization.yaml
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add .
+        git commit -m "Update staging image to ${{ needs.build-and-test.outputs.image-tag }}"
+        git push
+
+  deploy-production:
+    needs: [build-and-test, deploy-staging]
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - name: Checkout GitOps repo
+      uses: actions/checkout@v3
+      with:
+        repository: company/k8s-manifests
+        token: ${{ secrets.GITOPS_TOKEN }}
+        path: gitops
+    
+    - name: Update production manifests
+      run: |
+        cd gitops
+        yq eval '.images[0].newTag = "${{ needs.build-and-test.outputs.image-tag }}"' -i apps/overlays/production/kustomization.yaml
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add .
+        git commit -m "Update production image to ${{ needs.build-and-test.outputs.image-tag }}"
+        git push
+```
+
+**GitOps Best Practices:**
+
+1. **Repository Structure**: Separate application code from deployment manifests
+2. **Environment Promotion**: Use automated promotion pipelines between environments
+3. **Security**: Implement RBAC and secure secret management
+4. **Monitoring**: Set up comprehensive observability for GitOps workflows
+5. **Rollback Strategy**: Maintain ability to quickly rollback deployments
+6. **Branch Protection**: Protect main branches with required reviews
+7. **Drift Detection**: Monitor and alert on configuration drift
+8. **Multi-Cluster**: Plan for multi-cluster deployments from the start
+
+---
+
+## Advanced Networking and CNI
+
+## Q19: How do you implement advanced networking patterns and CNI plugins in Kubernetes?
+**Difficulty: Expert**
+
+**Answer:**
+
+Container Network Interface (CNI) is a specification for configuring network interfaces in Linux containers. Kubernetes uses CNI plugins to provide networking capabilities for pods, including IP allocation, routing, and network policies.
+
+### CNI Plugin Architecture and Implementation
+
+```bash
+# Install Calico CNI
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+
+# Install Cilium CNI with eBPF
+helm repo add cilium https://helm.cilium.io/
+helm install cilium cilium/cilium --version 1.14.0 \
+  --namespace kube-system \
+  --set kubeProxyReplacement=strict \
+  --set k8sServiceHost=YOUR_K8S_API_SERVER_IP \
+  --set k8sServicePort=6443
+
+# Install Weave Net
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+
+# Verify CNI installation
+kubectl get pods -n kube-system | grep -E '(calico|cilium|weave)'
+kubectl get nodes -o wide
+```
+
+### Advanced Network Policies
+
+```yaml
+# Comprehensive Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: advanced-network-policy
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: web-application
+      tier: frontend
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow traffic from load balancer
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - podSelector:
+        matchLabels:
+          app: nginx-ingress
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow traffic from same namespace
+  - from:
+    - podSelector:
+        matchLabels:
+          tier: backend
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow traffic from monitoring namespace
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    - podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - protocol: TCP
+      port: 9090
+  egress:
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow HTTPS to external services
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+  # Allow traffic to backend services
+  - to:
+    - podSelector:
+        matchLabels:
+          tier: backend
+    ports:
+    - protocol: TCP
+      port: 3000
+  # Allow traffic to database
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgresql
+    ports:
+    - protocol: TCP
+      port: 5432
+
+---
+# Calico Global Network Policy
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: deny-all-non-system-traffic
+spec:
+  order: 1000
+  selector: projectcalico.org/namespace != "kube-system"
+  types:
+  - Ingress
+  - Egress
+  egress:
+  # Allow DNS
+  - action: Allow
+    protocol: UDP
+    destination:
+      ports: [53]
+  - action: Allow
+    protocol: TCP
+    destination:
+      ports: [53]
+  # Allow NTP
+  - action: Allow
+    protocol: UDP
+    destination:
+      ports: [123]
+  # Deny all other traffic
+  - action: Deny
+
+---
+# Cilium Network Policy with L7 rules
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: l7-policy
+  namespace: production
+spec:
+  endpointSelector:
+    matchLabels:
+      app: api-gateway
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        app: frontend
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"
+          path: "/api/v1/.*"
+        - method: "POST"
+          path: "/api/v1/users"
+          headers:
+          - "Content-Type: application/json"
+        - method: "PUT"
+          path: "/api/v1/users/[0-9]+"
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        app: user-service
+    toPorts:
+    - ports:
+      - port: "3000"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"
+          path: "/users/.*"
+        - method: "POST"
+          path: "/users"
+```
+
+### Multi-Cluster Networking
+
+```python
+#!/usr/bin/env python3
+"""
+Multi-Cluster Networking Management
+"""
+
+import yaml
+import subprocess
+import json
+from typing import Dict, List, Any
+import ipaddress
+from dataclasses import dataclass
+
+@dataclass
+class ClusterConfig:
+    name: str
+    kubeconfig: str
+    pod_cidr: str
+    service_cidr: str
+    api_server: str
+    region: str
+
+class MultiClusterNetworking:
+    def __init__(self):
+        self.clusters = {}
+        self.mesh_config = {}
+    
+    def add_cluster(self, config: ClusterConfig):
+        """
+        Add cluster to multi-cluster setup
+        """
+        self.clusters[config.name] = config
+        
+        # Validate CIDR ranges don't overlap
+        self._validate_cidr_ranges()
+    
+    def _validate_cidr_ranges(self):
+        """
+        Ensure pod and service CIDRs don't overlap between clusters
+        """
+        pod_networks = []
+        service_networks = []
+        
+        for cluster in self.clusters.values():
+            pod_net = ipaddress.ip_network(cluster.pod_cidr)
+            service_net = ipaddress.ip_network(cluster.service_cidr)
+            
+            # Check for overlaps
+            for existing_pod in pod_networks:
+                if pod_net.overlaps(existing_pod):
+                    raise ValueError(f"Pod CIDR overlap detected: {cluster.pod_cidr} overlaps with existing network")
+            
+            for existing_service in service_networks:
+                if service_net.overlaps(existing_service):
+                    raise ValueError(f"Service CIDR overlap detected: {cluster.service_cidr} overlaps with existing network")
+            
+            pod_networks.append(pod_net)
+            service_networks.append(service_net)
+    
+    def setup_submariner(self, broker_cluster: str) -> Dict:
+        """
+        Setup Submariner for multi-cluster connectivity
+        """
+        try:
+            # Install Submariner broker on designated cluster
+            broker_config = self.clusters[broker_cluster]
+            
+            # Deploy broker
+            broker_cmd = [
+                'subctl', 'deploy-broker',
+                '--kubeconfig', broker_config.kubeconfig,
+                '--service-discovery'
+            ]
+            
+            result = subprocess.run(broker_cmd, capture_output=True, text=True)
+            if result.returncode != 0:
+                return {'status': 'error', 'message': f'Broker deployment failed: {result.stderr}'}
+            
+            # Join other clusters to broker
+            for cluster_name, cluster_config in self.clusters.items():
+                if cluster_name != broker_cluster:
+                    join_cmd = [
+                        'subctl', 'join',
+                        '--kubeconfig', cluster_config.kubeconfig,
+                        '--clusterid', cluster_name,
+                        '--repository', 'quay.io/submariner',
+                        'broker-info.subm'
+                    ]
+                    
+                    join_result = subprocess.run(join_cmd, capture_output=True, text=True)
+                    if join_result.returncode != 0:
+                        return {
+                            'status': 'error', 
+                            'message': f'Failed to join cluster {cluster_name}: {join_result.stderr}'
+                        }
+            
+            return {
+                'status': 'success',
+                'message': 'Submariner multi-cluster setup completed',
+                'broker_cluster': broker_cluster
+            }
+            
+        except Exception as e:
+            return {'status': 'error', 'message': f'Submariner setup failed: {str(e)}'}
+    
+    def setup_istio_multicluster(self) -> Dict:
+        """
+        Setup Istio multi-cluster mesh
+        """
+        try:
+            # Install Istio on each cluster
+            for cluster_name, cluster_config in self.clusters.items():
+                # Create network and cluster labels
+                network_name = f"network-{cluster_config.region}"
+                
+                istio_install_cmd = [
+                    'istioctl', 'install',
+                    '--kubeconfig', cluster_config.kubeconfig,
+                    '--set', f'values.pilot.env.EXTERNAL_ISTIOD=false',
+                    '--set', f'values.global.meshID=mesh1',
+                    '--set', f'values.global.network={network_name}',
+                    '--set', f'values.global.cluster={cluster_name}'
+                ]
+                
+                result = subprocess.run(istio_install_cmd, capture_output=True, text=True)
+                if result.returncode != 0:
+                    return {
+                        'status': 'error', 
+                        'message': f'Istio installation failed on {cluster_name}: {result.stderr}'
+                    }
+            
+            # Setup cross-cluster service discovery
+            self._setup_istio_cross_cluster_discovery()
+            
+            return {
+                'status': 'success',
+                'message': 'Istio multi-cluster mesh setup completed'
+            }
+            
+        except Exception as e:
+            return {'status': 'error', 'message': f'Istio multi-cluster setup failed: {str(e)}'}
+    
+    def _setup_istio_cross_cluster_discovery(self):
+        """
+        Setup Istio cross-cluster service discovery
+        """
+        for cluster_name, cluster_config in self.clusters.items():
+            for remote_cluster_name, remote_config in self.clusters.items():
+                if cluster_name != remote_cluster_name:
+                    # Create secret for remote cluster access
+                    secret_cmd = [
+                        'kubectl', 'create', 'secret', 'generic',
+                        f'cacerts-{remote_cluster_name}',
+                        '--kubeconfig', cluster_config.kubeconfig,
+                        '-n', 'istio-system',
+                        '--from-file', f'root-cert.pem=/tmp/{remote_cluster_name}-root-cert.pem',
+                        '--from-file', f'cert-chain.pem=/tmp/{remote_cluster_name}-cert-chain.pem'
+                    ]
+                    
+                    subprocess.run(secret_cmd, capture_output=True, text=True)
+    
+    def create_service_export(self, cluster_name: str, service_name: str, namespace: str) -> str:
+        """
+        Create ServiceExport for multi-cluster service discovery
+        """
+        service_export = {
+            'apiVersion': 'networking.istio.io/v1alpha3',
+            'kind': 'ServiceEntry',
+            'metadata': {
+                'name': f'{service_name}-remote',
+                'namespace': namespace
+            },
+            'spec': {
+                'hosts': [f'{service_name}.{namespace}.global'],
+                'location': 'MESH_EXTERNAL',
+                'ports': [
+                    {
+                        'number': 80,
+                        'name': 'http',
+                        'protocol': 'HTTP'
+                    }
+                ],
+                'resolution': 'DNS',
+                'addresses': [f'{service_name}.{namespace}.svc.cluster.local'],
+                'endpoints': [
+                    {
+                        'address': f'{service_name}.{namespace}.svc.cluster.local',
+                        'network': f'network-{self.clusters[cluster_name].region}',
+                        'ports': {'http': 80}
+                    }
+                ]
+            }
+        }
+        
+        return yaml.dump(service_export, default_flow_style=False)
+    
+    def monitor_cross_cluster_connectivity(self) -> Dict:
+        """
+        Monitor connectivity between clusters
+        """
+        connectivity_status = {}
+        
+        for source_cluster, source_config in self.clusters.items():
+            connectivity_status[source_cluster] = {}
+            
+            for target_cluster, target_config in self.clusters.items():
+                if source_cluster != target_cluster:
+                    # Test connectivity using kubectl
+                    test_cmd = [
+                        'kubectl', 'run', 'connectivity-test',
+                        '--kubeconfig', source_config.kubeconfig,
+                        '--image=busybox',
+                        '--rm', '-i', '--restart=Never',
+                        '--', 'ping', '-c', '3', target_config.api_server.split('://')[1].split(':')[0]
+                    ]
+                    
+                    result = subprocess.run(test_cmd, capture_output=True, text=True)
+                    connectivity_status[source_cluster][target_cluster] = {
+                        'status': 'success' if result.returncode == 0 else 'failed',
+                        'latency': self._extract_ping_latency(result.stdout) if result.returncode == 0 else None
+                    }
+        
+        return connectivity_status
+    
+    def _extract_ping_latency(self, ping_output: str) -> float:
+        """
+        Extract average latency from ping output
+        """
+        try:
+            lines = ping_output.split('\n')
+            for line in lines:
+                if 'avg' in line:
+                    # Extract average latency
+                    parts = line.split('/')
+                    if len(parts) >= 5:
+                        return float(parts[4])
+            return 0.0
+        except:
+            return 0.0
+
+# Example usage
+if __name__ == "__main__":
+    # Setup multi-cluster networking
+    mcn = MultiClusterNetworking()
+    
+    # Add clusters
+    cluster1 = ClusterConfig(
+        name="prod-us-east",
+        kubeconfig="/path/to/us-east-kubeconfig",
+        pod_cidr="10.1.0.0/16",
+        service_cidr="10.101.0.0/16",
+        api_server="https://us-east-api.example.com:6443",
+        region="us-east-1"
+    )
+    
+    cluster2 = ClusterConfig(
+        name="prod-us-west",
+        kubeconfig="/path/to/us-west-kubeconfig",
+        pod_cidr="10.2.0.0/16",
+        service_cidr="10.102.0.0/16",
+        api_server="https://us-west-api.example.com:6443",
+        region="us-west-2"
+    )
+    
+    mcn.add_cluster(cluster1)
+    mcn.add_cluster(cluster2)
+    
+    # Setup Submariner
+    result = mcn.setup_submariner("prod-us-east")
+    print(json.dumps(result, indent=2))
+    
+    # Monitor connectivity
+    connectivity = mcn.monitor_cross_cluster_connectivity()
+    print(json.dumps(connectivity, indent=2))
+```
+
+### eBPF-based Networking with Cilium
+
+```yaml
+# Cilium ConfigMap for advanced eBPF features
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cilium-config
+  namespace: kube-system
+data:
+  # Enable eBPF-based kube-proxy replacement
+  kube-proxy-replacement: "strict"
+  
+  # Enable Hubble for network observability
+  enable-hubble: "true"
+  hubble-listen-address: ":4244"
+  hubble-metrics-server: ":9091"
+  hubble-metrics: |
+    dns:query;ignoreAAAA
+    drop
+    tcp
+    flow
+    icmp
+    http
+  
+  # Enable L7 load balancing
+  enable-l7-proxy: "true"
+  
+  # Enable bandwidth management
+  enable-bandwidth-manager: "true"
+  
+  # Enable local redirect policy
+  enable-local-redirect-policy: "true"
+  
+  # Enable endpoint routes
+  enable-endpoint-routes: "true"
+  
+  # Enable host routing
+  enable-host-routing: "true"
+  
+  # Configure IPAM
+  ipam: "kubernetes"
+  
+  # Enable encryption
+  enable-ipsec: "true"
+  ipsec-key-file: "/etc/ipsec/keys"
+  
+  # Enable Wireguard encryption (alternative to IPSec)
+  enable-wireguard: "false"
+  
+  # Configure cluster pool
+  cluster-pool-ipv4-cidr: "10.0.0.0/8"
+  cluster-pool-ipv4-mask-size: "24"
+
+---
+# Cilium Load Balancer IP Pool
+apiVersion: cilium.io/v2alpha1
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: production-pool
+spec:
+  cidrs:
+  - cidr: "192.168.1.0/24"
+  serviceSelector:
+    matchLabels:
+      environment: production
+
+---
+# Cilium BGP Peering Policy
+apiVersion: cilium.io/v2alpha1
+kind: CiliumBGPPeeringPolicy
+metadata:
+  name: bgp-peering
+spec:
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/os: linux
+  virtualRouters:
+  - localASN: 65001
+    exportPodCIDR: true
+    serviceSelector:
+      matchExpressions:
+      - key: somekey
+        operator: NotIn
+        values: ['never-used-value']
+    neighbors:
+    - peerAddress: "192.168.1.1/32"
+      peerASN: 65000
+```
+
+### Network Troubleshooting Tools
+
+```bash
+# Network debugging commands
+
+# Check CNI plugin status
+kubectl get pods -n kube-system | grep -E '(calico|cilium|weave|flannel)'
+
+# Verify node networking
+kubectl get nodes -o wide
+kubectl describe node <node-name>
+
+# Check pod networking
+kubectl get pods -o wide
+kubectl exec -it <pod-name> -- ip addr show
+kubectl exec -it <pod-name> -- ip route show
+
+# Test DNS resolution
+kubectl run -it --rm debug --image=busybox --restart=Never -- nslookup kubernetes.default
+
+# Test service connectivity
+kubectl run -it --rm debug --image=busybox --restart=Never -- wget -qO- http://service-name:port
+
+# Check network policies
+kubectl get networkpolicies -A
+kubectl describe networkpolicy <policy-name> -n <namespace>
+
+# Cilium specific debugging
+cilium status
+cilium endpoint list
+cilium service list
+cilium policy get
+
+# Hubble network observability
+hubble status
+hubble observe --follow
+hubble observe --from-pod default/frontend --to-pod default/backend
+
+# Check iptables rules (on nodes)
+sudo iptables -t nat -L
+sudo iptables -t filter -L
+
+# Monitor network traffic
+sudo tcpdump -i any -n host <pod-ip>
+kubectl exec -it <pod-name> -- tcpdump -i eth0 -n
+```
+
+**Advanced Networking Best Practices:**
+
+1. **CNI Selection**: Choose CNI based on performance, security, and feature requirements
+2. **Network Policies**: Implement zero-trust networking with comprehensive policies
+3. **Multi-Cluster**: Plan for cross-cluster communication and service discovery
+4. **Observability**: Deploy network monitoring and tracing tools
+5. **Security**: Enable encryption for pod-to-pod communication
+6. **Performance**: Optimize network performance with eBPF and hardware acceleration
+7. **Troubleshooting**: Maintain network debugging tools and procedures
+8. **Compliance**: Ensure network configuration meets regulatory requirements
+
+---
+
+## Performance Optimization and Tuning
+
+## Q20: How do you optimize Kubernetes cluster performance and implement advanced tuning strategies?
+**Difficulty: Expert**
+
+**Answer:**
+
+Kubernetes performance optimization involves tuning multiple layers: cluster infrastructure, node configuration, pod scheduling, resource management, and application-level optimizations.
+
+### Cluster-Level Performance Optimization
+
+```yaml
+# High-Performance Node Configuration
+apiVersion: v1
+kind: Node
+metadata:
+  name: high-perf-node
+  labels:
+    node-type: high-performance
+    workload-class: compute-intensive
+  annotations:
+    cluster-autoscaler.kubernetes.io/scale-down-disabled: "true"
+spec:
+  # Node-specific configurations
+  taints:
+  - key: "high-performance"
+    value: "true"
+    effect: "NoSchedule"
+
+---
+# Performance-optimized Pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: high-perf-app
+  annotations:
+    scheduler.alpha.kubernetes.io/preferred-zone: "us-west-2a"
+spec:
+  nodeSelector:
+    node-type: high-performance
+  tolerations:
+  - key: "high-performance"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+  containers:
+  - name: app
+    image: myapp:latest
+    resources:
+      requests:
+        cpu: "2"
+        memory: "4Gi"
+        ephemeral-storage: "10Gi"
+      limits:
+        cpu: "4"
+        memory: "8Gi"
+        ephemeral-storage: "20Gi"
+    # CPU and memory optimizations
+    env:
+    - name: GOMAXPROCS
+      valueFrom:
+        resourceFieldRef:
+          resource: limits.cpu
+    - name: GOMEMLIMIT
+      valueFrom:
+        resourceFieldRef:
+          resource: limits.memory
+  # Performance-critical scheduling
+  priorityClassName: high-priority
+  schedulerName: performance-scheduler
+  # Topology spread constraints
+  topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app: high-perf-app
+
+---
+# Priority Class for critical workloads
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority
+value: 1000000
+globalDefault: false
+description: "High priority class for performance-critical workloads"
+```
+
+### Advanced Resource Management
+
+```python
+#!/usr/bin/env python3
+"""
+Kubernetes Performance Optimization and Monitoring
+"""
+
+import yaml
+import json
+import subprocess
+import time
+from typing import Dict, List, Any, Optional
+from dataclasses import dataclass
+from kubernetes import client, config
+import psutil
+import numpy as np
+
+@dataclass
+class PerformanceMetrics:
+    cpu_usage: float
+    memory_usage: float
+    network_io: Dict[str, float]
+    disk_io: Dict[str, float]
+    pod_count: int
+    node_count: int
+    timestamp: float
+
+class KubernetesPerformanceOptimizer:
+    def __init__(self, kubeconfig_path: Optional[str] = None):
+        if kubeconfig_path:
+            config.load_kube_config(config_file=kubeconfig_path)
+        else:
+            config.load_incluster_config()
+        
+        self.v1 = client.CoreV1Api()
+        self.apps_v1 = client.AppsV1Api()
+        self.metrics_v1beta1 = client.CustomObjectsApi()
+        self.autoscaling_v2 = client.AutoscalingV2Api()
+    
+    def analyze_cluster_performance(self) -> Dict[str, Any]:
+        """
+        Comprehensive cluster performance analysis
+        """
+        try:
+            # Get cluster metrics
+            nodes = self.v1.list_node()
+            pods = self.v1.list_pod_for_all_namespaces()
+            
+            # Calculate resource utilization
+            total_cpu_capacity = 0
+            total_memory_capacity = 0
+            total_cpu_requests = 0
+            total_memory_requests = 0
+            
+            node_metrics = []
+            
+            for node in nodes.items:
+                # Node capacity
+                cpu_capacity = self._parse_cpu(node.status.capacity.get('cpu', '0'))
+                memory_capacity = self._parse_memory(node.status.capacity.get('memory', '0'))
+                
+                total_cpu_capacity += cpu_capacity
+                total_memory_capacity += memory_capacity
+                
+                # Node conditions and performance
+                node_ready = False
+                for condition in node.status.conditions:
+                    if condition.type == 'Ready' and condition.status == 'True':
+                        node_ready = True
+                        break
+                
+                node_metrics.append({
+                    'name': node.metadata.name,
+                    'ready': node_ready,
+                    'cpu_capacity': cpu_capacity,
+                    'memory_capacity': memory_capacity,
+                    'kernel_version': node.status.node_info.kernel_version,
+                    'container_runtime': node.status.node_info.container_runtime_version
+                })
+            
+            # Calculate pod resource requests
+            pod_metrics = []
+            for pod in pods.items:
+                if pod.status.phase == 'Running':
+                    pod_cpu_requests = 0
+                    pod_memory_requests = 0
+                    
+                    for container in pod.spec.containers:
+                        if container.resources and container.resources.requests:
+                            cpu_req = container.resources.requests.get('cpu', '0')
+                            memory_req = container.resources.requests.get('memory', '0')
+                            
+                            pod_cpu_requests += self._parse_cpu(cpu_req)
+                            pod_memory_requests += self._parse_memory(memory_req)
+                    
+                    total_cpu_requests += pod_cpu_requests
+                    total_memory_requests += pod_memory_requests
+                    
+                    pod_metrics.append({
+                        'name': pod.metadata.name,
+                        'namespace': pod.metadata.namespace,
+                        'node': pod.spec.node_name,
+                        'cpu_requests': pod_cpu_requests,
+                        'memory_requests': pod_memory_requests,
+                        'restart_count': sum([c.restart_count for c in pod.status.container_statuses or []])
+                    })
+            
+            # Calculate utilization percentages
+            cpu_utilization = (total_cpu_requests / total_cpu_capacity * 100) if total_cpu_capacity > 0 else 0
+            memory_utilization = (total_memory_requests / total_memory_capacity * 100) if total_memory_capacity > 0 else 0
+            
+            return {
+                'cluster_summary': {
+                    'total_nodes': len(nodes.items),
+                    'total_pods': len([p for p in pods.items if p.status.phase == 'Running']),
+                    'cpu_utilization_percent': round(cpu_utilization, 2),
+                    'memory_utilization_percent': round(memory_utilization, 2),
+                    'total_cpu_capacity': total_cpu_capacity,
+                    'total_memory_capacity_gb': round(total_memory_capacity / (1024**3), 2)
+                },
+                'node_metrics': node_metrics,
+                'pod_metrics': pod_metrics[:10],  # Top 10 pods by resource usage
+                'recommendations': self._generate_performance_recommendations(cpu_utilization, memory_utilization, node_metrics)
+            }
+            
+        except Exception as e:
+            return {'error': f'Failed to analyze cluster performance: {str(e)}'}
+    
+    def optimize_pod_scheduling(self, namespace: str = 'default') -> Dict[str, Any]:
+        """
+        Optimize pod scheduling and placement
+        """
+        try:
+            # Get pods in namespace
+            pods = self.v1.list_namespaced_pod(namespace)
+            nodes = self.v1.list_node()
+            
+            optimization_recommendations = []
+            
+            for pod in pods.items:
+                if pod.status.phase == 'Running':
+                    recommendations = self._analyze_pod_placement(pod, nodes.items)
+                    if recommendations:
+                        optimization_recommendations.append({
+                            'pod': pod.metadata.name,
+                            'current_node': pod.spec.node_name,
+                            'recommendations': recommendations
+                        })
+            
+            return {
+                'namespace': namespace,
+                'total_pods_analyzed': len(pods.items),
+                'optimization_opportunities': len(optimization_recommendations),
+                'recommendations': optimization_recommendations
+            }
+            
+        except Exception as e:
+            return {'error': f'Failed to optimize pod scheduling: {str(e)}'}
+    
+    def implement_performance_tuning(self, deployment_name: str, namespace: str = 'default') -> Dict[str, Any]:
+        """
+        Implement performance tuning for a deployment
+        """
+        try:
+            # Get current deployment
+            deployment = self.apps_v1.read_namespaced_deployment(deployment_name, namespace)
+            
+            # Create optimized deployment spec
+            optimized_spec = self._create_optimized_deployment_spec(deployment)
+            
+            # Apply optimizations
+            self.apps_v1.patch_namespaced_deployment(
+                name=deployment_name,
+                namespace=namespace,
+                body=optimized_spec
+            )
+            
+            # Create HPA if not exists
+            hpa_spec = self._create_performance_hpa(deployment_name, namespace)
+            
+            try:
+                self.autoscaling_v2.create_namespaced_horizontal_pod_autoscaler(
+                    namespace=namespace,
+                    body=hpa_spec
+                )
+                hpa_created = True
+            except client.exceptions.ApiException as e:
+                if e.status == 409:  # Already exists
+                    hpa_created = False
+                else:
+                    raise
+            
+            return {
+                'deployment': deployment_name,
+                'namespace': namespace,
+                'optimizations_applied': [
+                    'Resource requests/limits optimized',
+                    'Node affinity configured',
+                    'Topology spread constraints added',
+                    'Performance annotations added'
+                ],
+                'hpa_created': hpa_created,
+                'status': 'success'
+            }
+            
+        except Exception as e:
+            return {'error': f'Failed to implement performance tuning: {str(e)}'}
+    
+    def monitor_performance_metrics(self, duration_minutes: int = 5) -> List[PerformanceMetrics]:
+        """
+        Monitor cluster performance metrics over time
+        """
+        metrics = []
+        end_time = time.time() + (duration_minutes * 60)
+        
+        while time.time() < end_time:
+            try:
+                # Get current metrics
+                nodes = self.v1.list_node()
+                pods = self.v1.list_pod_for_all_namespaces()
+                
+                # Calculate current utilization
+                running_pods = [p for p in pods.items if p.status.phase == 'Running']
+                
+                # Get system metrics (simplified)
+                cpu_usage = psutil.cpu_percent(interval=1)
+                memory_usage = psutil.virtual_memory().percent
+                network_io = psutil.net_io_counters()._asdict()
+                disk_io = psutil.disk_io_counters()._asdict()
+                
+                metrics.append(PerformanceMetrics(
+                    cpu_usage=cpu_usage,
+                    memory_usage=memory_usage,
+                    network_io=network_io,
+                    disk_io=disk_io,
+                    pod_count=len(running_pods),
+                    node_count=len(nodes.items),
+                    timestamp=time.time()
+                ))
+                
+                time.sleep(30)  # Sample every 30 seconds
+                
+            except Exception as e:
+                print(f"Error collecting metrics: {e}")
+                time.sleep(30)
+        
+        return metrics
+    
+    def _parse_cpu(self, cpu_str: str) -> float:
+        """
+        Parse CPU string to float (cores)
+        """
+        if cpu_str.endswith('m'):
+            return float(cpu_str[:-1]) / 1000
+        return float(cpu_str)
+    
+    def _parse_memory(self, memory_str: str) -> int:
+        """
+        Parse memory string to bytes
+        """
+        units = {'Ki': 1024, 'Mi': 1024**2, 'Gi': 1024**3, 'Ti': 1024**4}
+        
+        for unit, multiplier in units.items():
+            if memory_str.endswith(unit):
+                return int(memory_str[:-2]) * multiplier
+        
+        return int(memory_str)
+    
+    def _generate_performance_recommendations(self, cpu_util: float, memory_util: float, node_metrics: List[Dict]) -> List[str]:
+        """
+        Generate performance optimization recommendations
+        """
+        recommendations = []
+        
+        if cpu_util > 80:
+            recommendations.append("High CPU utilization detected. Consider adding more nodes or optimizing workloads.")
+        elif cpu_util < 30:
+            recommendations.append("Low CPU utilization. Consider consolidating workloads or reducing cluster size.")
+        
+        if memory_util > 85:
+            recommendations.append("High memory utilization detected. Consider adding memory or optimizing applications.")
+        elif memory_util < 40:
+            recommendations.append("Low memory utilization. Consider right-sizing your applications.")
+        
+        # Check node health
+        unhealthy_nodes = [n for n in node_metrics if not n['ready']]
+        if unhealthy_nodes:
+            recommendations.append(f"Found {len(unhealthy_nodes)} unhealthy nodes. Investigate node issues.")
+        
+        return recommendations
+    
+    def _analyze_pod_placement(self, pod, nodes: List) -> List[str]:
+        """
+        Analyze pod placement and suggest optimizations
+        """
+        recommendations = []
+        
+        # Check if pod has resource requests
+        has_requests = False
+        for container in pod.spec.containers:
+            if container.resources and container.resources.requests:
+                has_requests = True
+                break
+        
+        if not has_requests:
+            recommendations.append("Add resource requests for better scheduling")
+        
+        # Check node affinity
+        if not pod.spec.affinity:
+            recommendations.append("Consider adding node affinity for optimal placement")
+        
+        # Check for anti-affinity
+        if not pod.spec.affinity or not pod.spec.affinity.pod_anti_affinity:
+            recommendations.append("Consider adding pod anti-affinity for high availability")
+        
+        return recommendations
+    
+    def _create_optimized_deployment_spec(self, deployment) -> Dict:
+        """
+        Create optimized deployment specification
+        """
+        # Clone the deployment
+        optimized = deployment.to_dict()
+        
+        # Add performance optimizations
+        container = optimized['spec']['template']['spec']['containers'][0]
+        
+        # Optimize resource requests/limits
+        if 'resources' not in container:
+            container['resources'] = {}
+        
+        container['resources'] = {
+            'requests': {
+                'cpu': '100m',
+                'memory': '128Mi'
+            },
+            'limits': {
+                'cpu': '500m',
+                'memory': '512Mi'
+            }
+        }
+        
+        # Add performance annotations
+        if 'annotations' not in optimized['spec']['template']['metadata']:
+            optimized['spec']['template']['metadata']['annotations'] = {}
+        
+        optimized['spec']['template']['metadata']['annotations'].update({
+            'cluster-autoscaler.kubernetes.io/safe-to-evict': 'true',
+            'scheduler.alpha.kubernetes.io/preferred-zone': 'us-west-2a'
+        })
+        
+        # Add topology spread constraints
+        optimized['spec']['template']['spec']['topologySpreadConstraints'] = [{
+            'maxSkew': 1,
+            'topologyKey': 'kubernetes.io/hostname',
+            'whenUnsatisfiable': 'DoNotSchedule',
+            'labelSelector': {
+                'matchLabels': optimized['spec']['selector']['matchLabels']
+            }
+        }]
+        
+        return optimized
+    
+    def _create_performance_hpa(self, deployment_name: str, namespace: str) -> Dict:
+        """
+        Create HPA for performance optimization
+        """
+        return {
+            'apiVersion': 'autoscaling/v2',
+            'kind': 'HorizontalPodAutoscaler',
+            'metadata': {
+                'name': f'{deployment_name}-hpa',
+                'namespace': namespace
+            },
+            'spec': {
+                'scaleTargetRef': {
+                    'apiVersion': 'apps/v1',
+                    'kind': 'Deployment',
+                    'name': deployment_name
+                },
+                'minReplicas': 2,
+                'maxReplicas': 10,
+                'metrics': [
+                    {
+                        'type': 'Resource',
+                        'resource': {
+                            'name': 'cpu',
+                            'target': {
+                                'type': 'Utilization',
+                                'averageUtilization': 70
+                            }
+                        }
+                    },
+                    {
+                        'type': 'Resource',
+                        'resource': {
+                            'name': 'memory',
+                            'target': {
+                                'type': 'Utilization',
+                                'averageUtilization': 80
+                            }
+                        }
+                    }
+                ],
+                'behavior': {
+                    'scaleDown': {
+                        'stabilizationWindowSeconds': 300,
+                        'policies': [{
+                            'type': 'Percent',
+                            'value': 10,
+                            'periodSeconds': 60
+                        }]
+                    },
+                    'scaleUp': {
+                        'stabilizationWindowSeconds': 60,
+                        'policies': [{
+                            'type': 'Percent',
+                            'value': 50,
+                            'periodSeconds': 60
+                        }]
+                    }
+                }
+            }
+        }
+
+# Example usage
+if __name__ == "__main__":
+    optimizer = KubernetesPerformanceOptimizer()
+    
+    # Analyze cluster performance
+    analysis = optimizer.analyze_cluster_performance()
+    print(json.dumps(analysis, indent=2))
+    
+    # Optimize pod scheduling
+    scheduling_optimization = optimizer.optimize_pod_scheduling('production')
+    print(json.dumps(scheduling_optimization, indent=2))
+    
+    # Implement performance tuning
+    tuning_result = optimizer.implement_performance_tuning('web-app', 'production')
+    print(json.dumps(tuning_result, indent=2))
+```
+
+### Node-Level Performance Tuning
+
+```bash
+#!/bin/bash
+# Node Performance Optimization Script
+
+# Kernel parameter tuning for Kubernetes nodes
+cat << EOF > /etc/sysctl.d/99-kubernetes-performance.conf
+# Network performance
+net.core.somaxconn = 32768
+net.core.netdev_max_backlog = 5000
+net.core.rmem_default = 262144
+net.core.rmem_max = 16777216
+net.core.wmem_default = 262144
+net.core.wmem_max = 16777216
+net.ipv4.tcp_rmem = 4096 65536 16777216
+net.ipv4.tcp_wmem = 4096 65536 16777216
+net.ipv4.tcp_congestion_control = bbr
+
+# File system performance
+fs.file-max = 2097152
+fs.inotify.max_user_instances = 8192
+fs.inotify.max_user_watches = 524288
+
+# Memory management
+vm.max_map_count = 262144
+vm.swappiness = 1
+vm.dirty_ratio = 15
+vm.dirty_background_ratio = 5
+
+# Process limits
+kernel.pid_max = 4194304
+kernel.threads-max = 4194304
+EOF
+
+# Apply kernel parameters
+sysctl -p /etc/sysctl.d/99-kubernetes-performance.conf
+
+# CPU governor optimization
+echo 'performance' | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+
+# Disable swap for Kubernetes
+swapoff -a
+sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+# Container runtime optimization (containerd)
+cat << EOF > /etc/containerd/config.toml
+version = 2
+
+[plugins."io.containerd.grpc.v1.cri"]
+  # Performance optimizations
+  max_container_log_line_size = 16384
+  max_concurrent_downloads = 10
+  
+  [plugins."io.containerd.grpc.v1.cri".containerd]
+    default_runtime_name = "runc"
+    
+    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+      runtime_type = "io.containerd.runc.v2"
+      
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+        SystemdCgroup = true
+        
+  [plugins."io.containerd.grpc.v1.cri".registry]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+        endpoint = ["https://registry-1.docker.io"]
+EOF
+
+# Restart containerd
+systemctl restart containerd
+
+# Kubelet performance flags
+cat << EOF > /etc/kubernetes/kubelet/kubelet-config.yaml
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+# Performance optimizations
+maxPods: 250
+podsPerCore: 10
+kubeReserved:
+  cpu: "100m"
+  memory: "1Gi"
+  ephemeral-storage: "1Gi"
+systemReserved:
+  cpu: "100m"
+  memory: "1Gi"
+  ephemeral-storage: "1Gi"
+evictionHard:
+  memory.available: "200Mi"
+  nodefs.available: "10%"
+  imagefs.available: "15%"
+# Container log management
+containerLogMaxSize: "50Mi"
+containerLogMaxFiles: 5
+# Image garbage collection
+imageGCHighThresholdPercent: 85
+imageGCLowThresholdPercent: 80
+# CPU management
+cpuManagerPolicy: "static"
+topologyManagerPolicy: "best-effort"
+# Memory management
+memoryManagerPolicy: "Static"
+reservedMemory:
+- numaNode: 0
+  limits:
+    memory: "1Gi"
+EOF
+
+# Restart kubelet
+systemctl restart kubelet
+
+echo "Node performance optimization completed!"
+```
+
+### Advanced Monitoring and Alerting
+
+```yaml
+# Prometheus configuration for performance monitoring
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-performance-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    
+    rule_files:
+    - "/etc/prometheus/rules/*.yml"
+    
+    scrape_configs:
+    # Kubernetes API server
+    - job_name: 'kubernetes-apiservers'
+      kubernetes_sd_configs:
+      - role: endpoints
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+        action: keep
+        regex: default;kubernetes;https
+    
+    # Node metrics
+    - job_name: 'kubernetes-nodes'
+      kubernetes_sd_configs:
+      - role: node
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+    
+    # Pod metrics
+    - job_name: 'kubernetes-pods'
+      kubernetes_sd_configs:
+      - role: pod
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+
+---
+# Performance alerting rules
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: performance-alert-rules
+  namespace: monitoring
+data:
+  performance.yml: |
+    groups:
+    - name: kubernetes-performance
+      rules:
+      # High CPU utilization
+      - alert: HighCPUUtilization
+        expr: (1 - rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU utilization on {{ $labels.instance }}"
+          description: "CPU utilization is above 80% for more than 5 minutes"
+      
+      # High memory utilization
+      - alert: HighMemoryUtilization
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory utilization on {{ $labels.instance }}"
+          description: "Memory utilization is above 85% for more than 5 minutes"
+      
+      # Pod restart rate
+      - alert: HighPodRestartRate
+        expr: rate(kube_pod_container_status_restarts_total[15m]) * 60 * 15 > 5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High pod restart rate in {{ $labels.namespace }}/{{ $labels.pod }}"
+          description: "Pod is restarting more than 5 times in 15 minutes"
+      
+      # API server latency
+      - alert: HighAPIServerLatency
+        expr: histogram_quantile(0.99, rate(apiserver_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API server latency"
+          description: "99th percentile latency is above 1 second"
+```
+
+**Performance Optimization Best Practices:**
+
+1. **Resource Management**: Set appropriate requests and limits for all containers
+2. **Node Optimization**: Tune kernel parameters and container runtime settings
+3. **Scheduling**: Use node affinity, anti-affinity, and topology spread constraints
+4. **Monitoring**: Implement comprehensive performance monitoring and alerting
+5. **Autoscaling**: Configure HPA and VPA for dynamic resource management
+6. **Storage**: Optimize persistent volume performance and storage classes
+7. **Networking**: Choose appropriate CNI and optimize network policies
+8. **Image Optimization**: Use multi-stage builds and optimize container images
+
+---
