@@ -10,6 +10,17 @@
 7. [Testing](#testing)
 8. [Deployment and Distribution](#deployment-and-distribution)
 9. [Advanced Patterns](#advanced-patterns)
+10. [Animation and Gestures](#animation-and-gestures)
+11. [Offline Capabilities and Caching](#offline-capabilities-and-caching)
+12. [Security and Authentication](#security-and-authentication)
+13. [Code Splitting and Bundle Optimization](#code-splitting-and-bundle-optimization)
+14. [Accessibility and Internationalization](#accessibility-and-internationalization)
+15. [Background Tasks and Push Notifications](#background-tasks-and-push-notifications)
+16. [Camera and Media Handling](#camera-and-media-handling)
+17. [Maps and Location Services](#maps-and-location-services)
+18. [Real-time Communication](#real-time-communication)
+19. [Advanced Debugging and Profiling](#advanced-debugging-and-profiling)
+20. [Enterprise and Production Patterns](#enterprise-and-production-patterns)
 
 ---
 
@@ -5406,5 +5417,6440 @@ export {
 ```
 
 This comprehensive guide covers deployment configuration, build processes, CI/CD pipelines, and responsive design techniques for React Native applications, ensuring they work seamlessly across different devices, screen sizes, and deployment environments.
+
+---
+
+## Animation and Gestures
+
+### 13. How do you implement complex animations and gesture handling in React Native?
+
+**Answer:**
+React Native provides multiple animation APIs including Animated API, LayoutAnimation, and react-native-reanimated for complex animations and gesture handling.
+
+**1. Animated API - Basic Animations:**
+
+```javascript
+import React, { useRef, useEffect } from 'react'
+import { View, Animated, TouchableOpacity, StyleSheet, Easing } from 'react-native'
+
+// Basic Animated Value
+const BasicAnimation = () => {
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const scaleAnim = useRef(new Animated.Value(1)).current
+  const rotateAnim = useRef(new Animated.Value(0)).current
+
+  const startAnimation = () => {
+    // Parallel animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1.2,
+        friction: 3,
+        tension: 40,
+        useNativeDriver: true
+      }),
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.linear,
+        useNativeDriver: true
+      })
+    ]).start()
+  }
+
+  const spin = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  })
+
+  return (
+    <View style={styles.container}>
+      <Animated.View
+        style={[
+          styles.animatedBox,
+          {
+            opacity: fadeAnim,
+            transform: [
+              { scale: scaleAnim },
+              { rotate: spin }
+            ]
+          }
+        ]}
+      />
+      <TouchableOpacity style={styles.button} onPress={startAnimation}>
+        <Animated.Text>Start Animation</Animated.Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
+
+// Complex Animation Sequences
+const ComplexAnimationSequence = () => {
+  const position = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current
+  const opacity = useRef(new Animated.Value(1)).current
+  const scale = useRef(new Animated.Value(1)).current
+
+  const animateSequence = () => {
+    Animated.sequence([
+      // Move right
+      Animated.timing(position, {
+        toValue: { x: 100, y: 0 },
+        duration: 500,
+        useNativeDriver: true
+      }),
+      // Scale up while moving down
+      Animated.parallel([
+        Animated.timing(position, {
+          toValue: { x: 100, y: 100 },
+          duration: 500,
+          useNativeDriver: true
+        }),
+        Animated.spring(scale, {
+          toValue: 1.5,
+          useNativeDriver: true
+        })
+      ]),
+      // Fade out while moving back
+      Animated.parallel([
+        Animated.timing(position, {
+          toValue: { x: 0, y: 0 },
+          duration: 500,
+          useNativeDriver: true
+        }),
+        Animated.timing(opacity, {
+          toValue: 0.3,
+          duration: 500,
+          useNativeDriver: true
+        }),
+        Animated.spring(scale, {
+          toValue: 1,
+          useNativeDriver: true
+        })
+      ]),
+      // Reset
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+      })
+    ]).start()
+  }
+
+  return (
+    <View style={styles.container}>
+      <Animated.View
+        style={[
+          styles.animatedBox,
+          {
+            opacity,
+            transform: [
+              ...position.getTranslateTransform(),
+              { scale }
+            ]
+          }
+        ]}
+      />
+      <TouchableOpacity style={styles.button} onPress={animateSequence}>
+        <Animated.Text>Start Sequence</Animated.Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
+```
+
+**2. React Native Reanimated - Advanced Animations:**
+
+```javascript
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withRepeat,
+  withSequence,
+  runOnJS,
+  interpolate,
+  Extrapolate
+} from 'react-native-reanimated'
+import { Gesture, GestureDetector } from 'react-native-gesture-handler'
+
+// Reanimated Hook-based Animation
+const ReanimatedComponent = () => {
+  const translateX = useSharedValue(0)
+  const scale = useSharedValue(1)
+  const rotation = useSharedValue(0)
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: translateX.value },
+        { scale: scale.value },
+        { rotate: `${rotation.value}deg` }
+      ]
+    }
+  })
+
+  const startComplexAnimation = () => {
+    // Sequence of animations
+    translateX.value = withSequence(
+      withTiming(100, { duration: 500 }),
+      withSpring(0, { damping: 10 })
+    )
+    
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(1.2, { duration: 250 }),
+        withTiming(1, { duration: 250 })
+      ),
+      3,
+      false
+    )
+    
+    rotation.value = withTiming(360, { duration: 1000 })
+  }
+
+  return (
+    <View style={styles.container}>
+      <Animated.View style={[styles.animatedBox, animatedStyle]} />
+      <TouchableOpacity style={styles.button} onPress={startComplexAnimation}>
+        <Text>Start Reanimated</Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
+
+// Advanced Gesture Handling
+const GestureAnimationComponent = () => {
+  const translateX = useSharedValue(0)
+  const translateY = useSharedValue(0)
+  const scale = useSharedValue(1)
+  const rotation = useSharedValue(0)
+  const opacity = useSharedValue(1)
+
+  // Pan Gesture
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      scale.value = withSpring(1.1)
+      opacity.value = withTiming(0.8)
+    })
+    .onUpdate((event) => {
+      translateX.value = event.translationX
+      translateY.value = event.translationY
+    })
+    .onEnd((event) => {
+      // Snap back with physics
+      translateX.value = withSpring(0)
+      translateY.value = withSpring(0)
+      scale.value = withSpring(1)
+      opacity.value = withTiming(1)
+      
+      // Add velocity-based animation
+      if (Math.abs(event.velocityX) > 500) {
+        translateX.value = withSequence(
+          withTiming(event.velocityX > 0 ? 200 : -200, { duration: 200 }),
+          withSpring(0)
+        )
+      }
+    })
+
+  // Pinch Gesture
+  const pinchGesture = Gesture.Pinch()
+    .onUpdate((event) => {
+      scale.value = Math.max(0.5, Math.min(event.scale, 3))
+    })
+    .onEnd(() => {
+      scale.value = withSpring(1)
+    })
+
+  // Rotation Gesture
+  const rotationGesture = Gesture.Rotation()
+    .onUpdate((event) => {
+      rotation.value = (event.rotation * 180) / Math.PI
+    })
+    .onEnd(() => {
+      rotation.value = withSpring(0)
+    })
+
+  // Simultaneous gestures
+  const simultaneousGesture = Gesture.Simultaneous(
+    panGesture,
+    pinchGesture,
+    rotationGesture
+  )
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+        { scale: scale.value },
+        { rotate: `${rotation.value}deg` }
+      ],
+      opacity: opacity.value
+    }
+  })
+
+  return (
+    <View style={styles.container}>
+      <GestureDetector gesture={simultaneousGesture}>
+        <Animated.View style={[styles.gestureBox, animatedStyle]} />
+      </GestureDetector>
+    </View>
+  )
+}
+```
+
+**3. Custom Animation Hooks:**
+
+```javascript
+// Custom Animation Hooks
+const useSpringAnimation = (initialValue = 0) => {
+  const value = useSharedValue(initialValue)
+  
+  const animateTo = (toValue, config = {}) => {
+    value.value = withSpring(toValue, {
+      damping: 15,
+      stiffness: 150,
+      ...config
+    })
+  }
+  
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: value.value }]
+  }))
+  
+  return { value, animateTo, animatedStyle }
+}
+
+const useSlideAnimation = (direction = 'horizontal') => {
+  const translateX = useSharedValue(0)
+  const translateY = useSharedValue(0)
+  
+  const slideIn = (distance = 100) => {
+    if (direction === 'horizontal') {
+      translateX.value = withSpring(0, { damping: 20 })
+    } else {
+      translateY.value = withSpring(0, { damping: 20 })
+    }
+  }
+  
+  const slideOut = (distance = 100) => {
+    if (direction === 'horizontal') {
+      translateX.value = withTiming(distance, { duration: 300 })
+    } else {
+      translateY.value = withTiming(distance, { duration: 300 })
+    }
+  }
+  
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value }
+    ]
+  }))
+  
+  return { slideIn, slideOut, animatedStyle }
+}
+
+// Morphing Animation Hook
+const useMorphAnimation = () => {
+  const progress = useSharedValue(0)
+  
+  const morph = (toValue = 1) => {
+    progress.value = withTiming(toValue, {
+      duration: 800,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1)
+    })
+  }
+  
+  const createMorphStyle = (fromStyle, toStyle) => {
+    return useAnimatedStyle(() => {
+      const interpolatedStyle = {}
+      
+      Object.keys(fromStyle).forEach(key => {
+        if (typeof fromStyle[key] === 'number' && typeof toStyle[key] === 'number') {
+          interpolatedStyle[key] = interpolate(
+            progress.value,
+            [0, 1],
+            [fromStyle[key], toStyle[key]],
+            Extrapolate.CLAMP
+          )
+        }
+      })
+      
+      return interpolatedStyle
+    })
+  }
+  
+  return { progress, morph, createMorphStyle }
+}
+```
+
+**4. Advanced Animation Patterns:**
+
+```javascript
+// Staggered Animation
+const StaggeredAnimation = ({ items }) => {
+  const animations = items.map(() => useSharedValue(0))
+  
+  const startStaggered = () => {
+    animations.forEach((anim, index) => {
+      anim.value = withDelay(
+        index * 100, // Stagger delay
+        withSpring(1, { damping: 15 })
+      )
+    })
+  }
+  
+  return (
+    <View style={styles.container}>
+      {items.map((item, index) => {
+        const animatedStyle = useAnimatedStyle(() => ({
+          opacity: animations[index].value,
+          transform: [
+            {
+              translateY: interpolate(
+                animations[index].value,
+                [0, 1],
+                [50, 0],
+                Extrapolate.CLAMP
+              )
+            }
+          ]
+        }))
+        
+        return (
+          <Animated.View key={index} style={[styles.item, animatedStyle]}>
+            <Text>{item}</Text>
+          </Animated.View>
+        )
+      })}
+      <TouchableOpacity onPress={startStaggered}>
+        <Text>Start Staggered</Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
+
+// Physics-based Animation
+const PhysicsAnimation = () => {
+  const translateX = useSharedValue(0)
+  const translateY = useSharedValue(0)
+  const velocityX = useSharedValue(0)
+  const velocityY = useSharedValue(0)
+  
+  const startPhysics = () => {
+    // Initial velocity
+    velocityX.value = 500
+    velocityY.value = -800
+    
+    // Physics simulation
+    const gravity = 980 // pixels/second²
+    const friction = 0.98
+    const bounce = 0.8
+    
+    const animate = () => {
+      'worklet'
+      
+      // Apply gravity
+      velocityY.value += gravity * 0.016 // 60fps
+      
+      // Apply friction
+      velocityX.value *= friction
+      velocityY.value *= friction
+      
+      // Update position
+      translateX.value += velocityX.value * 0.016
+      translateY.value += velocityY.value * 0.016
+      
+      // Boundary collision
+      if (translateY.value > 300) {
+        translateY.value = 300
+        velocityY.value *= -bounce
+      }
+      
+      if (translateX.value > 200 || translateX.value < -200) {
+        velocityX.value *= -bounce
+        translateX.value = translateX.value > 0 ? 200 : -200
+      }
+      
+      // Continue animation if still moving
+      if (Math.abs(velocityX.value) > 10 || Math.abs(velocityY.value) > 10) {
+        requestAnimationFrame(animate)
+      }
+    }
+    
+    animate()
+  }
+  
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value }
+    ]
+  }))
+  
+  return (
+    <View style={styles.container}>
+      <Animated.View style={[styles.ball, animatedStyle]} />
+      <TouchableOpacity onPress={startPhysics}>
+        <Text>Start Physics</Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
+```
+
+**5. Performance Optimization:**
+
+```javascript
+// Animation Performance Manager
+class AnimationPerformanceManager {
+  static optimizeForPerformance() {
+    return {
+      // Always use native driver when possible
+      useNativeDriver: true,
+      
+      // Reduce animation complexity
+      reduceMotion: {
+        duration: 200,
+        easing: Easing.ease
+      },
+      
+      // Batch animations
+      batchAnimations: (animations) => {
+        return Animated.parallel(animations)
+      },
+      
+      // Memory management
+      cleanup: (animatedValues) => {
+        animatedValues.forEach(value => {
+          if (value.removeAllListeners) {
+            value.removeAllListeners()
+          }
+        })
+      }
+    }
+  }
+  
+  static createOptimizedAnimation(config) {
+    return {
+      ...config,
+      useNativeDriver: config.useNativeDriver !== false,
+      isInteraction: false, // Don't delay other interactions
+    }
+  }
+}
+
+// Animation Best Practices
+const AnimationBestPractices = {
+  // 1. Use native driver for transform and opacity
+  nativeDriverProps: ['transform', 'opacity'],
+  
+  // 2. Avoid animating layout properties
+  avoidLayoutProps: ['width', 'height', 'padding', 'margin'],
+  
+  // 3. Use InteractionManager for complex animations
+  deferAnimation: (animation) => {
+    InteractionManager.runAfterInteractions(() => {
+      animation.start()
+    })
+  },
+  
+  // 4. Optimize gesture handling
+  optimizeGestures: {
+    shouldCancelWhenOutside: true,
+    activeOffsetX: [-10, 10],
+    activeOffsetY: [-10, 10]
+  }
+}
+```
+
+This comprehensive guide covers basic to advanced animation techniques, gesture handling, custom hooks, physics-based animations, and performance optimization strategies for React Native applications.
+
+---
+
+## Offline Capabilities and Caching
+
+### 14. How do you implement offline capabilities and advanced caching strategies in React Native?
+
+**Answer:**
+Implementing offline capabilities requires network detection, data synchronization, local storage, and cache management strategies.
+
+**1. Network State Management:**
+
+```javascript
+import NetInfo from '@react-native-async-storage/async-storage'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+// Network State Store
+const useNetworkStore = create((set, get) => ({
+  isConnected: true,
+  connectionType: 'unknown',
+  isInternetReachable: true,
+  
+  setNetworkState: (state) => set(state),
+  
+  // Check if device can make network requests
+  canMakeRequests: () => {
+    const { isConnected, isInternetReachable } = get()
+    return isConnected && isInternetReachable
+  }
+}))
+
+// Network Monitor Hook
+const useNetworkMonitor = () => {
+  const { setNetworkState, canMakeRequests } = useNetworkStore()
+  
+  useEffect(() => {
+    // Subscribe to network state changes
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setNetworkState({
+        isConnected: state.isConnected,
+        connectionType: state.type,
+        isInternetReachable: state.isInternetReachable
+      })
+    })
+    
+    // Initial network state
+    NetInfo.fetch().then(state => {
+      setNetworkState({
+        isConnected: state.isConnected,
+        connectionType: state.type,
+        isInternetReachable: state.isInternetReachable
+      })
+    })
+    
+    return unsubscribe
+  }, [])
+  
+  return { canMakeRequests: canMakeRequests() }
+}
+
+// Network-aware API Client
+class NetworkAwareApiClient {
+  constructor() {
+    this.baseURL = 'https://api.example.com'
+    this.requestQueue = []
+    this.retryAttempts = 3
+    this.retryDelay = 1000
+  }
+  
+  async request(endpoint, options = {}) {
+    const { canMakeRequests } = useNetworkStore.getState()
+    
+    if (!canMakeRequests()) {
+      // Queue request for later
+      return this.queueRequest(endpoint, options)
+    }
+    
+    try {
+      const response = await this.makeRequest(endpoint, options)
+      await this.processQueuedRequests()
+      return response
+    } catch (error) {
+      if (this.isNetworkError(error)) {
+        return this.queueRequest(endpoint, options)
+      }
+      throw error
+    }
+  }
+  
+  async makeRequest(endpoint, options) {
+    const url = `${this.baseURL}${endpoint}`
+    const config = {
+      timeout: 10000,
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      }
+    }
+    
+    const response = await fetch(url, config)
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+    
+    return response.json()
+  }
+  
+  queueRequest(endpoint, options) {
+    return new Promise((resolve, reject) => {
+      this.requestQueue.push({
+        endpoint,
+        options,
+        resolve,
+        reject,
+        timestamp: Date.now()
+      })
+    })
+  }
+  
+  async processQueuedRequests() {
+    const { canMakeRequests } = useNetworkStore.getState()
+    
+    if (!canMakeRequests() || this.requestQueue.length === 0) {
+      return
+    }
+    
+    const requests = [...this.requestQueue]
+    this.requestQueue = []
+    
+    for (const request of requests) {
+      try {
+        const response = await this.makeRequest(request.endpoint, request.options)
+        request.resolve(response)
+      } catch (error) {
+        if (this.isNetworkError(error)) {
+          this.requestQueue.push(request)
+        } else {
+          request.reject(error)
+        }
+      }
+    }
+  }
+  
+  isNetworkError(error) {
+    return error.message.includes('Network') || 
+           error.message.includes('timeout') ||
+           error.message.includes('Failed to fetch')
+  }
+}
+```
+
+**2. Advanced Caching System:**
+
+```javascript
+// Cache Manager with TTL and LRU
+class CacheManager {
+  constructor(maxSize = 100, defaultTTL = 3600000) { // 1 hour default TTL
+    this.cache = new Map()
+    this.accessOrder = new Map()
+    this.maxSize = maxSize
+    this.defaultTTL = defaultTTL
+  }
+  
+  async set(key, value, ttl = this.defaultTTL) {
+    // Remove oldest if cache is full
+    if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
+      this.evictLRU()
+    }
+    
+    const expiresAt = Date.now() + ttl
+    const cacheEntry = {
+      value,
+      expiresAt,
+      createdAt: Date.now(),
+      accessCount: 0
+    }
+    
+    this.cache.set(key, cacheEntry)
+    this.updateAccessOrder(key)
+    
+    // Persist to AsyncStorage for critical data
+    if (this.isPersistentKey(key)) {
+      await AsyncStorage.setItem(
+        `cache_${key}`,
+        JSON.stringify(cacheEntry)
+      )
+    }
+  }
+  
+  async get(key) {
+    let cacheEntry = this.cache.get(key)
+    
+    // Try to load from persistent storage if not in memory
+    if (!cacheEntry && this.isPersistentKey(key)) {
+      try {
+        const stored = await AsyncStorage.getItem(`cache_${key}`)
+        if (stored) {
+          cacheEntry = JSON.parse(stored)
+          this.cache.set(key, cacheEntry)
+        }
+      } catch (error) {
+        console.warn('Failed to load from persistent cache:', error)
+      }
+    }
+    
+    if (!cacheEntry) {
+      return null
+    }
+    
+    // Check if expired
+    if (Date.now() > cacheEntry.expiresAt) {
+      this.delete(key)
+      return null
+    }
+    
+    // Update access statistics
+    cacheEntry.accessCount++
+    cacheEntry.lastAccessed = Date.now()
+    this.updateAccessOrder(key)
+    
+    return cacheEntry.value
+  }
+  
+  async delete(key) {
+    this.cache.delete(key)
+    this.accessOrder.delete(key)
+    
+    if (this.isPersistentKey(key)) {
+      await AsyncStorage.removeItem(`cache_${key}`)
+    }
+  }
+  
+  evictLRU() {
+    const oldestKey = this.accessOrder.keys().next().value
+    if (oldestKey) {
+      this.delete(oldestKey)
+    }
+  }
+  
+  updateAccessOrder(key) {
+    this.accessOrder.delete(key)
+    this.accessOrder.set(key, Date.now())
+  }
+  
+  isPersistentKey(key) {
+    // Define which keys should be persisted
+    return key.startsWith('user_') || 
+           key.startsWith('settings_') ||
+           key.startsWith('critical_')
+  }
+  
+  // Cache statistics
+  getStats() {
+    const entries = Array.from(this.cache.entries())
+    return {
+      size: this.cache.size,
+      maxSize: this.maxSize,
+      hitRate: this.calculateHitRate(),
+      oldestEntry: Math.min(...entries.map(([, entry]) => entry.createdAt)),
+      newestEntry: Math.max(...entries.map(([, entry]) => entry.createdAt)),
+      totalAccessCount: entries.reduce((sum, [, entry]) => sum + entry.accessCount, 0)
+    }
+  }
+  
+  calculateHitRate() {
+    // Implementation depends on tracking hits/misses
+    return 0.85 // Placeholder
+  }
+}
+
+// Global cache instance
+const globalCache = new CacheManager()
+```
+
+**3. Offline Data Synchronization:**
+
+```javascript
+// Offline Data Store with Sync
+const useOfflineStore = create(
+  persist(
+    (set, get) => ({
+      // Offline data
+      offlineData: {},
+      pendingActions: [],
+      lastSyncTimestamp: null,
+      syncInProgress: false,
+      
+      // Add data to offline store
+      addOfflineData: (key, data) => {
+        set(state => ({
+          offlineData: {
+            ...state.offlineData,
+            [key]: {
+              ...data,
+              timestamp: Date.now(),
+              synced: false
+            }
+          }
+        }))
+      },
+      
+      // Queue action for sync
+      queueAction: (action) => {
+        set(state => ({
+          pendingActions: [
+            ...state.pendingActions,
+            {
+              ...action,
+              id: Date.now().toString(),
+              timestamp: Date.now(),
+              retryCount: 0
+            }
+          ]
+        }))
+      },
+      
+      // Sync with server
+      syncData: async () => {
+        const { pendingActions, offlineData } = get()
+        
+        if (get().syncInProgress) {
+          return
+        }
+        
+        set({ syncInProgress: true })
+        
+        try {
+          // Sync pending actions
+          for (const action of pendingActions) {
+            await get().processPendingAction(action)
+          }
+          
+          // Sync offline data
+          await get().syncOfflineData()
+          
+          set({
+            lastSyncTimestamp: Date.now(),
+            syncInProgress: false
+          })
+        } catch (error) {
+          console.error('Sync failed:', error)
+          set({ syncInProgress: false })
+        }
+      },
+      
+      processPendingAction: async (action) => {
+        try {
+          const apiClient = new NetworkAwareApiClient()
+          await apiClient.request(action.endpoint, action.options)
+          
+          // Remove successful action
+          set(state => ({
+            pendingActions: state.pendingActions.filter(a => a.id !== action.id)
+          }))
+        } catch (error) {
+          // Increment retry count
+          set(state => ({
+            pendingActions: state.pendingActions.map(a => 
+              a.id === action.id 
+                ? { ...a, retryCount: a.retryCount + 1 }
+                : a
+            )
+          }))
+          
+          // Remove if max retries exceeded
+          if (action.retryCount >= 3) {
+            set(state => ({
+              pendingActions: state.pendingActions.filter(a => a.id !== action.id)
+            }))
+          }
+        }
+      },
+      
+      syncOfflineData: async () => {
+        const { offlineData } = get()
+        const apiClient = new NetworkAwareApiClient()
+        
+        for (const [key, data] of Object.entries(offlineData)) {
+          if (!data.synced) {
+            try {
+              await apiClient.request('/sync', {
+                method: 'POST',
+                body: JSON.stringify({ key, data })
+              })
+              
+              // Mark as synced
+              set(state => ({
+                offlineData: {
+                  ...state.offlineData,
+                  [key]: { ...data, synced: true }
+                }
+              }))
+            } catch (error) {
+              console.error(`Failed to sync ${key}:`, error)
+            }
+          }
+        }
+      }
+    }),
+    {
+      name: 'offline-store',
+      storage: {
+        getItem: async (name) => {
+          const value = await AsyncStorage.getItem(name)
+          return value ? JSON.parse(value) : null
+        },
+        setItem: async (name, value) => {
+          await AsyncStorage.setItem(name, JSON.stringify(value))
+        },
+        removeItem: async (name) => {
+          await AsyncStorage.removeItem(name)
+        }
+      }
+    }
+  )
+)
+```
+
+**4. Offline-First Data Layer:**
+
+```javascript
+// Offline-First Data Manager
+class OfflineFirstDataManager {
+  constructor() {
+    this.cache = globalCache
+    this.apiClient = new NetworkAwareApiClient()
+    this.offlineStore = useOfflineStore
+  }
+  
+  async getData(endpoint, options = {}) {
+    const cacheKey = this.generateCacheKey(endpoint, options)
+    const { forceRefresh = false, cacheFirst = true } = options
+    
+    // Try cache first (if not forcing refresh)
+    if (!forceRefresh && cacheFirst) {
+      const cachedData = await this.cache.get(cacheKey)
+      if (cachedData) {
+        // Optionally fetch fresh data in background
+        if (options.backgroundRefresh) {
+          this.refreshInBackground(endpoint, options, cacheKey)
+        }
+        return cachedData
+      }
+    }
+    
+    // Try network
+    try {
+      const data = await this.apiClient.request(endpoint, options)
+      await this.cache.set(cacheKey, data, options.ttl)
+      return data
+    } catch (error) {
+      // Fallback to cache if network fails
+      const cachedData = await this.cache.get(cacheKey)
+      if (cachedData) {
+        console.warn('Network failed, using cached data:', error)
+        return cachedData
+      }
+      
+      // Fallback to offline store
+      const offlineData = this.offlineStore.getState().offlineData[cacheKey]
+      if (offlineData) {
+        console.warn('Using offline data:', error)
+        return offlineData
+      }
+      
+      throw error
+    }
+  }
+  
+  async setData(endpoint, data, options = {}) {
+    const cacheKey = this.generateCacheKey(endpoint, options)
+    
+    // Always cache locally first
+    await this.cache.set(cacheKey, data, options.ttl)
+    this.offlineStore.getState().addOfflineData(cacheKey, data)
+    
+    // Try to sync with server
+    try {
+      const response = await this.apiClient.request(endpoint, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        ...options
+      })
+      
+      // Update cache with server response
+      await this.cache.set(cacheKey, response, options.ttl)
+      return response
+    } catch (error) {
+      // Queue for later sync
+      this.offlineStore.getState().queueAction({
+        endpoint,
+        options: {
+          method: 'POST',
+          body: JSON.stringify(data),
+          ...options
+        }
+      })
+      
+      console.warn('Queued for later sync:', error)
+      return data // Return local data
+    }
+  }
+  
+  async refreshInBackground(endpoint, options, cacheKey) {
+    try {
+      const data = await this.apiClient.request(endpoint, options)
+      await this.cache.set(cacheKey, data, options.ttl)
+    } catch (error) {
+      console.warn('Background refresh failed:', error)
+    }
+  }
+  
+  generateCacheKey(endpoint, options) {
+    const params = options.params || {}
+    const sortedParams = Object.keys(params)
+      .sort()
+      .map(key => `${key}=${params[key]}`)
+      .join('&')
+    
+    return `${endpoint}${sortedParams ? '?' + sortedParams : ''}`
+  }
+}
+
+// Hook for offline-first data fetching
+const useOfflineFirstData = (endpoint, options = {}) => {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const dataManager = useRef(new OfflineFirstDataManager()).current
+  
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const result = await dataManager.getData(endpoint, options)
+      setData(result)
+    } catch (err) {
+      setError(err)
+    } finally {
+      setLoading(false)
+    }
+  }, [endpoint, JSON.stringify(options)])
+  
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+  
+  const refetch = useCallback(() => {
+    return fetchData()
+  }, [fetchData])
+  
+  const updateData = useCallback(async (newData) => {
+    try {
+      const result = await dataManager.setData(endpoint, newData, options)
+      setData(result)
+      return result
+    } catch (err) {
+      setError(err)
+      throw err
+    }
+  }, [endpoint, JSON.stringify(options)])
+  
+  return { data, loading, error, refetch, updateData }
+}
+```
+
+**5. Offline UI Components:**
+
+```javascript
+// Offline Indicator Component
+const OfflineIndicator = () => {
+  const { isConnected } = useNetworkStore()
+  const { pendingActions } = useOfflineStore()
+  
+  if (isConnected && pendingActions.length === 0) {
+    return null
+  }
+  
+  return (
+    <View style={styles.offlineIndicator}>
+      <Icon name={isConnected ? 'sync' : 'wifi-off'} size={16} color="white" />
+      <Text style={styles.offlineText}>
+        {isConnected 
+          ? `${pendingActions.length} pending sync${pendingActions.length !== 1 ? 's' : ''}`
+          : 'Offline mode'
+        }
+      </Text>
+    </View>
+  )
+}
+
+// Sync Button Component
+const SyncButton = () => {
+  const { syncData, syncInProgress, pendingActions } = useOfflineStore()
+  const { canMakeRequests } = useNetworkMonitor()
+  
+  const handleSync = async () => {
+    if (canMakeRequests && !syncInProgress) {
+      await syncData()
+    }
+  }
+  
+  return (
+    <TouchableOpacity 
+      style={[
+        styles.syncButton,
+        (!canMakeRequests || syncInProgress) && styles.syncButtonDisabled
+      ]}
+      onPress={handleSync}
+      disabled={!canMakeRequests || syncInProgress}
+    >
+      {syncInProgress ? (
+        <ActivityIndicator size="small" color="white" />
+      ) : (
+        <Icon name="sync" size={20} color="white" />
+      )}
+      <Text style={styles.syncButtonText}>
+        Sync ({pendingActions.length})
+      </Text>
+    </TouchableOpacity>
+  )
+}
+
+const styles = StyleSheet.create({
+  offlineIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ff6b6b',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20
+  },
+  offlineText: {
+    color: 'white',
+    fontSize: 12,
+    marginLeft: 6,
+    fontWeight: '600'
+  },
+  syncButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8
+  },
+  syncButtonDisabled: {
+    backgroundColor: '#ccc'
+  },
+  syncButtonText: {
+    color: 'white',
+    fontSize: 14,
+    marginLeft: 8,
+    fontWeight: '600'
+  }
+})
+```
+
+This comprehensive guide covers network monitoring, advanced caching with TTL and LRU, offline data synchronization, offline-first data management, and UI components for handling offline scenarios in React Native applications.
+
+---
+
+## Security and Authentication
+
+### 15. How do you implement comprehensive security and authentication in React Native?
+
+**Answer:**
+Security in React Native involves secure storage, authentication flows, API security, biometric authentication, and protection against common vulnerabilities.
+
+**1. Secure Storage and Keychain:**
+
+```javascript
+import * as Keychain from 'react-native-keychain'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import CryptoJS from 'crypto-js'
+import { MMKV } from 'react-native-mmkv'
+
+// Secure Storage Manager
+class SecureStorageManager {
+  constructor() {
+    this.storage = new MMKV({
+      id: 'secure-storage',
+      encryptionKey: 'your-encryption-key'
+    })
+  }
+  
+  // Store sensitive data in Keychain
+  async storeSecureData(key, data) {
+    try {
+      await Keychain.setInternetCredentials(
+        key,
+        JSON.stringify(data),
+        '', // No password needed
+        {
+          accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
+          authenticationType: Keychain.AUTHENTICATION_TYPE.DEVICE_PASSCODE_OR_BIOMETRICS,
+          accessGroup: 'your.app.bundle.id',
+          storage: Keychain.STORAGE_TYPE.KC
+        }
+      )
+      return true
+    } catch (error) {
+      console.error('Failed to store secure data:', error)
+      return false
+    }
+  }
+  
+  // Retrieve sensitive data from Keychain
+  async getSecureData(key) {
+    try {
+      const credentials = await Keychain.getInternetCredentials(key)
+      if (credentials) {
+        return JSON.parse(credentials.username)
+      }
+      return null
+    } catch (error) {
+      console.error('Failed to retrieve secure data:', error)
+      return null
+    }
+  }
+  
+  // Store encrypted data in MMKV
+  storeEncryptedData(key, data, encryptionKey) {
+    try {
+      const encrypted = CryptoJS.AES.encrypt(
+        JSON.stringify(data),
+        encryptionKey
+      ).toString()
+      this.storage.set(key, encrypted)
+      return true
+    } catch (error) {
+      console.error('Failed to store encrypted data:', error)
+      return false
+    }
+  }
+  
+  // Retrieve encrypted data from MMKV
+  getEncryptedData(key, encryptionKey) {
+    try {
+      const encrypted = this.storage.getString(key)
+      if (encrypted) {
+        const decrypted = CryptoJS.AES.decrypt(encrypted, encryptionKey)
+        return JSON.parse(decrypted.toString(CryptoJS.enc.Utf8))
+      }
+      return null
+    } catch (error) {
+      console.error('Failed to retrieve encrypted data:', error)
+      return null
+    }
+  }
+  
+  // Clear all secure data
+  async clearSecureData() {
+    try {
+      await Keychain.resetInternetCredentials()
+      this.storage.clearAll()
+      return true
+    } catch (error) {
+      console.error('Failed to clear secure data:', error)
+      return false
+    }
+  }
+}
+
+// Token Manager with automatic refresh
+class TokenManager {
+  constructor() {
+    this.secureStorage = new SecureStorageManager()
+    this.refreshPromise = null
+  }
+  
+  async storeTokens(accessToken, refreshToken) {
+    const tokenData = {
+      accessToken,
+      refreshToken,
+      expiresAt: Date.now() + (15 * 60 * 1000), // 15 minutes
+      createdAt: Date.now()
+    }
+    
+    return await this.secureStorage.storeSecureData('auth_tokens', tokenData)
+  }
+  
+  async getAccessToken() {
+    const tokenData = await this.secureStorage.getSecureData('auth_tokens')
+    
+    if (!tokenData) {
+      return null
+    }
+    
+    // Check if token is expired
+    if (Date.now() >= tokenData.expiresAt) {
+      return await this.refreshAccessToken()
+    }
+    
+    return tokenData.accessToken
+  }
+  
+  async refreshAccessToken() {
+    // Prevent multiple simultaneous refresh requests
+    if (this.refreshPromise) {
+      return await this.refreshPromise
+    }
+    
+    this.refreshPromise = this.performTokenRefresh()
+    const result = await this.refreshPromise
+    this.refreshPromise = null
+    
+    return result
+  }
+  
+  async performTokenRefresh() {
+    try {
+      const tokenData = await this.secureStorage.getSecureData('auth_tokens')
+      
+      if (!tokenData?.refreshToken) {
+        throw new Error('No refresh token available')
+      }
+      
+      const response = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          refreshToken: tokenData.refreshToken
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Token refresh failed')
+      }
+      
+      const { accessToken, refreshToken } = await response.json()
+      await this.storeTokens(accessToken, refreshToken)
+      
+      return accessToken
+    } catch (error) {
+      console.error('Token refresh failed:', error)
+      await this.clearTokens()
+      throw error
+    }
+  }
+  
+  async clearTokens() {
+    return await this.secureStorage.clearSecureData()
+  }
+}
+```
+
+**2. Biometric Authentication:**
+
+```javascript
+import TouchID from 'react-native-touch-id'
+import FingerprintScanner from 'react-native-fingerprint-scanner'
+
+// Biometric Authentication Manager
+class BiometricAuthManager {
+  constructor() {
+    this.isSupported = false
+    this.biometryType = null
+    this.init()
+  }
+  
+  async init() {
+    try {
+      // Check TouchID/FaceID support
+      this.biometryType = await TouchID.isSupported()
+      this.isSupported = true
+    } catch (error) {
+      try {
+        // Fallback to fingerprint scanner
+        this.isSupported = await FingerprintScanner.isSensorAvailable()
+        this.biometryType = 'Fingerprint'
+      } catch (fingerprintError) {
+        console.warn('Biometric authentication not supported')
+        this.isSupported = false
+      }
+    }
+  }
+  
+  async authenticate(reason = 'Please authenticate to continue') {
+    if (!this.isSupported) {
+      throw new Error('Biometric authentication not supported')
+    }
+    
+    try {
+      if (this.biometryType === 'Fingerprint') {
+        return await this.authenticateWithFingerprint(reason)
+      } else {
+        return await this.authenticateWithTouchID(reason)
+      }
+    } catch (error) {
+      throw this.handleBiometricError(error)
+    }
+  }
+  
+  async authenticateWithTouchID(reason) {
+    const optionalConfigObject = {
+      title: 'Authentication Required',
+      subtitle: reason,
+      imageColor: '#e00606',
+      imageErrorColor: '#ff0000',
+      sensorDescription: 'Touch sensor',
+      sensorErrorDescription: 'Failed',
+      cancelText: 'Cancel',
+      fallbackLabel: 'Show Passcode',
+      unifiedErrors: false,
+      passcodeFallback: true
+    }
+    
+    return await TouchID.authenticate(reason, optionalConfigObject)
+  }
+  
+  async authenticateWithFingerprint(reason) {
+    return new Promise((resolve, reject) => {
+      FingerprintScanner
+        .authenticate({
+          description: reason,
+          fallbackEnabled: true
+        })
+        .then(() => {
+          resolve(true)
+        })
+        .catch((error) => {
+          reject(error)
+        })
+    })
+  }
+  
+  handleBiometricError(error) {
+    const errorMap = {
+      'LAErrorUserCancel': 'User cancelled authentication',
+      'LAErrorUserFallback': 'User chose to enter passcode',
+      'LAErrorSystemCancel': 'System cancelled authentication',
+      'LAErrorPasscodeNotSet': 'Passcode not set on device',
+      'LAErrorTouchIDNotAvailable': 'Touch ID not available',
+      'LAErrorTouchIDNotEnrolled': 'Touch ID not enrolled',
+      'LAErrorTouchIDLockout': 'Touch ID locked out',
+      'RNFingerprintScannerNotSupported': 'Fingerprint scanner not supported',
+      'RNFingerprintScannerNotEnrolled': 'No fingerprints enrolled',
+      'RNFingerprintScannerNotAvailable': 'Fingerprint scanner not available'
+    }
+    
+    const message = errorMap[error.name] || error.message || 'Authentication failed'
+    return new Error(message)
+  }
+  
+  getBiometryType() {
+    return this.biometryType
+  }
+  
+  isAvailable() {
+    return this.isSupported
+  }
+}
+```
+
+**3. Authentication Flow Management:**
+
+```javascript
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+// Authentication Store
+const useAuthStore = create(
+  persist(
+    (set, get) => ({
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      authError: null,
+      biometricEnabled: false,
+      
+      // Initialize authentication
+      initAuth: async () => {
+        set({ isLoading: true })
+        
+        try {
+          const tokenManager = new TokenManager()
+          const accessToken = await tokenManager.getAccessToken()
+          
+          if (accessToken) {
+            const user = await get().validateToken(accessToken)
+            set({ 
+              user, 
+              isAuthenticated: true, 
+              isLoading: false,
+              authError: null 
+            })
+          } else {
+            set({ isLoading: false })
+          }
+        } catch (error) {
+          console.error('Auth initialization failed:', error)
+          set({ 
+            isLoading: false, 
+            authError: error.message 
+          })
+        }
+      },
+      
+      // Login with credentials
+      login: async (email, password, rememberMe = false) => {
+        set({ isLoading: true, authError: null })
+        
+        try {
+          const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+          })
+          
+          if (!response.ok) {
+            throw new Error('Invalid credentials')
+          }
+          
+          const { user, accessToken, refreshToken } = await response.json()
+          
+          // Store tokens securely
+          const tokenManager = new TokenManager()
+          await tokenManager.storeTokens(accessToken, refreshToken)
+          
+          // Store user data
+          if (rememberMe) {
+            const secureStorage = new SecureStorageManager()
+            await secureStorage.storeSecureData('user_data', user)
+          }
+          
+          set({ 
+            user, 
+            isAuthenticated: true, 
+            isLoading: false,
+            authError: null 
+          })
+          
+          return { success: true, user }
+        } catch (error) {
+          set({ 
+            isLoading: false, 
+            authError: error.message 
+          })
+          return { success: false, error: error.message }
+        }
+      },
+      
+      // Biometric login
+      biometricLogin: async () => {
+        set({ isLoading: true, authError: null })
+        
+        try {
+          const biometricAuth = new BiometricAuthManager()
+          
+          if (!biometricAuth.isAvailable()) {
+            throw new Error('Biometric authentication not available')
+          }
+          
+          await biometricAuth.authenticate('Login with biometrics')
+          
+          // Retrieve stored user data
+          const secureStorage = new SecureStorageManager()
+          const userData = await secureStorage.getSecureData('user_data')
+          
+          if (!userData) {
+            throw new Error('No biometric login data found')
+          }
+          
+          // Validate with server
+          const tokenManager = new TokenManager()
+          const accessToken = await tokenManager.getAccessToken()
+          
+          if (!accessToken) {
+            throw new Error('No valid session found')
+          }
+          
+          const user = await get().validateToken(accessToken)
+          
+          set({ 
+            user, 
+            isAuthenticated: true, 
+            isLoading: false,
+            authError: null 
+          })
+          
+          return { success: true, user }
+        } catch (error) {
+          set({ 
+            isLoading: false, 
+            authError: error.message 
+          })
+          return { success: false, error: error.message }
+        }
+      },
+      
+      // Validate token with server
+      validateToken: async (token) => {
+        const response = await fetch('/api/auth/validate', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        
+        if (!response.ok) {
+          throw new Error('Token validation failed')
+        }
+        
+        return await response.json()
+      },
+      
+      // Logout
+      logout: async () => {
+        set({ isLoading: true })
+        
+        try {
+          // Clear tokens
+          const tokenManager = new TokenManager()
+          await tokenManager.clearTokens()
+          
+          // Clear secure storage
+          const secureStorage = new SecureStorageManager()
+          await secureStorage.clearSecureData()
+          
+          // Notify server
+          try {
+            await fetch('/api/auth/logout', {
+              method: 'POST'
+            })
+          } catch (error) {
+            console.warn('Server logout failed:', error)
+          }
+          
+          set({ 
+            user: null, 
+            isAuthenticated: false, 
+            isLoading: false,
+            authError: null 
+          })
+        } catch (error) {
+          console.error('Logout failed:', error)
+          set({ isLoading: false })
+        }
+      },
+      
+      // Enable/disable biometric authentication
+      toggleBiometric: async (enabled) => {
+        try {
+          if (enabled) {
+            const biometricAuth = new BiometricAuthManager()
+            
+            if (!biometricAuth.isAvailable()) {
+              throw new Error('Biometric authentication not available')
+            }
+            
+            await biometricAuth.authenticate('Enable biometric login')
+            
+            // Store user data for biometric login
+            const secureStorage = new SecureStorageManager()
+            await secureStorage.storeSecureData('user_data', get().user)
+          } else {
+            // Clear biometric data
+            const secureStorage = new SecureStorageManager()
+            await secureStorage.clearSecureData()
+          }
+          
+          set({ biometricEnabled: enabled })
+        } catch (error) {
+          throw new Error(`Failed to ${enabled ? 'enable' : 'disable'} biometric authentication: ${error.message}`)
+        }
+      }
+    }),
+    {
+      name: 'auth-store',
+      partialize: (state) => ({
+        biometricEnabled: state.biometricEnabled
+      })
+    }
+  )
+)
+```
+
+**4. API Security and Request Interceptors:**
+
+```javascript
+// Secure API Client
+class SecureApiClient {
+  constructor() {
+    this.baseURL = 'https://api.example.com'
+    this.tokenManager = new TokenManager()
+    this.requestQueue = []
+    this.isRefreshing = false
+  }
+  
+  async request(endpoint, options = {}) {
+    const config = await this.prepareRequest(endpoint, options)
+    
+    try {
+      const response = await fetch(config.url, config.options)
+      return await this.handleResponse(response, endpoint, options)
+    } catch (error) {
+      throw this.handleError(error)
+    }
+  }
+  
+  async prepareRequest(endpoint, options) {
+    const url = `${this.baseURL}${endpoint}`
+    
+    // Get access token
+    const accessToken = await this.tokenManager.getAccessToken()
+    
+    // Prepare headers
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-Client-Version': '1.0.0',
+      ...options.headers
+    }
+    
+    // Add authorization header
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`
+    }
+    
+    // Add CSRF protection
+    if (options.method && ['POST', 'PUT', 'DELETE'].includes(options.method.toUpperCase())) {
+      headers['X-CSRF-Token'] = await this.getCSRFToken()
+    }
+    
+    return {
+      url,
+      options: {
+        ...options,
+        headers,
+        timeout: options.timeout || 30000
+      }
+    }
+  }
+  
+  async handleResponse(response, endpoint, originalOptions) {
+    // Handle 401 Unauthorized
+    if (response.status === 401) {
+      return await this.handleUnauthorized(endpoint, originalOptions)
+    }
+    
+    // Handle other HTTP errors
+    if (!response.ok) {
+      const error = await this.parseErrorResponse(response)
+      throw error
+    }
+    
+    // Parse successful response
+    const contentType = response.headers.get('content-type')
+    if (contentType && contentType.includes('application/json')) {
+      return await response.json()
+    }
+    
+    return await response.text()
+  }
+  
+  async handleUnauthorized(endpoint, originalOptions) {
+    // Add request to queue if token refresh is in progress
+    if (this.isRefreshing) {
+      return new Promise((resolve, reject) => {
+        this.requestQueue.push({ resolve, reject, endpoint, options: originalOptions })
+      })
+    }
+    
+    this.isRefreshing = true
+    
+    try {
+      // Attempt token refresh
+      await this.tokenManager.refreshAccessToken()
+      
+      // Process queued requests
+      this.processRequestQueue()
+      
+      // Retry original request
+      return await this.request(endpoint, originalOptions)
+    } catch (error) {
+      // Token refresh failed, logout user
+      this.processRequestQueue(error)
+      useAuthStore.getState().logout()
+      throw new Error('Session expired. Please login again.')
+    } finally {
+      this.isRefreshing = false
+    }
+  }
+  
+  processRequestQueue(error = null) {
+    this.requestQueue.forEach(({ resolve, reject, endpoint, options }) => {
+      if (error) {
+        reject(error)
+      } else {
+        resolve(this.request(endpoint, options))
+      }
+    })
+    
+    this.requestQueue = []
+  }
+  
+  async parseErrorResponse(response) {
+    try {
+      const errorData = await response.json()
+      return new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`)
+    } catch (parseError) {
+      return new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+  }
+  
+  async getCSRFToken() {
+    // Implement CSRF token retrieval
+    try {
+      const response = await fetch(`${this.baseURL}/csrf-token`)
+      const { token } = await response.json()
+      return token
+    } catch (error) {
+      console.warn('Failed to get CSRF token:', error)
+      return null
+    }
+  }
+  
+  handleError(error) {
+    if (error.name === 'AbortError') {
+      return new Error('Request timeout')
+    }
+    
+    if (error.message.includes('Network')) {
+      return new Error('Network error. Please check your connection.')
+    }
+    
+    return error
+  }
+}
+```
+
+**5. Security Best Practices and Validation:**
+
+```javascript
+// Input Validation and Sanitization
+class SecurityValidator {
+  static validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+  
+  static validatePassword(password) {
+    const minLength = 8
+    const hasUpperCase = /[A-Z]/.test(password)
+    const hasLowerCase = /[a-z]/.test(password)
+    const hasNumbers = /\d/.test(password)
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    
+    return {
+      isValid: password.length >= minLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar,
+      errors: [
+        password.length < minLength && 'Password must be at least 8 characters long',
+        !hasUpperCase && 'Password must contain at least one uppercase letter',
+        !hasLowerCase && 'Password must contain at least one lowercase letter',
+        !hasNumbers && 'Password must contain at least one number',
+        !hasSpecialChar && 'Password must contain at least one special character'
+      ].filter(Boolean)
+    }
+  }
+  
+  static sanitizeInput(input) {
+    if (typeof input !== 'string') {
+      return input
+    }
+    
+    // Remove potentially dangerous characters
+    return input
+      .replace(/[<>"'&]/g, '')
+      .trim()
+      .substring(0, 1000) // Limit length
+  }
+  
+  static validatePhoneNumber(phone) {
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/
+    return phoneRegex.test(phone.replace(/[\s-()]/g, ''))
+  }
+  
+  static isSecureUrl(url) {
+    try {
+      const urlObj = new URL(url)
+      return urlObj.protocol === 'https:'
+    } catch (error) {
+      return false
+    }
+  }
+}
+
+// Security Headers and Protection
+class SecurityManager {
+  static setupSecurityHeaders() {
+    // Configure security headers for WebView
+    return {
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'X-XSS-Protection': '1; mode=block',
+      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
+    }
+  }
+  
+  static detectJailbreak() {
+    // Basic jailbreak/root detection
+    const suspiciousApps = [
+      'cydia://',
+      'sileo://',
+      'zbra://',
+      'undecimus://',
+      'checkra1n://'
+    ]
+    
+    return suspiciousApps.some(app => {
+      try {
+        // This would need native module implementation
+        return false // Placeholder
+      } catch (error) {
+        return false
+      }
+    })
+  }
+  
+  static enableCertificatePinning() {
+    // Certificate pinning configuration
+    return {
+      hostname: 'api.example.com',
+      sslPinningEnabled: true,
+      publicKeyHashes: [
+        'sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+        'sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB='
+      ]
+    }
+  }
+}
+
+// Global security instance
+const secureApiClient = new SecureApiClient()
+const biometricAuth = new BiometricAuthManager()
+const secureStorage = new SecureStorageManager()
+
+export {
+  SecureStorageManager,
+  TokenManager,
+  BiometricAuthManager,
+  useAuthStore,
+  SecureApiClient,
+  SecurityValidator,
+  SecurityManager,
+  secureApiClient,
+  biometricAuth,
+  secureStorage
+}
+```
+
+This comprehensive guide covers secure storage with Keychain and encryption, biometric authentication, complete authentication flows, secure API communication with automatic token refresh, and security best practices including input validation and protection against common vulnerabilities.
+
+---
+
+## Code Splitting and Lazy Loading
+
+### 16. How do you implement code splitting and lazy loading in React Native?
+
+**Answer:**
+Code splitting and lazy loading in React Native help reduce bundle size, improve app startup time, and optimize memory usage through dynamic imports and component-level splitting.
+
+**1. React.lazy and Suspense for Component Splitting:**
+
+```javascript
+import React, { Suspense, lazy, useState, useEffect } from 'react'
+import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native'
+import { NavigationContainer } from '@react-navigation/native'
+import { createStackNavigator } from '@react-navigation/stack'
+
+// Lazy load components
+const ProfileScreen = lazy(() => import('./screens/ProfileScreen'))
+const SettingsScreen = lazy(() => import('./screens/SettingsScreen'))
+const ChatScreen = lazy(() => import('./screens/ChatScreen'))
+const MediaGallery = lazy(() => import('./components/MediaGallery'))
+
+// Loading component
+const LoadingFallback = ({ message = 'Loading...' }) => (
+  <View style={styles.loadingContainer}>
+    <ActivityIndicator size="large" color="#007AFF" />
+    <Text style={styles.loadingText}>{message}</Text>
+  </View>
+)
+
+// Enhanced Suspense wrapper with error boundary
+class LazyLoadErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+  
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+  
+  componentDidCatch(error, errorInfo) {
+    console.error('Lazy loading error:', error, errorInfo)
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Failed to load component</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={() => this.setState({ hasError: false, error: null })}
+          >
+            <Text style={styles.retryText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )
+    }
+    
+    return this.props.children
+  }
+}
+
+// Lazy component wrapper
+const LazyComponent = ({ component: Component, fallback, ...props }) => (
+  <LazyLoadErrorBoundary>
+    <Suspense fallback={fallback || <LoadingFallback />}>
+      <Component {...props} />
+    </Suspense>
+  </LazyLoadErrorBoundary>
+)
+
+// Navigation with lazy loading
+const Stack = createStackNavigator()
+
+const AppNavigator = () => {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen 
+          name="Home" 
+          component={HomeScreen} 
+        />
+        <Stack.Screen 
+          name="Profile"
+          children={(props) => (
+            <LazyComponent 
+              component={ProfileScreen} 
+              fallback={<LoadingFallback message="Loading Profile..." />}
+              {...props} 
+            />
+          )}
+        />
+        <Stack.Screen 
+          name="Settings"
+          children={(props) => (
+            <LazyComponent 
+              component={SettingsScreen} 
+              fallback={<LoadingFallback message="Loading Settings..." />}
+              {...props} 
+            />
+          )}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  )
+}
+```
+
+**2. Dynamic Import Manager:**
+
+```javascript
+// Dynamic import manager with caching
+class DynamicImportManager {
+  constructor() {
+    this.cache = new Map()
+    this.loadingPromises = new Map()
+  }
+  
+  async loadComponent(importFunction, componentName) {
+    // Return cached component if available
+    if (this.cache.has(componentName)) {
+      return this.cache.get(componentName)
+    }
+    
+    // Return existing loading promise if component is being loaded
+    if (this.loadingPromises.has(componentName)) {
+      return this.loadingPromises.get(componentName)
+    }
+    
+    // Create loading promise
+    const loadingPromise = this.performImport(importFunction, componentName)
+    this.loadingPromises.set(componentName, loadingPromise)
+    
+    try {
+      const component = await loadingPromise
+      this.cache.set(componentName, component)
+      this.loadingPromises.delete(componentName)
+      return component
+    } catch (error) {
+      this.loadingPromises.delete(componentName)
+      throw error
+    }
+  }
+  
+  async performImport(importFunction, componentName) {
+    try {
+      console.log(`Loading component: ${componentName}`)
+      const startTime = Date.now()
+      
+      const module = await importFunction()
+      const component = module.default || module
+      
+      const loadTime = Date.now() - startTime
+      console.log(`Component ${componentName} loaded in ${loadTime}ms`)
+      
+      return component
+    } catch (error) {
+      console.error(`Failed to load component ${componentName}:`, error)
+      throw new Error(`Failed to load ${componentName}: ${error.message}`)
+    }
+  }
+  
+  preloadComponent(importFunction, componentName) {
+    // Preload component without waiting
+    if (!this.cache.has(componentName) && !this.loadingPromises.has(componentName)) {
+      this.loadComponent(importFunction, componentName).catch(error => {
+        console.warn(`Preload failed for ${componentName}:`, error)
+      })
+    }
+  }
+  
+  clearCache() {
+    this.cache.clear()
+    this.loadingPromises.clear()
+  }
+  
+  getCacheSize() {
+    return this.cache.size
+  }
+  
+  getCachedComponents() {
+    return Array.from(this.cache.keys())
+  }
+}
+
+// Global instance
+const importManager = new DynamicImportManager()
+
+// Hook for dynamic imports
+const useDynamicImport = (importFunction, componentName) => {
+  const [component, setComponent] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  
+  useEffect(() => {
+    let isMounted = true
+    
+    const loadComponent = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const loadedComponent = await importManager.loadComponent(
+          importFunction, 
+          componentName
+        )
+        
+        if (isMounted) {
+          setComponent(() => loadedComponent)
+          setLoading(false)
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err)
+          setLoading(false)
+        }
+      }
+    }
+    
+    loadComponent()
+    
+    return () => {
+      isMounted = false
+    }
+  }, [importFunction, componentName])
+  
+  return { component, loading, error }
+}
+```
+
+**3. Bundle Splitting with Metro Configuration:**
+
+```javascript
+// metro.config.js
+const { getDefaultConfig } = require('metro-config')
+
+module.exports = (async () => {
+  const {
+    resolver: { sourceExts, assetExts },
+    transformer,
+    ...config
+  } = await getDefaultConfig()
+  
+  return {
+    ...config,
+    resolver: {
+      ...config.resolver,
+      sourceExts,
+      assetExts,
+    },
+    transformer: {
+      ...transformer,
+      // Enable bundle splitting
+      minifierConfig: {
+        mangle: {
+          keep_fnames: true,
+        },
+        output: {
+          ascii_only: true,
+          quote_keys: true,
+          wrap_iife: true,
+        },
+        sourceMap: {
+          includeSources: false,
+        },
+        toplevel: false,
+        compress: {
+          reduce_funcs: false,
+        },
+      },
+    },
+    serializer: {
+      // Custom serializer for code splitting
+      createModuleIdFactory: () => {
+        const fileToIdMap = new Map()
+        let nextId = 0
+        
+        return (path) => {
+          if (!fileToIdMap.has(path)) {
+            fileToIdMap.set(path, nextId++)
+          }
+          return fileToIdMap.get(path)
+        }
+      },
+      // Split bundles by feature
+      processModuleFilter: (module) => {
+        // Exclude dev tools and test files from production bundle
+        if (module.path.includes('__tests__') || 
+            module.path.includes('__mocks__') ||
+            module.path.includes('.test.') ||
+            module.path.includes('.spec.')) {
+          return false
+        }
+        return true
+      },
+    },
+  }
+})()
+
+// Bundle analyzer configuration
+const bundleAnalyzer = {
+  enabled: process.env.ANALYZE_BUNDLE === 'true',
+  openAnalyzer: true,
+  analyzerMode: 'server',
+  analyzerPort: 8888,
+}
+```
+
+**4. Feature-Based Code Splitting:**
+
+```javascript
+// Feature loader with lazy loading
+class FeatureLoader {
+  constructor() {
+    this.features = new Map()
+    this.loadingFeatures = new Set()
+  }
+  
+  // Register feature modules
+  registerFeature(featureName, importFunction) {
+    this.features.set(featureName, {
+      importFunction,
+      loaded: false,
+      module: null
+    })
+  }
+  
+  // Load feature on demand
+  async loadFeature(featureName) {
+    const feature = this.features.get(featureName)
+    
+    if (!feature) {
+      throw new Error(`Feature '${featureName}' not registered`)
+    }
+    
+    if (feature.loaded) {
+      return feature.module
+    }
+    
+    if (this.loadingFeatures.has(featureName)) {
+      // Wait for existing load to complete
+      return new Promise((resolve, reject) => {
+        const checkLoaded = () => {
+          if (feature.loaded) {
+            resolve(feature.module)
+          } else if (!this.loadingFeatures.has(featureName)) {
+            reject(new Error(`Failed to load feature '${featureName}'`))
+          } else {
+            setTimeout(checkLoaded, 100)
+          }
+        }
+        checkLoaded()
+      })
+    }
+    
+    this.loadingFeatures.add(featureName)
+    
+    try {
+      console.log(`Loading feature: ${featureName}`)
+      const startTime = Date.now()
+      
+      const module = await feature.importFunction()
+      
+      feature.module = module.default || module
+      feature.loaded = true
+      
+      const loadTime = Date.now() - startTime
+      console.log(`Feature '${featureName}' loaded in ${loadTime}ms`)
+      
+      return feature.module
+    } catch (error) {
+      console.error(`Failed to load feature '${featureName}':`, error)
+      throw error
+    } finally {
+      this.loadingFeatures.delete(featureName)
+    }
+  }
+  
+  // Preload features
+  async preloadFeatures(featureNames) {
+    const preloadPromises = featureNames.map(featureName => 
+      this.loadFeature(featureName).catch(error => {
+        console.warn(`Preload failed for feature '${featureName}':`, error)
+      })
+    )
+    
+    await Promise.allSettled(preloadPromises)
+  }
+  
+  // Check if feature is loaded
+  isFeatureLoaded(featureName) {
+    const feature = this.features.get(featureName)
+    return feature ? feature.loaded : false
+  }
+  
+  // Get loaded features
+  getLoadedFeatures() {
+    return Array.from(this.features.entries())
+      .filter(([, feature]) => feature.loaded)
+      .map(([name]) => name)
+  }
+}
+
+// Global feature loader
+const featureLoader = new FeatureLoader()
+
+// Register features
+featureLoader.registerFeature('chat', () => import('./features/chat'))
+featureLoader.registerFeature('media', () => import('./features/media'))
+featureLoader.registerFeature('payments', () => import('./features/payments'))
+featureLoader.registerFeature('analytics', () => import('./features/analytics'))
+
+// Feature component wrapper
+const FeatureComponent = ({ featureName, componentName, fallback, ...props }) => {
+  const [FeatureModule, setFeatureModule] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  
+  useEffect(() => {
+    let isMounted = true
+    
+    const loadFeature = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const module = await featureLoader.loadFeature(featureName)
+        
+        if (isMounted) {
+          setFeatureModule(module)
+          setLoading(false)
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err)
+          setLoading(false)
+        }
+      }
+    }
+    
+    loadFeature()
+    
+    return () => {
+      isMounted = false
+    }
+  }, [featureName])
+  
+  if (loading) {
+    return fallback || <LoadingFallback message={`Loading ${featureName}...`} />
+  }
+  
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Failed to load {featureName}</Text>
+        <Text style={styles.errorDetails}>{error.message}</Text>
+      </View>
+    )
+  }
+  
+  if (!FeatureModule || !FeatureModule[componentName]) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Component {componentName} not found in {featureName}</Text>
+      </View>
+    )
+  }
+  
+  const Component = FeatureModule[componentName]
+  return <Component {...props} />
+}
+```
+
+**5. Performance Monitoring and Optimization:**
+
+```javascript
+// Bundle performance monitor
+class BundlePerformanceMonitor {
+  constructor() {
+    this.metrics = {
+      bundleSize: 0,
+      loadTimes: new Map(),
+      memoryUsage: [],
+      componentCounts: new Map()
+    }
+    
+    this.startTime = Date.now()
+    this.initializeMonitoring()
+  }
+  
+  initializeMonitoring() {
+    // Monitor memory usage
+    setInterval(() => {
+      if (global.performance && global.performance.memory) {
+        this.metrics.memoryUsage.push({
+          timestamp: Date.now(),
+          used: global.performance.memory.usedJSHeapSize,
+          total: global.performance.memory.totalJSHeapSize,
+          limit: global.performance.memory.jsHeapSizeLimit
+        })
+        
+        // Keep only last 100 measurements
+        if (this.metrics.memoryUsage.length > 100) {
+          this.metrics.memoryUsage.shift()
+        }
+      }
+    }, 5000)
+  }
+  
+  recordComponentLoad(componentName, loadTime) {
+    this.metrics.loadTimes.set(componentName, loadTime)
+    
+    const count = this.metrics.componentCounts.get(componentName) || 0
+    this.metrics.componentCounts.set(componentName, count + 1)
+  }
+  
+  getPerformanceReport() {
+    const currentTime = Date.now()
+    const uptime = currentTime - this.startTime
+    
+    const avgLoadTime = Array.from(this.metrics.loadTimes.values())
+      .reduce((sum, time) => sum + time, 0) / this.metrics.loadTimes.size || 0
+    
+    const currentMemory = this.metrics.memoryUsage.length > 0 
+      ? this.metrics.memoryUsage[this.metrics.memoryUsage.length - 1]
+      : null
+    
+    return {
+      uptime,
+      loadedComponents: this.metrics.loadTimes.size,
+      averageLoadTime: Math.round(avgLoadTime),
+      totalComponentLoads: Array.from(this.metrics.componentCounts.values())
+        .reduce((sum, count) => sum + count, 0),
+      memoryUsage: currentMemory ? {
+        used: Math.round(currentMemory.used / 1024 / 1024), // MB
+        total: Math.round(currentMemory.total / 1024 / 1024), // MB
+        percentage: Math.round((currentMemory.used / currentMemory.total) * 100)
+      } : null,
+      slowestComponents: Array.from(this.metrics.loadTimes.entries())
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5)
+        .map(([name, time]) => ({ name, time: Math.round(time) }))
+    }
+  }
+  
+  exportMetrics() {
+    return {
+      ...this.metrics,
+      report: this.getPerformanceReport()
+    }
+  }
+}
+
+// Global performance monitor
+const performanceMonitor = new BundlePerformanceMonitor()
+
+// Enhanced lazy loading hook with performance tracking
+const useLazyComponent = (importFunction, componentName) => {
+  const [component, setComponent] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  
+  useEffect(() => {
+    let isMounted = true
+    
+    const loadComponent = async () => {
+      const startTime = Date.now()
+      
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const loadedComponent = await importFunction()
+        const loadTime = Date.now() - startTime
+        
+        performanceMonitor.recordComponentLoad(componentName, loadTime)
+        
+        if (isMounted) {
+          setComponent(() => loadedComponent.default || loadedComponent)
+          setLoading(false)
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err)
+          setLoading(false)
+        }
+      }
+    }
+    
+    loadComponent()
+    
+    return () => {
+      isMounted = false
+    }
+  }, [importFunction, componentName])
+  
+  return { component, loading, error }
+}
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5'
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666'
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#f5f5f5'
+  },
+  errorText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#d32f2f',
+    textAlign: 'center',
+    marginBottom: 8
+  },
+  errorDetails: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 16
+  },
+  retryButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8
+  },
+  retryText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600'
+  }
+})
+
+export {
+  LazyComponent,
+  DynamicImportManager,
+  FeatureLoader,
+  FeatureComponent,
+  BundlePerformanceMonitor,
+  useDynamicImport,
+  useLazyComponent,
+  importManager,
+  featureLoader,
+  performanceMonitor
+}
+```
+
+This comprehensive guide covers React.lazy and Suspense implementation, dynamic import management with caching, Metro configuration for bundle splitting, feature-based code splitting, and performance monitoring for optimized lazy loading in React Native applications.
+
+---
+
+## Accessibility (a11y)
+
+### 17. How do you implement comprehensive accessibility features in React Native?
+
+**Answer:**
+Accessibility in React Native ensures your app is usable by people with disabilities through screen readers, voice control, and other assistive technologies.
+
+**1. Basic Accessibility Props and Screen Reader Support:**
+
+```javascript
+import React, { useState, useRef, useEffect } from 'react'
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+  StyleSheet,
+  AccessibilityInfo,
+  findNodeHandle,
+  Platform
+} from 'react-native'
+
+// Accessible Button Component
+const AccessibleButton = ({ 
+  onPress, 
+  title, 
+  disabled = false, 
+  variant = 'primary',
+  accessibilityHint,
+  children 
+}) => {
+  return (
+    <TouchableOpacity
+      style={[
+        styles.button,
+        styles[`button${variant.charAt(0).toUpperCase() + variant.slice(1)}`],
+        disabled && styles.buttonDisabled
+      ]}
+      onPress={onPress}
+      disabled={disabled}
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{
+        disabled,
+        selected: variant === 'selected'
+      }}
+      // Announce state changes
+      accessibilityLiveRegion={variant === 'loading' ? 'polite' : 'none'}
+    >
+      {children || <Text style={styles.buttonText}>{title}</Text>}
+    </TouchableOpacity>
+  )
+}
+
+// Accessible Form Input
+const AccessibleTextInput = ({ 
+  label, 
+  value, 
+  onChangeText, 
+  placeholder,
+  error,
+  required = false,
+  secureTextEntry = false,
+  keyboardType = 'default',
+  ...props 
+}) => {
+  const inputRef = useRef(null)
+  const [isFocused, setIsFocused] = useState(false)
+  
+  const inputId = `input-${label.toLowerCase().replace(/\s+/g, '-')}`
+  const errorId = `${inputId}-error`
+  const hintId = `${inputId}-hint`
+  
+  return (
+    <View style={styles.inputContainer}>
+      <Text 
+        style={[
+          styles.inputLabel,
+          error && styles.inputLabelError,
+          isFocused && styles.inputLabelFocused
+        ]}
+        accessibilityRole="text"
+        nativeID={`${inputId}-label`}
+      >
+        {label}
+        {required && (
+          <Text 
+            style={styles.requiredIndicator}
+            accessibilityLabel="required"
+          >
+            {' *'}
+          </Text>
+        )}
+      </Text>
+      
+      <TextInput
+        ref={inputRef}
+        style={[
+          styles.textInput,
+          error && styles.textInputError,
+          isFocused && styles.textInputFocused
+        ]}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        secureTextEntry={secureTextEntry}
+        keyboardType={keyboardType}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        accessible={true}
+        accessibilityLabel={label}
+        accessibilityHint={placeholder}
+        accessibilityRequired={required}
+        accessibilityInvalidated={!!error}
+        accessibilityLabelledBy={`${inputId}-label`}
+        accessibilityDescribedBy={error ? errorId : hintId}
+        nativeID={inputId}
+        {...props}
+      />
+      
+      {error && (
+        <Text 
+          style={styles.errorText}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="assertive"
+          nativeID={errorId}
+        >
+          {error}
+        </Text>
+      )}
+    </View>
+  )
+}
+
+// Accessible List Component
+const AccessibleList = ({ data, renderItem, keyExtractor, title }) => {
+  return (
+    <View>
+      {title && (
+        <Text 
+          style={styles.listTitle}
+          accessibilityRole="header"
+          accessibilityLevel={2}
+        >
+          {title}
+        </Text>
+      )}
+      <ScrollView
+        accessible={true}
+        accessibilityRole="list"
+        accessibilityLabel={`${title || 'List'} with ${data.length} items`}
+      >
+        {data.map((item, index) => (
+          <View
+            key={keyExtractor(item, index)}
+            accessible={true}
+            accessibilityRole="listitem"
+            accessibilityLabel={`Item ${index + 1} of ${data.length}`}
+          >
+            {renderItem({ item, index })}
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  )
+}
+```
+
+**2. Advanced Accessibility Features:**
+
+```javascript
+// Accessibility Manager
+class AccessibilityManager {
+  constructor() {
+    this.isScreenReaderEnabled = false
+    this.isReduceMotionEnabled = false
+    this.isReduceTransparencyEnabled = false
+    this.preferredContentSizeCategory = 'medium'
+    
+    this.init()
+  }
+  
+  async init() {
+    try {
+      // Check screen reader status
+      this.isScreenReaderEnabled = await AccessibilityInfo.isScreenReaderEnabled()
+      
+      // Check reduce motion preference
+      if (Platform.OS === 'ios') {
+        this.isReduceMotionEnabled = await AccessibilityInfo.isReduceMotionEnabled()
+        this.isReduceTransparencyEnabled = await AccessibilityInfo.isReduceTransparencyEnabled()
+      }
+      
+      // Listen for accessibility changes
+      AccessibilityInfo.addEventListener(
+        'screenReaderChanged',
+        this.handleScreenReaderChange.bind(this)
+      )
+      
+      if (Platform.OS === 'ios') {
+        AccessibilityInfo.addEventListener(
+          'reduceMotionChanged',
+          this.handleReduceMotionChange.bind(this)
+        )
+        
+        AccessibilityInfo.addEventListener(
+          'reduceTransparencyChanged',
+          this.handleReduceTransparencyChange.bind(this)
+        )
+      }
+    } catch (error) {
+      console.error('Failed to initialize accessibility manager:', error)
+    }
+  }
+  
+  handleScreenReaderChange(isEnabled) {
+    this.isScreenReaderEnabled = isEnabled
+    console.log('Screen reader changed:', isEnabled)
+  }
+  
+  handleReduceMotionChange(isEnabled) {
+    this.isReduceMotionEnabled = isEnabled
+    console.log('Reduce motion changed:', isEnabled)
+  }
+  
+  handleReduceTransparencyChange(isEnabled) {
+    this.isReduceTransparencyEnabled = isEnabled
+    console.log('Reduce transparency changed:', isEnabled)
+  }
+  
+  // Announce message to screen reader
+  announceForAccessibility(message, priority = 'polite') {
+    if (this.isScreenReaderEnabled) {
+      AccessibilityInfo.announceForAccessibility(message)
+    }
+  }
+  
+  // Set accessibility focus
+  setAccessibilityFocus(reactTag) {
+    if (this.isScreenReaderEnabled && reactTag) {
+      AccessibilityInfo.setAccessibilityFocus(reactTag)
+    }
+  }
+  
+  // Get accessibility preferences
+  getAccessibilityPreferences() {
+    return {
+      screenReaderEnabled: this.isScreenReaderEnabled,
+      reduceMotionEnabled: this.isReduceMotionEnabled,
+      reduceTransparencyEnabled: this.isReduceTransparencyEnabled,
+      preferredContentSizeCategory: this.preferredContentSizeCategory
+    }
+  }
+  
+  cleanup() {
+    AccessibilityInfo.removeEventListener('screenReaderChanged', this.handleScreenReaderChange)
+    if (Platform.OS === 'ios') {
+      AccessibilityInfo.removeEventListener('reduceMotionChanged', this.handleReduceMotionChange)
+      AccessibilityInfo.removeEventListener('reduceTransparencyChanged', this.handleReduceTransparencyChange)
+    }
+  }
+}
+
+// Global accessibility manager
+const accessibilityManager = new AccessibilityManager()
+
+// Accessible Modal Component
+const AccessibleModal = ({ 
+  visible, 
+  onClose, 
+  title, 
+  children, 
+  closeButtonLabel = 'Close modal' 
+}) => {
+  const modalRef = useRef(null)
+  const closeButtonRef = useRef(null)
+  
+  useEffect(() => {
+    if (visible && modalRef.current) {
+      // Focus on modal when it opens
+      const reactTag = findNodeHandle(modalRef.current)
+      if (reactTag) {
+        setTimeout(() => {
+          accessibilityManager.setAccessibilityFocus(reactTag)
+        }, 100)
+      }
+      
+      // Announce modal opening
+      accessibilityManager.announceForAccessibility(`${title} modal opened`)
+    }
+  }, [visible, title])
+  
+  if (!visible) return null
+  
+  return (
+    <View style={styles.modalOverlay}>
+      <View 
+        ref={modalRef}
+        style={styles.modalContent}
+        accessible={true}
+        accessibilityRole="dialog"
+        accessibilityLabel={title}
+        accessibilityModal={true}
+        accessibilityViewIsModal={true}
+      >
+        <View style={styles.modalHeader}>
+          <Text 
+            style={styles.modalTitle}
+            accessibilityRole="header"
+            accessibilityLevel={1}
+          >
+            {title}
+          </Text>
+          <TouchableOpacity
+            ref={closeButtonRef}
+            style={styles.closeButton}
+            onPress={onClose}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel={closeButtonLabel}
+            accessibilityHint="Closes the modal dialog"
+          >
+            <Text style={styles.closeButtonText}>×</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <ScrollView 
+          style={styles.modalBody}
+          accessible={true}
+          accessibilityRole="scrollbar"
+        >
+          {children}
+        </ScrollView>
+      </View>
+    </View>
+  )
+}
+```
+
+**3. Accessibility Testing and Validation:**
+
+```javascript
+// Accessibility testing utilities
+class AccessibilityTester {
+  constructor() {
+    this.violations = []
+    this.warnings = []
+  }
+  
+  // Test component accessibility
+  testComponent(component, testName) {
+    const violations = []
+    const warnings = []
+    
+    // Check for accessibility label
+    if (component.props.accessible && !component.props.accessibilityLabel) {
+      violations.push({
+        test: testName,
+        rule: 'accessibility-label-required',
+        message: 'Accessible elements must have accessibilityLabel',
+        severity: 'error'
+      })
+    }
+    
+    // Check for proper roles
+    if (component.props.onPress && !component.props.accessibilityRole) {
+      warnings.push({
+        test: testName,
+        rule: 'accessibility-role-recommended',
+        message: 'Interactive elements should have accessibilityRole',
+        severity: 'warning'
+      })
+    }
+    
+    // Check for minimum touch target size
+    if (component.props.onPress && component.props.style) {
+      const style = StyleSheet.flatten(component.props.style)
+      const minSize = 44 // iOS HIG minimum
+      
+      if ((style.width && style.width < minSize) || 
+          (style.height && style.height < minSize)) {
+        violations.push({
+          test: testName,
+          rule: 'minimum-touch-target',
+          message: `Touch targets should be at least ${minSize}x${minSize} points`,
+          severity: 'error'
+        })
+      }
+    }
+    
+    // Check color contrast (simplified)
+    if (component.props.style) {
+      const style = StyleSheet.flatten(component.props.style)
+      if (style.color && style.backgroundColor) {
+        const contrast = this.calculateContrast(style.color, style.backgroundColor)
+        if (contrast < 4.5) {
+          violations.push({
+            test: testName,
+            rule: 'color-contrast',
+            message: 'Text color contrast ratio should be at least 4.5:1',
+            severity: 'error'
+          })
+        }
+      }
+    }
+    
+    this.violations.push(...violations)
+    this.warnings.push(...warnings)
+    
+    return { violations, warnings }
+  }
+  
+  // Simplified contrast calculation
+  calculateContrast(color1, color2) {
+    // This is a simplified version - in practice, you'd use a proper color library
+    // Returns a mock value for demonstration
+    return 5.2
+  }
+  
+  // Generate accessibility report
+  generateReport() {
+    return {
+      summary: {
+        totalViolations: this.violations.length,
+        totalWarnings: this.warnings.length,
+        passed: this.violations.length === 0
+      },
+      violations: this.violations,
+      warnings: this.warnings,
+      recommendations: this.generateRecommendations()
+    }
+  }
+  
+  generateRecommendations() {
+    const recommendations = []
+    
+    if (this.violations.some(v => v.rule === 'accessibility-label-required')) {
+      recommendations.push({
+        title: 'Add Accessibility Labels',
+        description: 'Ensure all interactive elements have descriptive accessibility labels',
+        priority: 'high'
+      })
+    }
+    
+    if (this.violations.some(v => v.rule === 'minimum-touch-target')) {
+      recommendations.push({
+        title: 'Increase Touch Target Size',
+        description: 'Make sure all touch targets are at least 44x44 points',
+        priority: 'high'
+      })
+    }
+    
+    if (this.violations.some(v => v.rule === 'color-contrast')) {
+      recommendations.push({
+        title: 'Improve Color Contrast',
+        description: 'Ensure text has sufficient contrast against background colors',
+        priority: 'medium'
+      })
+    }
+    
+    return recommendations
+  }
+  
+  reset() {
+    this.violations = []
+    this.warnings = []
+  }
+}
+```
+
+**4. Accessibility Hooks and Utilities:**
+
+```javascript
+// Custom accessibility hooks
+const useAccessibility = () => {
+  const [isScreenReaderEnabled, setIsScreenReaderEnabled] = useState(false)
+  const [isReduceMotionEnabled, setIsReduceMotionEnabled] = useState(false)
+  
+  useEffect(() => {
+    const checkAccessibilityStatus = async () => {
+      try {
+        const screenReaderEnabled = await AccessibilityInfo.isScreenReaderEnabled()
+        setIsScreenReaderEnabled(screenReaderEnabled)
+        
+        if (Platform.OS === 'ios') {
+          const reduceMotionEnabled = await AccessibilityInfo.isReduceMotionEnabled()
+          setIsReduceMotionEnabled(reduceMotionEnabled)
+        }
+      } catch (error) {
+        console.error('Failed to check accessibility status:', error)
+      }
+    }
+    
+    checkAccessibilityStatus()
+    
+    const screenReaderListener = AccessibilityInfo.addEventListener(
+      'screenReaderChanged',
+      setIsScreenReaderEnabled
+    )
+    
+    let reduceMotionListener
+    if (Platform.OS === 'ios') {
+      reduceMotionListener = AccessibilityInfo.addEventListener(
+        'reduceMotionChanged',
+        setIsReduceMotionEnabled
+      )
+    }
+    
+    return () => {
+      screenReaderListener?.remove()
+      reduceMotionListener?.remove()
+    }
+  }, [])
+  
+  const announceForAccessibility = (message) => {
+    if (isScreenReaderEnabled) {
+      AccessibilityInfo.announceForAccessibility(message)
+    }
+  }
+  
+  const setAccessibilityFocus = (ref) => {
+    if (isScreenReaderEnabled && ref.current) {
+      const reactTag = findNodeHandle(ref.current)
+      if (reactTag) {
+        AccessibilityInfo.setAccessibilityFocus(reactTag)
+      }
+    }
+  }
+  
+  return {
+    isScreenReaderEnabled,
+    isReduceMotionEnabled,
+    announceForAccessibility,
+    setAccessibilityFocus
+  }
+}
+
+// Focus management hook
+const useFocusManagement = () => {
+  const { setAccessibilityFocus } = useAccessibility()
+  const focusQueue = useRef([])
+  
+  const addToFocusQueue = (ref, delay = 0) => {
+    focusQueue.current.push({ ref, delay })
+  }
+  
+  const processFocusQueue = () => {
+    focusQueue.current.forEach(({ ref, delay }) => {
+      setTimeout(() => {
+        setAccessibilityFocus(ref)
+      }, delay)
+    })
+    focusQueue.current = []
+  }
+  
+  const focusElement = (ref, delay = 100) => {
+    setTimeout(() => {
+      setAccessibilityFocus(ref)
+    }, delay)
+  }
+  
+  return {
+    addToFocusQueue,
+    processFocusQueue,
+    focusElement
+  }
+}
+
+// Accessible navigation hook
+const useAccessibleNavigation = () => {
+  const { announceForAccessibility } = useAccessibility()
+  
+  const announceScreenChange = (screenName, description) => {
+    const message = description 
+      ? `Navigated to ${screenName}. ${description}`
+      : `Navigated to ${screenName}`
+    
+    announceForAccessibility(message)
+  }
+  
+  const announceRouteChange = (routeName) => {
+    announceForAccessibility(`Current page: ${routeName}`)
+  }
+  
+  return {
+    announceScreenChange,
+    announceRouteChange
+  }
+}
+```
+
+**5. Accessibility Styles and Theming:**
+
+```javascript
+const styles = StyleSheet.create({
+  // Button styles
+  button: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    minHeight: 44, // Minimum touch target
+    minWidth: 44,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  buttonPrimary: {
+    backgroundColor: '#007AFF'
+  },
+  buttonSecondary: {
+    backgroundColor: '#8E8E93',
+    borderWidth: 1,
+    borderColor: '#C7C7CC'
+  },
+  buttonDisabled: {
+    backgroundColor: '#C7C7CC',
+    opacity: 0.6
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white'
+  },
+  
+  // Input styles
+  inputContainer: {
+    marginBottom: 16
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#000'
+  },
+  inputLabelError: {
+    color: '#FF3B30'
+  },
+  inputLabelFocused: {
+    color: '#007AFF'
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: '#C7C7CC',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    minHeight: 44,
+    backgroundColor: 'white'
+  },
+  textInputError: {
+    borderColor: '#FF3B30'
+  },
+  textInputFocused: {
+    borderColor: '#007AFF',
+    borderWidth: 2
+  },
+  requiredIndicator: {
+    color: '#FF3B30'
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 14,
+    marginTop: 4
+  },
+  
+  // List styles
+  listTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#000'
+  },
+  
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    maxWidth: '90%',
+    maxHeight: '80%',
+    minWidth: 300
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    flex: 1
+  },
+  closeButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 22
+  },
+  closeButtonText: {
+    fontSize: 24,
+    color: '#8E8E93'
+  },
+  modalBody: {
+    flex: 1
+  }
+})
+
+export {
+  AccessibleButton,
+  AccessibleTextInput,
+  AccessibleList,
+  AccessibleModal,
+  AccessibilityManager,
+  AccessibilityTester,
+  useAccessibility,
+  useFocusManagement,
+  useAccessibleNavigation,
+  accessibilityManager
+}
+```
+
+This comprehensive guide covers basic accessibility props, advanced accessibility features with screen reader support, accessibility testing and validation, custom accessibility hooks, and proper styling for accessible React Native applications.
+
+---
+
+## Background Tasks and Services
+
+### 18. How do you implement background tasks and services in React Native?
+
+**Answer:**
+Background tasks in React Native allow your app to perform operations when it's not in the foreground, such as data synchronization, location tracking, or push notifications.
+
+**1. Background App State and App State Management:**
+
+```javascript
+import React, { useState, useEffect, useRef } from 'react'
+import {
+  AppState,
+  Platform,
+  Alert,
+  BackgroundTimer
+} from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import BackgroundJob from 'react-native-background-job'
+import PushNotification from 'react-native-push-notification'
+
+// Background Task Manager
+class BackgroundTaskManager {
+  constructor() {
+    this.appState = AppState.currentState
+    this.backgroundTasks = new Map()
+    this.timers = new Map()
+    this.isBackgroundJobRunning = false
+    
+    this.init()
+  }
+  
+  init() {
+    // Listen to app state changes
+    AppState.addEventListener('change', this.handleAppStateChange.bind(this))
+    
+    // Configure background job
+    this.configureBackgroundJob()
+    
+    // Setup push notifications
+    this.setupPushNotifications()
+  }
+  
+  handleAppStateChange(nextAppState) {
+    console.log('App state changed from', this.appState, 'to', nextAppState)
+    
+    if (this.appState.match(/inactive|background/) && nextAppState === 'active') {
+      // App has come to the foreground
+      this.onAppForeground()
+    } else if (this.appState === 'active' && nextAppState.match(/inactive|background/)) {
+      // App has gone to the background
+      this.onAppBackground()
+    }
+    
+    this.appState = nextAppState
+  }
+  
+  onAppForeground() {
+    console.log('App came to foreground')
+    
+    // Stop background tasks
+    this.stopBackgroundTasks()
+    
+    // Sync data when app becomes active
+    this.syncDataOnForeground()
+    
+    // Clear background notifications
+    PushNotification.cancelAllLocalNotifications()
+  }
+  
+  onAppBackground() {
+    console.log('App went to background')
+    
+    // Start background tasks
+    this.startBackgroundTasks()
+    
+    // Save app state
+    this.saveAppState()
+    
+    // Schedule background sync
+    this.scheduleBackgroundSync()
+  }
+  
+  // Register a background task
+  registerTask(taskId, taskFunction, interval = 30000) {
+    this.backgroundTasks.set(taskId, {
+      function: taskFunction,
+      interval,
+      isRunning: false
+    })
+  }
+  
+  // Start background tasks
+  startBackgroundTasks() {
+    if (Platform.OS === 'ios') {
+      // iOS background execution time is limited
+      this.startIOSBackgroundTasks()
+    } else {
+      // Android allows more background processing
+      this.startAndroidBackgroundTasks()
+    }
+  }
+  
+  startIOSBackgroundTasks() {
+    // iOS background app refresh (limited time)
+    this.backgroundTasks.forEach((task, taskId) => {
+      if (!task.isRunning) {
+        const timer = BackgroundTimer.setTimeout(() => {
+          task.function()
+          task.isRunning = false
+        }, 1000) // Execute immediately, then stop
+        
+        this.timers.set(taskId, timer)
+        task.isRunning = true
+      }
+    })
+  }
+  
+  startAndroidBackgroundTasks() {
+    // Android background service
+    if (!this.isBackgroundJobRunning) {
+      BackgroundJob.start({
+        jobKey: 'myJob',
+        period: 15000, // 15 seconds
+        requiredNetworkType: 'UNMETERED', // WiFi only
+        persistAcrossReboot: true
+      })
+      
+      this.isBackgroundJobRunning = true
+    }
+    
+    // Start periodic tasks
+    this.backgroundTasks.forEach((task, taskId) => {
+      if (!task.isRunning) {
+        const timer = setInterval(() => {
+          if (AppState.currentState.match(/inactive|background/)) {
+            task.function()
+          }
+        }, task.interval)
+        
+        this.timers.set(taskId, timer)
+        task.isRunning = true
+      }
+    })
+  }
+  
+  // Stop background tasks
+  stopBackgroundTasks() {
+    // Clear all timers
+    this.timers.forEach((timer, taskId) => {
+      if (Platform.OS === 'ios') {
+        BackgroundTimer.clearTimeout(timer)
+      } else {
+        clearInterval(timer)
+      }
+      
+      const task = this.backgroundTasks.get(taskId)
+      if (task) {
+        task.isRunning = false
+      }
+    })
+    
+    this.timers.clear()
+    
+    // Stop background job (Android)
+    if (this.isBackgroundJobRunning) {
+      BackgroundJob.stop()
+      this.isBackgroundJobRunning = false
+    }
+  }
+  
+  // Configure background job for Android
+  configureBackgroundJob() {
+    BackgroundJob.register({
+      jobKey: 'myJob',
+      job: () => {
+        console.log('Background job executed')
+        
+        // Perform background tasks
+        this.backgroundTasks.forEach((task) => {
+          try {
+            task.function()
+          } catch (error) {
+            console.error('Background task error:', error)
+          }
+        })
+      }
+    })
+  }
+  
+  // Setup push notifications
+  setupPushNotifications() {
+    PushNotification.configure({
+      onRegister: (token) => {
+        console.log('Push notification token:', token)
+      },
+      
+      onNotification: (notification) => {
+        console.log('Notification received:', notification)
+        
+        if (notification.userInteraction) {
+          // User tapped on notification
+          this.handleNotificationTap(notification)
+        }
+      },
+      
+      permissions: {
+        alert: true,
+        badge: true,
+        sound: true
+      },
+      
+      popInitialNotification: true,
+      requestPermissions: Platform.OS === 'ios'
+    })
+  }
+  
+  // Schedule background sync
+  scheduleBackgroundSync() {
+    // Schedule a local notification for background sync reminder
+    PushNotification.localNotificationSchedule({
+      title: 'Background Sync',
+      message: 'Syncing data in background...',
+      date: new Date(Date.now() + 60 * 1000), // 1 minute from now
+      allowWhileIdle: true,
+      repeatType: 'minute',
+      repeatTime: 5 // Every 5 minutes
+    })
+  }
+  
+  // Save app state
+  async saveAppState() {
+    try {
+      const appState = {
+        lastBackgroundTime: Date.now(),
+        appVersion: '1.0.0',
+        userSession: 'active'
+      }
+      
+      await AsyncStorage.setItem('appState', JSON.stringify(appState))
+    } catch (error) {
+      console.error('Failed to save app state:', error)
+    }
+  }
+  
+  // Sync data when app comes to foreground
+  async syncDataOnForeground() {
+    try {
+      const savedState = await AsyncStorage.getItem('appState')
+      if (savedState) {
+        const appState = JSON.parse(savedState)
+        const timeDiff = Date.now() - appState.lastBackgroundTime
+        
+        // If app was in background for more than 5 minutes, sync data
+        if (timeDiff > 5 * 60 * 1000) {
+          console.log('App was in background for', timeDiff / 1000, 'seconds. Syncing data...')
+          await this.performDataSync()
+        }
+      }
+    } catch (error) {
+      console.error('Failed to sync data on foreground:', error)
+    }
+  }
+  
+  // Perform data synchronization
+  async performDataSync() {
+    try {
+      // Simulate API call for data sync
+      const response = await fetch('https://api.example.com/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          lastSync: Date.now(),
+          deviceId: 'device123'
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Data sync successful:', data)
+        
+        // Update local storage with synced data
+        await AsyncStorage.setItem('lastSyncTime', Date.now().toString())
+      }
+    } catch (error) {
+      console.error('Data sync failed:', error)
+    }
+  }
+  
+  // Handle notification tap
+  handleNotificationTap(notification) {
+    console.log('User tapped notification:', notification)
+    
+    // Navigate to specific screen based on notification
+    if (notification.data && notification.data.screen) {
+      // Use your navigation library to navigate
+      // NavigationService.navigate(notification.data.screen)
+    }
+  }
+  
+  cleanup() {
+    AppState.removeEventListener('change', this.handleAppStateChange)
+    this.stopBackgroundTasks()
+  }
+}
+
+// Global background task manager
+const backgroundTaskManager = new BackgroundTaskManager()
+```
+
+**2. Background Location Tracking:**
+
+```javascript
+import Geolocation from '@react-native-community/geolocation'
+import BackgroundGeolocation from 'react-native-background-geolocation'
+
+// Background Location Manager
+class BackgroundLocationManager {
+  constructor() {
+    this.isTracking = false
+    this.locationHistory = []
+    this.watchId = null
+    
+    this.init()
+  }
+  
+  async init() {
+    try {
+      // Configure background geolocation
+      await BackgroundGeolocation.ready({
+        // Geolocation Config
+        desiredAccuracy: BackgroundGeolocation.DESIRED_ACCURACY_HIGH,
+        distanceFilter: 10, // meters
+        
+        // Activity Recognition
+        stopTimeout: 1, // minutes
+        
+        // Application config
+        debug: __DEV__, // Enable debug sounds in development
+        logLevel: BackgroundGeolocation.LOG_LEVEL_OFF,
+        enableHeadless: true,
+        
+        // HTTP / SQLite config
+        url: 'https://api.example.com/locations',
+        batchSync: false,
+        autoSync: true,
+        
+        // iOS specific
+        preventSuspend: true,
+        heartbeatInterval: 60,
+        
+        // Android specific
+        locationUpdateInterval: 1000,
+        fastestLocationUpdateInterval: 5000,
+        
+        // Permissions
+        locationAuthorizationRequest: 'Always',
+        backgroundPermissionRationale: {
+          title: "Allow location access",
+          message: "This app needs background location access for tracking",
+          positiveAction: 'Change to "{backgroundPermissionOptionLabel}"',
+          negativeAction: 'Cancel'
+        }
+      })
+      
+      // Event listeners
+      this.setupEventListeners()
+      
+    } catch (error) {
+      console.error('Failed to initialize background location:', error)
+    }
+  }
+  
+  setupEventListeners() {
+    // Location event
+    BackgroundGeolocation.onLocation(this.onLocation.bind(this), this.onLocationError.bind(this))
+    
+    // Motion change event
+    BackgroundGeolocation.onMotionChange(this.onMotionChange.bind(this))
+    
+    // Activity change event
+    BackgroundGeolocation.onActivityChange(this.onActivityChange.bind(this))
+    
+    // Provider change event
+    BackgroundGeolocation.onProviderChange(this.onProviderChange.bind(this))
+    
+    // Heartbeat event
+    BackgroundGeolocation.onHeartbeat(this.onHeartbeat.bind(this))
+  }
+  
+  onLocation(location) {
+    console.log('Background location:', location)
+    
+    // Store location in history
+    this.locationHistory.push({
+      ...location,
+      timestamp: Date.now()
+    })
+    
+    // Keep only last 100 locations
+    if (this.locationHistory.length > 100) {
+      this.locationHistory = this.locationHistory.slice(-100)
+    }
+    
+    // Save to local storage
+    this.saveLocationHistory()
+    
+    // Send to server if needed
+    this.uploadLocation(location)
+  }
+  
+  onLocationError(error) {
+    console.error('Background location error:', error)
+  }
+  
+  onMotionChange(event) {
+    console.log('Motion change:', event)
+    
+    if (event.isMoving) {
+      console.log('Device started moving')
+    } else {
+      console.log('Device stopped moving')
+    }
+  }
+  
+  onActivityChange(event) {
+    console.log('Activity change:', event)
+    // Activities: still, on_foot, walking, running, on_bicycle, in_vehicle
+  }
+  
+  onProviderChange(event) {
+    console.log('Provider change:', event)
+    
+    if (!event.enabled) {
+      Alert.alert(
+        'Location Services Disabled',
+        'Please enable location services to continue tracking.',
+        [
+          { text: 'Settings', onPress: () => BackgroundGeolocation.showSettings() },
+          { text: 'Cancel', style: 'cancel' }
+        ]
+      )
+    }
+  }
+  
+  onHeartbeat(params) {
+    console.log('Heartbeat:', params)
+    
+    // Perform periodic tasks during heartbeat
+    this.performPeriodicTasks()
+  }
+  
+  // Start location tracking
+  async startTracking() {
+    try {
+      if (!this.isTracking) {
+        await BackgroundGeolocation.start()
+        this.isTracking = true
+        console.log('Background location tracking started')
+      }
+    } catch (error) {
+      console.error('Failed to start location tracking:', error)
+    }
+  }
+  
+  // Stop location tracking
+  async stopTracking() {
+    try {
+      if (this.isTracking) {
+        await BackgroundGeolocation.stop()
+        this.isTracking = false
+        console.log('Background location tracking stopped')
+      }
+    } catch (error) {
+      console.error('Failed to stop location tracking:', error)
+    }
+  }
+  
+  // Get current location
+  async getCurrentLocation() {
+    try {
+      const location = await BackgroundGeolocation.getCurrentPosition({
+        timeout: 30,
+        maximumAge: 5000,
+        enableHighAccuracy: true
+      })
+      
+      return location
+    } catch (error) {
+      console.error('Failed to get current location:', error)
+      return null
+    }
+  }
+  
+  // Save location history to local storage
+  async saveLocationHistory() {
+    try {
+      await AsyncStorage.setItem(
+        'locationHistory',
+        JSON.stringify(this.locationHistory)
+      )
+    } catch (error) {
+      console.error('Failed to save location history:', error)
+    }
+  }
+  
+  // Upload location to server
+  async uploadLocation(location) {
+    try {
+      const response = await fetch('https://api.example.com/locations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer your-token'
+        },
+        body: JSON.stringify({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          accuracy: location.coords.accuracy,
+          timestamp: location.timestamp,
+          speed: location.coords.speed,
+          heading: location.coords.heading
+        })
+      })
+      
+      if (response.ok) {
+        console.log('Location uploaded successfully')
+      }
+    } catch (error) {
+      console.error('Failed to upload location:', error)
+    }
+  }
+  
+  // Perform periodic tasks
+  performPeriodicTasks() {
+    // Check battery level
+    this.checkBatteryLevel()
+    
+    // Clean old location data
+    this.cleanOldLocationData()
+    
+    // Sync pending data
+    this.syncPendingData()
+  }
+  
+  checkBatteryLevel() {
+    // Check if battery is low and adjust tracking accordingly
+    // This would require react-native-device-info or similar
+  }
+  
+  cleanOldLocationData() {
+    // Remove location data older than 7 days
+    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000)
+    this.locationHistory = this.locationHistory.filter(
+      location => location.timestamp > sevenDaysAgo
+    )
+  }
+  
+  async syncPendingData() {
+    // Sync any pending location data that failed to upload
+    try {
+      const pendingData = await AsyncStorage.getItem('pendingLocationData')
+      if (pendingData) {
+        const locations = JSON.parse(pendingData)
+        
+        for (const location of locations) {
+          await this.uploadLocation(location)
+        }
+        
+        // Clear pending data after successful sync
+        await AsyncStorage.removeItem('pendingLocationData')
+      }
+    } catch (error) {
+      console.error('Failed to sync pending data:', error)
+    }
+  }
+  
+  // Get location history
+  getLocationHistory() {
+    return this.locationHistory
+  }
+  
+  // Check if tracking is active
+  isTrackingActive() {
+    return this.isTracking
+  }
+  
+  cleanup() {
+    this.stopTracking()
+    BackgroundGeolocation.removeAllListeners()
+  }
+}
+
+// Global location manager
+const backgroundLocationManager = new BackgroundLocationManager()
+```
+
+**3. Background Data Synchronization:**
+
+```javascript
+// Background Sync Manager
+class BackgroundSyncManager {
+  constructor() {
+    this.syncQueue = []
+    this.isSyncing = false
+    this.syncInterval = null
+    this.retryAttempts = 3
+    this.retryDelay = 5000 // 5 seconds
+    
+    this.init()
+  }
+  
+  init() {
+    // Register background sync task
+    backgroundTaskManager.registerTask(
+      'dataSync',
+      this.performBackgroundSync.bind(this),
+      60000 // Every minute
+    )
+    
+    // Load pending sync items
+    this.loadPendingSyncItems()
+  }
+  
+  // Add item to sync queue
+  addToSyncQueue(item) {
+    const syncItem = {
+      id: Date.now().toString(),
+      data: item,
+      timestamp: Date.now(),
+      attempts: 0,
+      status: 'pending'
+    }
+    
+    this.syncQueue.push(syncItem)
+    this.saveSyncQueue()
+    
+    // Try to sync immediately if app is active
+    if (AppState.currentState === 'active') {
+      this.performSync()
+    }
+  }
+  
+  // Perform background sync
+  async performBackgroundSync() {
+    if (this.isSyncing || this.syncQueue.length === 0) {
+      return
+    }
+    
+    console.log('Performing background sync...')
+    await this.performSync()
+  }
+  
+  // Perform sync operation
+  async performSync() {
+    if (this.isSyncing) {
+      return
+    }
+    
+    this.isSyncing = true
+    
+    try {
+      const pendingItems = this.syncQueue.filter(item => 
+        item.status === 'pending' && item.attempts < this.retryAttempts
+      )
+      
+      for (const item of pendingItems) {
+        try {
+          await this.syncItem(item)
+          item.status = 'completed'
+          console.log('Sync completed for item:', item.id)
+        } catch (error) {
+          item.attempts++
+          item.lastError = error.message
+          
+          if (item.attempts >= this.retryAttempts) {
+            item.status = 'failed'
+            console.error('Sync failed permanently for item:', item.id, error)
+          } else {
+            console.warn('Sync failed, will retry:', item.id, error)
+          }
+        }
+      }
+      
+      // Remove completed items
+      this.syncQueue = this.syncQueue.filter(item => 
+        item.status !== 'completed'
+      )
+      
+      this.saveSyncQueue()
+      
+    } finally {
+      this.isSyncing = false
+    }
+  }
+  
+  // Sync individual item
+  async syncItem(item) {
+    const response = await fetch('https://api.example.com/sync', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer your-token'
+      },
+      body: JSON.stringify({
+        id: item.id,
+        data: item.data,
+        timestamp: item.timestamp
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Sync failed: ${response.status} ${response.statusText}`)
+    }
+    
+    return await response.json()
+  }
+  
+  // Save sync queue to storage
+  async saveSyncQueue() {
+    try {
+      await AsyncStorage.setItem('syncQueue', JSON.stringify(this.syncQueue))
+    } catch (error) {
+      console.error('Failed to save sync queue:', error)
+    }
+  }
+  
+  // Load pending sync items
+  async loadPendingSyncItems() {
+    try {
+      const savedQueue = await AsyncStorage.getItem('syncQueue')
+      if (savedQueue) {
+        this.syncQueue = JSON.parse(savedQueue)
+        console.log('Loaded', this.syncQueue.length, 'pending sync items')
+      }
+    } catch (error) {
+      console.error('Failed to load sync queue:', error)
+    }
+  }
+  
+  // Get sync status
+  getSyncStatus() {
+    const pending = this.syncQueue.filter(item => item.status === 'pending').length
+    const failed = this.syncQueue.filter(item => item.status === 'failed').length
+    
+    return {
+      pending,
+      failed,
+      isSyncing: this.isSyncing,
+      totalItems: this.syncQueue.length
+    }
+  }
+  
+  // Retry failed items
+  retryFailedItems() {
+    this.syncQueue.forEach(item => {
+      if (item.status === 'failed') {
+        item.status = 'pending'
+        item.attempts = 0
+        delete item.lastError
+      }
+    })
+    
+    this.saveSyncQueue()
+    this.performSync()
+  }
+  
+  // Clear completed items
+  clearCompletedItems() {
+    this.syncQueue = this.syncQueue.filter(item => 
+      item.status !== 'completed'
+    )
+    this.saveSyncQueue()
+  }
+}
+
+// Global sync manager
+const backgroundSyncManager = new BackgroundSyncManager()
+
+export {
+  BackgroundTaskManager,
+  BackgroundLocationManager,
+  BackgroundSyncManager,
+  backgroundTaskManager,
+  backgroundLocationManager,
+  backgroundSyncManager
+}
+```
+
+**4. Background Task Hooks:**
+
+```javascript
+// Custom hooks for background tasks
+const useBackgroundTasks = () => {
+  const [appState, setAppState] = useState(AppState.currentState)
+  const [isInBackground, setIsInBackground] = useState(false)
+  
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState) => {
+      setAppState(nextAppState)
+      setIsInBackground(nextAppState.match(/inactive|background/))
+    }
+    
+    const subscription = AppState.addEventListener('change', handleAppStateChange)
+    
+    return () => {
+      subscription?.remove()
+    }
+  }, [])
+  
+  const registerBackgroundTask = (taskId, taskFunction, interval) => {
+    backgroundTaskManager.registerTask(taskId, taskFunction, interval)
+  }
+  
+  const addToSyncQueue = (data) => {
+    backgroundSyncManager.addToSyncQueue(data)
+  }
+  
+  const getSyncStatus = () => {
+    return backgroundSyncManager.getSyncStatus()
+  }
+  
+  return {
+    appState,
+    isInBackground,
+    registerBackgroundTask,
+    addToSyncQueue,
+    getSyncStatus
+  }
+}
+
+// Location tracking hook
+const useLocationTracking = () => {
+  const [isTracking, setIsTracking] = useState(false)
+  const [currentLocation, setCurrentLocation] = useState(null)
+  const [locationHistory, setLocationHistory] = useState([])
+  
+  useEffect(() => {
+    setIsTracking(backgroundLocationManager.isTrackingActive())
+    setLocationHistory(backgroundLocationManager.getLocationHistory())
+  }, [])
+  
+  const startTracking = async () => {
+    await backgroundLocationManager.startTracking()
+    setIsTracking(true)
+  }
+  
+  const stopTracking = async () => {
+    await backgroundLocationManager.stopTracking()
+    setIsTracking(false)
+  }
+  
+  const getCurrentLocation = async () => {
+    const location = await backgroundLocationManager.getCurrentLocation()
+    setCurrentLocation(location)
+    return location
+  }
+  
+  return {
+    isTracking,
+    currentLocation,
+    locationHistory,
+    startTracking,
+    stopTracking,
+    getCurrentLocation
+  }
+}
+```
+
+This comprehensive guide covers app state management, background location tracking, data synchronization, and custom hooks for implementing robust background tasks and services in React Native applications.
+
+---
+
+## Camera and Media
+
+### 19. How do you implement advanced camera and media features in React Native?
+
+**Answer:**
+Advanced camera and media features in React Native include camera capture, video recording, image processing, media gallery access, and real-time filters.
+
+**1. Advanced Camera Implementation with react-native-vision-camera:**
+
+```javascript
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  Dimensions,
+  Platform,
+  PermissionsAndroid
+} from 'react-native'
+import {
+  Camera,
+  useCameraDevices,
+  useFrameProcessor,
+  runOnJS
+} from 'react-native-vision-camera'
+import { useSharedValue } from 'react-native-reanimated'
+import RNFS from 'react-native-fs'
+import ImageResizer from 'react-native-image-resizer'
+import ImagePicker from 'react-native-image-crop-picker'
+
+// Advanced Camera Component
+const AdvancedCamera = ({ onMediaCaptured, onClose }) => {
+  const camera = useRef(null)
+  const devices = useCameraDevices()
+  const device = devices.back
+  
+  const [cameraPermission, setCameraPermission] = useState('not-determined')
+  const [microphonePermission, setMicrophonePermission] = useState('not-determined')
+  const [isRecording, setIsRecording] = useState(false)
+  const [flash, setFlash] = useState('off')
+  const [cameraType, setCameraType] = useState('back')
+  const [zoom, setZoom] = useState(1)
+  const [focusPoint, setFocusPoint] = useState(null)
+  
+  // Shared values for frame processor
+  const frameCount = useSharedValue(0)
+  const faceDetected = useSharedValue(false)
+  
+  useEffect(() => {
+    checkPermissions()
+  }, [])
+  
+  const checkPermissions = async () => {
+    const cameraPermissionStatus = await Camera.getCameraPermissionStatus()
+    const microphonePermissionStatus = await Camera.getMicrophonePermissionStatus()
+    
+    setCameraPermission(cameraPermissionStatus)
+    setMicrophonePermission(microphonePermissionStatus)
+    
+    if (cameraPermissionStatus !== 'authorized') {
+      const newCameraPermission = await Camera.requestCameraPermission()
+      setCameraPermission(newCameraPermission)
+    }
+    
+    if (microphonePermissionStatus !== 'authorized') {
+      const newMicrophonePermission = await Camera.requestMicrophonePermission()
+      setMicrophonePermission(newMicrophonePermission)
+    }
+  }
+  
+  // Frame processor for real-time analysis
+  const frameProcessor = useFrameProcessor((frame) => {
+    'worklet'
+    
+    frameCount.value += 1
+    
+    // Example: Face detection (requires additional setup)
+    // const faces = detectFaces(frame)
+    // faceDetected.value = faces.length > 0
+    
+    // Run JavaScript function from worklet
+    if (frameCount.value % 30 === 0) { // Every 30 frames
+      runOnJS(onFrameProcessed)(frame)
+    }
+  }, [frameCount, faceDetected])
+  
+  const onFrameProcessed = useCallback((frame) => {
+    // Process frame data in JavaScript thread
+    console.log('Frame processed:', frame.width, 'x', frame.height)
+  }, [])
+  
+  // Take photo with advanced options
+  const takePhoto = async () => {
+    try {
+      if (!camera.current) return
+      
+      const photo = await camera.current.takePhoto({
+        qualityPrioritization: 'quality',
+        flash: flash,
+        enableAutoRedEyeReduction: true,
+        enableAutoStabilization: true,
+        enableShutterSound: true
+      })
+      
+      // Process the captured photo
+      const processedPhoto = await processPhoto(photo)
+      onMediaCaptured(processedPhoto)
+      
+    } catch (error) {
+      console.error('Failed to take photo:', error)
+      Alert.alert('Error', 'Failed to take photo')
+    }
+  }
+  
+  // Record video with advanced options
+  const startVideoRecording = async () => {
+    try {
+      if (!camera.current || isRecording) return
+      
+      setIsRecording(true)
+      
+      camera.current.startRecording({
+        flash: flash,
+        onRecordingFinished: async (video) => {
+          setIsRecording(false)
+          const processedVideo = await processVideo(video)
+          onMediaCaptured(processedVideo)
+        },
+        onRecordingError: (error) => {
+          setIsRecording(false)
+          console.error('Recording error:', error)
+          Alert.alert('Error', 'Failed to record video')
+        },
+        videoBitRate: 'high',
+        videoCodec: 'h264'
+      })
+      
+    } catch (error) {
+      setIsRecording(false)
+      console.error('Failed to start recording:', error)
+    }
+  }
+  
+  const stopVideoRecording = async () => {
+    try {
+      if (!camera.current || !isRecording) return
+      await camera.current.stopRecording()
+    } catch (error) {
+      console.error('Failed to stop recording:', error)
+    }
+  }
+  
+  // Process captured photo
+  const processPhoto = async (photo) => {
+    try {
+      // Resize image for optimization
+      const resizedImage = await ImageResizer.createResizedImage(
+        photo.path,
+        1920, // max width
+        1080, // max height
+        'JPEG',
+        80, // quality
+        0, // rotation
+        undefined, // output path
+        false, // keep metadata
+        {
+          mode: 'contain',
+          onlyScaleDown: true
+        }
+      )
+      
+      // Add metadata
+      const processedPhoto = {
+        ...photo,
+        resized: resizedImage,
+        metadata: {
+          capturedAt: new Date().toISOString(),
+          device: Platform.OS,
+          flash: flash,
+          zoom: zoom,
+          cameraType: cameraType
+        }
+      }
+      
+      return processedPhoto
+      
+    } catch (error) {
+      console.error('Failed to process photo:', error)
+      return photo
+    }
+  }
+  
+  // Process captured video
+  const processVideo = async (video) => {
+    try {
+      // Get video info
+      const videoInfo = await RNFS.stat(video.path)
+      
+      const processedVideo = {
+        ...video,
+        metadata: {
+          capturedAt: new Date().toISOString(),
+          device: Platform.OS,
+          flash: flash,
+          zoom: zoom,
+          cameraType: cameraType,
+          fileSize: videoInfo.size,
+          duration: video.duration
+        }
+      }
+      
+      return processedVideo
+      
+    } catch (error) {
+      console.error('Failed to process video:', error)
+      return video
+    }
+  }
+  
+  // Handle focus tap
+  const onFocusTap = (event) => {
+    const { locationX, locationY } = event.nativeEvent
+    setFocusPoint({ x: locationX, y: locationY })
+    
+    // Focus camera at tapped point
+    if (camera.current) {
+      camera.current.focus({ x: locationX, y: locationY })
+    }
+    
+    // Clear focus point after 2 seconds
+    setTimeout(() => setFocusPoint(null), 2000)
+  }
+  
+  // Toggle camera type
+  const toggleCameraType = () => {
+    setCameraType(cameraType === 'back' ? 'front' : 'back')
+  }
+  
+  // Toggle flash
+  const toggleFlash = () => {
+    const flashModes = ['off', 'on', 'auto']
+    const currentIndex = flashModes.indexOf(flash)
+    const nextIndex = (currentIndex + 1) % flashModes.length
+    setFlash(flashModes[nextIndex])
+  }
+  
+  // Handle zoom
+  const handleZoom = (zoomValue) => {
+    const clampedZoom = Math.max(1, Math.min(zoomValue, device?.maxZoom || 10))
+    setZoom(clampedZoom)
+  }
+  
+  if (cameraPermission !== 'authorized') {
+    return (
+      <View style={styles.permissionContainer}>
+        <Text style={styles.permissionText}>
+          Camera permission is required to use this feature
+        </Text>
+        <TouchableOpacity style={styles.permissionButton} onPress={checkPermissions}>
+          <Text style={styles.permissionButtonText}>Grant Permission</Text>
+        </TouchableOpacity>
+      </View>
+    )
+  }
+  
+  if (!device) {
+    return (
+      <View style={styles.permissionContainer}>
+        <Text style={styles.permissionText}>No camera device found</Text>
+      </View>
+    )
+  }
+  
+  return (
+    <View style={styles.container}>
+      <Camera
+        ref={camera}
+        style={styles.camera}
+        device={devices[cameraType]}
+        isActive={true}
+        photo={true}
+        video={true}
+        audio={microphonePermission === 'authorized'}
+        frameProcessor={frameProcessor}
+        zoom={zoom}
+        onTouchEnd={onFocusTap}
+      />
+      
+      {/* Focus indicator */}
+      {focusPoint && (
+        <View
+          style={[
+            styles.focusIndicator,
+            {
+              left: focusPoint.x - 25,
+              top: focusPoint.y - 25
+            }
+          ]}
+        />
+      )}
+      
+      {/* Camera controls */}
+      <View style={styles.controls}>
+        <View style={styles.topControls}>
+          <TouchableOpacity style={styles.controlButton} onPress={onClose}>
+            <Text style={styles.controlButtonText}>✕</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.controlButton} onPress={toggleFlash}>
+            <Text style={styles.controlButtonText}>
+              {flash === 'off' ? '⚡' : flash === 'on' ? '⚡' : 'A⚡'}
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.controlButton} onPress={toggleCameraType}>
+            <Text style={styles.controlButtonText}>🔄</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.bottomControls}>
+          <TouchableOpacity
+            style={[styles.captureButton, isRecording && styles.recordingButton]}
+            onPress={isRecording ? stopVideoRecording : takePhoto}
+            onLongPress={startVideoRecording}
+          >
+            <View style={[styles.captureButtonInner, isRecording && styles.recordingButtonInner]} />
+          </TouchableOpacity>
+        </View>
+        
+        {/* Zoom slider */}
+        <View style={styles.zoomContainer}>
+          <Text style={styles.zoomText}>{zoom.toFixed(1)}x</Text>
+        </View>
+      </View>
+    </View>
+  )
+}
+```
+
+**2. Media Gallery and Image Processing:**
+
+```javascript
+// Media Gallery Manager
+class MediaGalleryManager {
+  constructor() {
+    this.mediaCache = new Map()
+    this.thumbnailCache = new Map()
+  }
+  
+  // Open image picker with advanced options
+  async openImagePicker(options = {}) {
+    try {
+      const defaultOptions = {
+        mediaType: 'photo',
+        multiple: false,
+        includeBase64: false,
+        maxWidth: 2048,
+        maxHeight: 2048,
+        quality: 0.8,
+        cropping: false,
+        cropperCircleOverlay: false,
+        freeStyleCropEnabled: true,
+        showCropGuidelines: true,
+        hideBottomControls: false,
+        enableRotationGesture: true,
+        compressImageMaxWidth: 1920,
+        compressImageMaxHeight: 1080,
+        compressImageQuality: 0.8
+      }
+      
+      const mergedOptions = { ...defaultOptions, ...options }
+      
+      const result = await ImagePicker.openPicker(mergedOptions)
+      
+      if (mergedOptions.multiple) {
+        return await Promise.all(result.map(item => this.processMediaItem(item)))
+      } else {
+        return await this.processMediaItem(result)
+      }
+      
+    } catch (error) {
+      if (error.code !== 'E_PICKER_CANCELLED') {
+        console.error('Image picker error:', error)
+        throw error
+      }
+      return null
+    }
+  }
+  
+  // Open camera with picker
+  async openCamera(options = {}) {
+    try {
+      const defaultOptions = {
+        mediaType: 'photo',
+        includeBase64: false,
+        maxWidth: 2048,
+        maxHeight: 2048,
+        quality: 0.8,
+        useFrontCamera: false,
+        cropping: false
+      }
+      
+      const mergedOptions = { ...defaultOptions, ...options }
+      
+      const result = await ImagePicker.openCamera(mergedOptions)
+      return await this.processMediaItem(result)
+      
+    } catch (error) {
+      if (error.code !== 'E_PICKER_CANCELLED') {
+        console.error('Camera error:', error)
+        throw error
+      }
+      return null
+    }
+  }
+  
+  // Process media item
+  async processMediaItem(item) {
+    try {
+      const processedItem = {
+        ...item,
+        id: this.generateMediaId(),
+        processedAt: new Date().toISOString(),
+        thumbnail: null,
+        metadata: await this.extractMetadata(item)
+      }
+      
+      // Generate thumbnail
+      if (item.mime.startsWith('image/')) {
+        processedItem.thumbnail = await this.generateThumbnail(item.path)
+      }
+      
+      // Cache the processed item
+      this.mediaCache.set(processedItem.id, processedItem)
+      
+      return processedItem
+      
+    } catch (error) {
+      console.error('Failed to process media item:', error)
+      return item
+    }
+  }
+  
+  // Generate thumbnail
+  async generateThumbnail(imagePath, size = 200) {
+    try {
+      const cacheKey = `${imagePath}_${size}`
+      
+      if (this.thumbnailCache.has(cacheKey)) {
+        return this.thumbnailCache.get(cacheKey)
+      }
+      
+      const thumbnail = await ImageResizer.createResizedImage(
+        imagePath,
+        size,
+        size,
+        'JPEG',
+        70,
+        0,
+        undefined,
+        false,
+        {
+          mode: 'cover'
+        }
+      )
+      
+      this.thumbnailCache.set(cacheKey, thumbnail)
+      return thumbnail
+      
+    } catch (error) {
+      console.error('Failed to generate thumbnail:', error)
+      return null
+    }
+  }
+  
+  // Extract metadata
+  async extractMetadata(item) {
+    try {
+      const fileStats = await RNFS.stat(item.path)
+      
+      return {
+        fileSize: fileStats.size,
+        fileName: item.filename || item.path.split('/').pop(),
+        mimeType: item.mime,
+        width: item.width,
+        height: item.height,
+        creationDate: item.creationDate,
+        modificationDate: item.modificationDate,
+        duration: item.duration, // for videos
+        exif: item.exif || {}
+      }
+    } catch (error) {
+      console.error('Failed to extract metadata:', error)
+      return {}
+    }
+  }
+  
+  // Apply image filters
+  async applyImageFilter(imagePath, filterType) {
+    try {
+      switch (filterType) {
+        case 'grayscale':
+          return await this.applyGrayscaleFilter(imagePath)
+        case 'sepia':
+          return await this.applySepiaFilter(imagePath)
+        case 'blur':
+          return await this.applyBlurFilter(imagePath)
+        case 'sharpen':
+          return await this.applySharpenFilter(imagePath)
+        default:
+          return imagePath
+      }
+    } catch (error) {
+      console.error('Failed to apply filter:', error)
+      return imagePath
+    }
+  }
+  
+  // Grayscale filter
+  async applyGrayscaleFilter(imagePath) {
+    // This would require a native image processing library
+    // For demonstration, we'll just return the original path
+    console.log('Applying grayscale filter to:', imagePath)
+    return imagePath
+  }
+  
+  // Sepia filter
+  async applySepiaFilter(imagePath) {
+    console.log('Applying sepia filter to:', imagePath)
+    return imagePath
+  }
+  
+  // Blur filter
+  async applyBlurFilter(imagePath) {
+    console.log('Applying blur filter to:', imagePath)
+    return imagePath
+  }
+  
+  // Sharpen filter
+  async applySharpenFilter(imagePath) {
+    console.log('Applying sharpen filter to:', imagePath)
+    return imagePath
+  }
+  
+  // Compress image
+  async compressImage(imagePath, quality = 0.8, maxWidth = 1920, maxHeight = 1080) {
+    try {
+      const compressedImage = await ImageResizer.createResizedImage(
+        imagePath,
+        maxWidth,
+        maxHeight,
+        'JPEG',
+        quality * 100,
+        0,
+        undefined,
+        false,
+        {
+          mode: 'contain',
+          onlyScaleDown: true
+        }
+      )
+      
+      return compressedImage
+    } catch (error) {
+      console.error('Failed to compress image:', error)
+      throw error
+    }
+  }
+  
+  // Crop image
+  async cropImage(imagePath, cropData) {
+    try {
+      const croppedImage = await ImagePicker.openCropper({
+        path: imagePath,
+        width: cropData.width,
+        height: cropData.height,
+        cropperToolbarTitle: 'Crop Image',
+        cropperActiveWidgetColor: '#007AFF',
+        cropperStatusBarColor: '#007AFF',
+        cropperToolbarColor: '#007AFF',
+        cropperToolbarWidgetColor: '#FFFFFF'
+      })
+      
+      return croppedImage
+    } catch (error) {
+      console.error('Failed to crop image:', error)
+      throw error
+    }
+  }
+  
+  // Generate media ID
+  generateMediaId() {
+    return `media_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  }
+  
+  // Get cached media
+  getCachedMedia(mediaId) {
+    return this.mediaCache.get(mediaId)
+  }
+  
+  // Clear cache
+  clearCache() {
+    this.mediaCache.clear()
+    this.thumbnailCache.clear()
+  }
+}
+
+// Global media gallery manager
+const mediaGalleryManager = new MediaGalleryManager()
+```
+
+**3. Video Processing and Playback:**
+
+```javascript
+import Video from 'react-native-video'
+import { FFmpegKit, ReturnCode } from 'ffmpeg-kit-react-native'
+
+// Video Player Component
+const AdvancedVideoPlayer = ({ source, onProgress, onEnd, style }) => {
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [volume, setVolume] = useState(1.0)
+  const [playbackRate, setPlaybackRate] = useState(1.0)
+  const [showControls, setShowControls] = useState(true)
+  
+  const videoRef = useRef(null)
+  const controlsTimeoutRef = useRef(null)
+  
+  const onLoad = (data) => {
+    setDuration(data.duration)
+  }
+  
+  const onProgressUpdate = (data) => {
+    setCurrentTime(data.currentTime)
+    onProgress?.(data)
+  }
+  
+  const onVideoEnd = () => {
+    setIsPlaying(false)
+    setCurrentTime(0)
+    onEnd?.()
+  }
+  
+  const togglePlayPause = () => {
+    setIsPlaying(!isPlaying)
+    showControlsTemporarily()
+  }
+  
+  const seekTo = (time) => {
+    videoRef.current?.seek(time)
+    setCurrentTime(time)
+  }
+  
+  const showControlsTemporarily = () => {
+    setShowControls(true)
+    
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current)
+    }
+    
+    controlsTimeoutRef.current = setTimeout(() => {
+      setShowControls(false)
+    }, 3000)
+  }
+  
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+  
+  return (
+    <View style={[styles.videoContainer, style]}>
+      <Video
+        ref={videoRef}
+        source={source}
+        style={styles.video}
+        paused={!isPlaying}
+        volume={volume}
+        rate={playbackRate}
+        resizeMode="contain"
+        onLoad={onLoad}
+        onProgress={onProgressUpdate}
+        onEnd={onVideoEnd}
+        onTouchStart={showControlsTemporarily}
+      />
+      
+      {showControls && (
+        <View style={styles.videoControls}>
+          <TouchableOpacity
+            style={styles.playButton}
+            onPress={togglePlayPause}
+          >
+            <Text style={styles.playButtonText}>
+              {isPlaying ? '⏸️' : '▶️'}
+            </Text>
+          </TouchableOpacity>
+          
+          <View style={styles.progressContainer}>
+            <Text style={styles.timeText}>{formatTime(currentTime)}</Text>
+            
+            <View style={styles.progressBar}>
+              <View
+                style={[
+                  styles.progressFill,
+                  { width: `${(currentTime / duration) * 100}%` }
+                ]}
+              />
+            </View>
+            
+            <Text style={styles.timeText}>{formatTime(duration)}</Text>
+          </View>
+        </View>
+      )}
+    </View>
+  )
+}
+
+// Video Processing Manager
+class VideoProcessingManager {
+  constructor() {
+    this.processingQueue = []
+    this.isProcessing = false
+  }
+  
+  // Compress video
+  async compressVideo(inputPath, outputPath, quality = 'medium') {
+    try {
+      const qualitySettings = {
+        low: '-crf 32 -preset fast',
+        medium: '-crf 28 -preset medium',
+        high: '-crf 24 -preset slow'
+      }
+      
+      const command = `-i ${inputPath} ${qualitySettings[quality]} -movflags +faststart ${outputPath}`
+      
+      const session = await FFmpegKit.execute(command)
+      const returnCode = await session.getReturnCode()
+      
+      if (ReturnCode.isSuccess(returnCode)) {
+        console.log('Video compression successful')
+        return outputPath
+      } else {
+        throw new Error('Video compression failed')
+      }
+    } catch (error) {
+      console.error('Video compression error:', error)
+      throw error
+    }
+  }
+  
+  // Extract video thumbnail
+  async extractThumbnail(videoPath, outputPath, timeOffset = '00:00:01') {
+    try {
+      const command = `-i ${videoPath} -ss ${timeOffset} -vframes 1 -q:v 2 ${outputPath}`
+      
+      const session = await FFmpegKit.execute(command)
+      const returnCode = await session.getReturnCode()
+      
+      if (ReturnCode.isSuccess(returnCode)) {
+        console.log('Thumbnail extraction successful')
+        return outputPath
+      } else {
+        throw new Error('Thumbnail extraction failed')
+      }
+    } catch (error) {
+      console.error('Thumbnail extraction error:', error)
+      throw error
+    }
+  }
+  
+  // Trim video
+  async trimVideo(inputPath, outputPath, startTime, duration) {
+    try {
+      const command = `-i ${inputPath} -ss ${startTime} -t ${duration} -c copy ${outputPath}`
+      
+      const session = await FFmpegKit.execute(command)
+      const returnCode = await session.getReturnCode()
+      
+      if (ReturnCode.isSuccess(returnCode)) {
+        console.log('Video trimming successful')
+        return outputPath
+      } else {
+        throw new Error('Video trimming failed')
+      }
+    } catch (error) {
+      console.error('Video trimming error:', error)
+      throw error
+    }
+  }
+  
+  // Add watermark to video
+  async addWatermark(inputPath, watermarkPath, outputPath, position = 'bottom-right') {
+    try {
+      const positions = {
+        'top-left': '10:10',
+        'top-right': 'W-w-10:10',
+        'bottom-left': '10:H-h-10',
+        'bottom-right': 'W-w-10:H-h-10',
+        'center': '(W-w)/2:(H-h)/2'
+      }
+      
+      const overlayPosition = positions[position] || positions['bottom-right']
+      
+      const command = `-i ${inputPath} -i ${watermarkPath} -filter_complex "[1:v]scale=100:100[watermark];[0:v][watermark]overlay=${overlayPosition}" -c:a copy ${outputPath}`
+      
+      const session = await FFmpegKit.execute(command)
+      const returnCode = await session.getReturnCode()
+      
+      if (ReturnCode.isSuccess(returnCode)) {
+        console.log('Watermark addition successful')
+        return outputPath
+      } else {
+        throw new Error('Watermark addition failed')
+      }
+    } catch (error) {
+      console.error('Watermark addition error:', error)
+      throw error
+    }
+  }
+  
+  // Convert video format
+  async convertVideoFormat(inputPath, outputPath, format = 'mp4') {
+    try {
+      const command = `-i ${inputPath} -c:v libx264 -c:a aac -movflags +faststart ${outputPath}`
+      
+      const session = await FFmpegKit.execute(command)
+      const returnCode = await session.getReturnCode()
+      
+      if (ReturnCode.isSuccess(returnCode)) {
+        console.log('Video format conversion successful')
+        return outputPath
+      } else {
+        throw new Error('Video format conversion failed')
+      }
+    } catch (error) {
+      console.error('Video format conversion error:', error)
+      throw error
+    }
+  }
+}
+
+// Global video processing manager
+const videoProcessingManager = new VideoProcessingManager()
+
+export {
+  AdvancedCamera,
+  MediaGalleryManager,
+  AdvancedVideoPlayer,
+  VideoProcessingManager,
+  mediaGalleryManager,
+  videoProcessingManager
+}
+```
+
+**4. Camera and Media Hooks:**
+
+```javascript
+// Custom hooks for camera and media
+const useCamera = () => {
+  const [hasPermission, setHasPermission] = useState(false)
+  const [isActive, setIsActive] = useState(false)
+  
+  useEffect(() => {
+    checkCameraPermission()
+  }, [])
+  
+  const checkCameraPermission = async () => {
+    const status = await Camera.getCameraPermissionStatus()
+    setHasPermission(status === 'authorized')
+    
+    if (status !== 'authorized') {
+      const newStatus = await Camera.requestCameraPermission()
+      setHasPermission(newStatus === 'authorized')
+    }
+  }
+  
+  const activateCamera = () => setIsActive(true)
+  const deactivateCamera = () => setIsActive(false)
+  
+  return {
+    hasPermission,
+    isActive,
+    activateCamera,
+    deactivateCamera,
+    checkCameraPermission
+  }
+}
+
+// Media picker hook
+const useMediaPicker = () => {
+  const [selectedMedia, setSelectedMedia] = useState([])
+  
+  const pickImage = async (options) => {
+    const result = await mediaGalleryManager.openImagePicker(options)
+    if (result) {
+      setSelectedMedia(prev => [...prev, result])
+    }
+    return result
+  }
+  
+  const pickMultipleImages = async (options) => {
+    const results = await mediaGalleryManager.openImagePicker({
+      ...options,
+      multiple: true
+    })
+    if (results) {
+      setSelectedMedia(prev => [...prev, ...results])
+    }
+    return results
+  }
+  
+  const takePhoto = async (options) => {
+    const result = await mediaGalleryManager.openCamera(options)
+    if (result) {
+      setSelectedMedia(prev => [...prev, result])
+    }
+    return result
+  }
+  
+  const removeMedia = (mediaId) => {
+    setSelectedMedia(prev => prev.filter(item => item.id !== mediaId))
+  }
+  
+  const clearSelection = () => {
+    setSelectedMedia([])
+  }
+  
+  return {
+    selectedMedia,
+    pickImage,
+    pickMultipleImages,
+    takePhoto,
+    removeMedia,
+    clearSelection
+  }
+}
+```
+
+This comprehensive guide covers advanced camera implementation, media gallery management, video processing, and custom hooks for implementing robust camera and media features in React Native applications.
+
+---
+
+## Maps and Location Services
+
+### 20. How do you implement advanced maps and location services in React Native?
+
+**Answer:**
+Advanced maps and location services in React Native include interactive maps, real-time location tracking, geofencing, route planning, and custom map overlays.
+
+**1. Advanced Map Implementation with react-native-maps:**
+
+```javascript
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
+  Dimensions,
+  Platform,
+  PermissionsAndroid
+} from 'react-native'
+import MapView, {
+  Marker,
+  Polyline,
+  Polygon,
+  Circle,
+  Callout,
+  PROVIDER_GOOGLE,
+  PROVIDER_DEFAULT
+} from 'react-native-maps'
+import Geolocation from '@react-native-community/geolocation'
+import { request, PERMISSIONS, RESULTS } from 'react-native-permissions'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+
+// Advanced Map Component
+const AdvancedMap = ({ 
+  initialRegion,
+  markers = [],
+  routes = [],
+  onLocationChange,
+  onMarkerPress,
+  showUserLocation = true,
+  followUserLocation = false,
+  customMapStyle = null
+}) => {
+  const mapRef = useRef(null)
+  const [region, setRegion] = useState(initialRegion)
+  const [userLocation, setUserLocation] = useState(null)
+  const [locationPermission, setLocationPermission] = useState(false)
+  const [mapType, setMapType] = useState('standard')
+  const [showTraffic, setShowTraffic] = useState(false)
+  const [isTracking, setIsTracking] = useState(false)
+  const [locationHistory, setLocationHistory] = useState([])
+  const [geofences, setGeofences] = useState([])
+  const [selectedMarker, setSelectedMarker] = useState(null)
+  
+  const watchId = useRef(null)
+  
+  useEffect(() => {
+    requestLocationPermission()
+    loadSavedPreferences()
+    
+    return () => {
+      if (watchId.current) {
+        Geolocation.clearWatch(watchId.current)
+      }
+    }
+  }, [])
+  
+  useEffect(() => {
+    if (locationPermission && showUserLocation) {
+      getCurrentLocation()
+    }
+  }, [locationPermission, showUserLocation])
+  
+  useEffect(() => {
+    if (followUserLocation && userLocation) {
+      animateToLocation(userLocation)
+    }
+  }, [userLocation, followUserLocation])
+  
+  // Request location permission
+  const requestLocationPermission = async () => {
+    try {
+      let permission
+      
+      if (Platform.OS === 'ios') {
+        permission = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE)
+      } else {
+        permission = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION)
+      }
+      
+      const granted = permission === RESULTS.GRANTED
+      setLocationPermission(granted)
+      
+      if (!granted) {
+        Alert.alert(
+          'Location Permission',
+          'Location permission is required for this feature',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Settings', onPress: () => Linking.openSettings() }
+          ]
+        )
+      }
+    } catch (error) {
+      console.error('Location permission error:', error)
+    }
+  }
+  
+  // Get current location
+  const getCurrentLocation = () => {
+    if (!locationPermission) return
+    
+    Geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        const newLocation = {
+          latitude,
+          longitude,
+          timestamp: Date.now(),
+          accuracy: position.coords.accuracy,
+          altitude: position.coords.altitude,
+          heading: position.coords.heading,
+          speed: position.coords.speed
+        }
+        
+        setUserLocation(newLocation)
+        onLocationChange?.(newLocation)
+        
+        // Add to location history
+        setLocationHistory(prev => {
+          const updated = [...prev, newLocation]
+          // Keep only last 100 locations
+          return updated.slice(-100)
+        })
+        
+        // Check geofences
+        checkGeofences(newLocation)
+      },
+      (error) => {
+        console.error('Location error:', error)
+        Alert.alert('Location Error', 'Failed to get current location')
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 10000
+      }
+    )
+  }
+  
+  // Start location tracking
+  const startLocationTracking = () => {
+    if (!locationPermission || isTracking) return
+    
+    setIsTracking(true)
+    
+    watchId.current = Geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        const newLocation = {
+          latitude,
+          longitude,
+          timestamp: Date.now(),
+          accuracy: position.coords.accuracy,
+          altitude: position.coords.altitude,
+          heading: position.coords.heading,
+          speed: position.coords.speed
+        }
+        
+        setUserLocation(newLocation)
+        onLocationChange?.(newLocation)
+        
+        // Add to location history
+        setLocationHistory(prev => {
+          const updated = [...prev, newLocation]
+          return updated.slice(-100)
+        })
+        
+        // Check geofences
+        checkGeofences(newLocation)
+      },
+      (error) => {
+        console.error('Location tracking error:', error)
+      },
+      {
+        enableHighAccuracy: true,
+        distanceFilter: 10, // Update every 10 meters
+        interval: 5000, // Update every 5 seconds
+        fastestInterval: 2000
+      }
+    )
+  }
+  
+  // Stop location tracking
+  const stopLocationTracking = () => {
+    if (watchId.current) {
+      Geolocation.clearWatch(watchId.current)
+      watchId.current = null
+    }
+    setIsTracking(false)
+  }
+  
+  // Animate to location
+  const animateToLocation = (location, duration = 1000) => {
+    if (!mapRef.current) return
+    
+    mapRef.current.animateToRegion({
+      latitude: location.latitude,
+      longitude: location.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01
+    }, duration)
+  }
+  
+  // Fit to coordinates
+  const fitToCoordinates = (coordinates, padding = 50) => {
+    if (!mapRef.current || coordinates.length === 0) return
+    
+    mapRef.current.fitToCoordinates(coordinates, {
+      edgePadding: {
+        top: padding,
+        right: padding,
+        bottom: padding,
+        left: padding
+      },
+      animated: true
+    })
+  }
+  
+  // Check geofences
+  const checkGeofences = (location) => {
+    geofences.forEach(geofence => {
+      const distance = calculateDistance(
+        location.latitude,
+        location.longitude,
+        geofence.latitude,
+        geofence.longitude
+      )
+      
+      const isInside = distance <= geofence.radius
+      const wasInside = geofence.isInside || false
+      
+      if (isInside && !wasInside) {
+        // Entered geofence
+        geofence.isInside = true
+        geofence.onEnter?.(geofence, location)
+      } else if (!isInside && wasInside) {
+        // Exited geofence
+        geofence.isInside = false
+        geofence.onExit?.(geofence, location)
+      }
+    })
+  }
+  
+  // Calculate distance between two points
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371e3 // Earth's radius in meters
+    const φ1 = lat1 * Math.PI / 180
+    const φ2 = lat2 * Math.PI / 180
+    const Δφ = (lat2 - lat1) * Math.PI / 180
+    const Δλ = (lon2 - lon1) * Math.PI / 180
+    
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    
+    return R * c
+  }
+  
+  // Add geofence
+  const addGeofence = (geofence) => {
+    setGeofences(prev => [...prev, {
+      ...geofence,
+      id: geofence.id || `geofence_${Date.now()}`,
+      isInside: false
+    }])
+  }
+  
+  // Remove geofence
+  const removeGeofence = (geofenceId) => {
+    setGeofences(prev => prev.filter(g => g.id !== geofenceId))
+  }
+  
+  // Handle marker press
+  const handleMarkerPress = (marker, event) => {
+    setSelectedMarker(marker)
+    onMarkerPress?.(marker, event)
+  }
+  
+  // Handle map press
+  const handleMapPress = (event) => {
+    setSelectedMarker(null)
+  }
+  
+  // Toggle map type
+  const toggleMapType = () => {
+    const types = ['standard', 'satellite', 'hybrid', 'terrain']
+    const currentIndex = types.indexOf(mapType)
+    const nextIndex = (currentIndex + 1) % types.length
+    setMapType(types[nextIndex])
+  }
+  
+  // Toggle traffic
+  const toggleTraffic = () => {
+    setShowTraffic(!showTraffic)
+  }
+  
+  // Save preferences
+  const savePreferences = async () => {
+    try {
+      const preferences = {
+        mapType,
+        showTraffic,
+        lastRegion: region
+      }
+      await AsyncStorage.setItem('mapPreferences', JSON.stringify(preferences))
+    } catch (error) {
+      console.error('Failed to save preferences:', error)
+    }
+  }
+  
+  // Load saved preferences
+  const loadSavedPreferences = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('mapPreferences')
+      if (saved) {
+        const preferences = JSON.parse(saved)
+        setMapType(preferences.mapType || 'standard')
+        setShowTraffic(preferences.showTraffic || false)
+        if (preferences.lastRegion && !initialRegion) {
+          setRegion(preferences.lastRegion)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load preferences:', error)
+    }
+  }
+  
+  // Handle region change
+  const handleRegionChangeComplete = (newRegion) => {
+    setRegion(newRegion)
+    savePreferences()
+  }
+  
+  return (
+    <View style={styles.container}>
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
+        mapType={mapType}
+        showsUserLocation={showUserLocation && locationPermission}
+        followsUserLocation={followUserLocation}
+        showsMyLocationButton={false}
+        showsTraffic={showTraffic}
+        showsBuildings={true}
+        showsIndoors={true}
+        region={region}
+        onRegionChangeComplete={handleRegionChangeComplete}
+        onPress={handleMapPress}
+        customMapStyle={customMapStyle}
+      >
+        {/* Markers */}
+        {markers.map((marker, index) => (
+          <Marker
+            key={marker.id || index}
+            coordinate={marker.coordinate}
+            title={marker.title}
+            description={marker.description}
+            image={marker.image}
+            onPress={(event) => handleMarkerPress(marker, event)}
+          >
+            {marker.customCallout && (
+              <Callout>
+                {marker.customCallout}
+              </Callout>
+            )}
+          </Marker>
+        ))}
+        
+        {/* Routes */}
+        {routes.map((route, index) => (
+          <Polyline
+            key={route.id || index}
+            coordinates={route.coordinates}
+            strokeColor={route.color || '#007AFF'}
+            strokeWidth={route.width || 3}
+            lineDashPattern={route.dashed ? [5, 5] : undefined}
+          />
+        ))}
+        
+        {/* Location history trail */}
+        {locationHistory.length > 1 && (
+          <Polyline
+            coordinates={locationHistory}
+            strokeColor="#FF6B6B"
+            strokeWidth={2}
+            lineDashPattern={[2, 2]}
+          />
+        )}
+        
+        {/* Geofences */}
+        {geofences.map((geofence) => (
+          <Circle
+            key={geofence.id}
+            center={{
+              latitude: geofence.latitude,
+              longitude: geofence.longitude
+            }}
+            radius={geofence.radius}
+            fillColor={geofence.fillColor || 'rgba(0, 122, 255, 0.2)'}
+            strokeColor={geofence.strokeColor || '#007AFF'}
+            strokeWidth={2}
+          />
+        ))}
+      </MapView>
+      
+      {/* Map controls */}
+      <View style={styles.controls}>
+        <TouchableOpacity
+          style={styles.controlButton}
+          onPress={toggleMapType}
+        >
+          <Text style={styles.controlButtonText}>🗺️</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={styles.controlButton}
+          onPress={toggleTraffic}
+        >
+          <Text style={styles.controlButtonText}>🚦</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={styles.controlButton}
+          onPress={getCurrentLocation}
+        >
+          <Text style={styles.controlButtonText}>📍</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.controlButton, isTracking && styles.activeButton]}
+          onPress={isTracking ? stopLocationTracking : startLocationTracking}
+        >
+          <Text style={styles.controlButtonText}>
+            {isTracking ? '⏹️' : '▶️'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+      
+      {/* Location info */}
+      {userLocation && (
+        <View style={styles.locationInfo}>
+          <Text style={styles.locationText}>
+            Lat: {userLocation.latitude.toFixed(6)}
+          </Text>
+          <Text style={styles.locationText}>
+            Lng: {userLocation.longitude.toFixed(6)}
+          </Text>
+          <Text style={styles.locationText}>
+            Accuracy: {userLocation.accuracy?.toFixed(0)}m
+          </Text>
+          {userLocation.speed && (
+            <Text style={styles.locationText}>
+              Speed: {(userLocation.speed * 3.6).toFixed(1)} km/h
+            </Text>
+          )}
+        </View>
+      )}
+    </View>
+  )
+}
+```
+
+**2. Location Services Manager:**
+
+```javascript
+// Location Services Manager
+class LocationServicesManager {
+  constructor() {
+    this.watchId = null
+    this.isTracking = false
+    this.locationHistory = []
+    this.geofences = new Map()
+    this.subscribers = new Set()
+  }
+  
+  // Subscribe to location updates
+  subscribe(callback) {
+    this.subscribers.add(callback)
+    return () => this.subscribers.delete(callback)
+  }
+  
+  // Notify subscribers
+  notifySubscribers(location) {
+    this.subscribers.forEach(callback => {
+      try {
+        callback(location)
+      } catch (error) {
+        console.error('Subscriber callback error:', error)
+      }
+    })
+  }
+  
+  // Start location tracking
+  async startTracking(options = {}) {
+    try {
+      if (this.isTracking) {
+        console.warn('Location tracking is already active')
+        return
+      }
+      
+      const defaultOptions = {
+        enableHighAccuracy: true,
+        distanceFilter: 10,
+        interval: 5000,
+        fastestInterval: 2000,
+        saveHistory: true,
+        maxHistorySize: 1000
+      }
+      
+      const trackingOptions = { ...defaultOptions, ...options }
+      
+      this.isTracking = true
+      
+      this.watchId = Geolocation.watchPosition(
+        (position) => {
+          const location = this.processLocationUpdate(position, trackingOptions)
+          this.notifySubscribers(location)
+        },
+        (error) => {
+          console.error('Location tracking error:', error)
+          this.handleLocationError(error)
+        },
+        {
+          enableHighAccuracy: trackingOptions.enableHighAccuracy,
+          distanceFilter: trackingOptions.distanceFilter,
+          interval: trackingOptions.interval,
+          fastestInterval: trackingOptions.fastestInterval
+        }
+      )
+      
+      console.log('Location tracking started')
+      
+    } catch (error) {
+      console.error('Failed to start location tracking:', error)
+      this.isTracking = false
+      throw error
+    }
+  }
+  
+  // Stop location tracking
+  stopTracking() {
+    if (this.watchId) {
+      Geolocation.clearWatch(this.watchId)
+      this.watchId = null
+    }
+    this.isTracking = false
+    console.log('Location tracking stopped')
+  }
+  
+  // Process location update
+  processLocationUpdate(position, options) {
+    const location = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      altitude: position.coords.altitude,
+      accuracy: position.coords.accuracy,
+      altitudeAccuracy: position.coords.altitudeAccuracy,
+      heading: position.coords.heading,
+      speed: position.coords.speed,
+      timestamp: position.timestamp || Date.now()
+    }
+    
+    // Add to history
+    if (options.saveHistory) {
+      this.addToHistory(location, options.maxHistorySize)
+    }
+    
+    // Check geofences
+    this.checkGeofences(location)
+    
+    return location
+  }
+  
+  // Add location to history
+  addToHistory(location, maxSize = 1000) {
+    this.locationHistory.push(location)
+    
+    // Trim history if it exceeds max size
+    if (this.locationHistory.length > maxSize) {
+      this.locationHistory = this.locationHistory.slice(-maxSize)
+    }
+  }
+  
+  // Get current location (one-time)
+  async getCurrentLocation(options = {}) {
+    return new Promise((resolve, reject) => {
+      const defaultOptions = {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 10000
+      }
+      
+      const locationOptions = { ...defaultOptions, ...options }
+      
+      Geolocation.getCurrentPosition(
+        (position) => {
+          const location = this.processLocationUpdate(position, { saveHistory: false })
+          resolve(location)
+        },
+        (error) => {
+          this.handleLocationError(error)
+          reject(error)
+        },
+        locationOptions
+      )
+    })
+  }
+  
+  // Handle location errors
+  handleLocationError(error) {
+    switch (error.code) {
+      case 1: // PERMISSION_DENIED
+        console.error('Location permission denied')
+        break
+      case 2: // POSITION_UNAVAILABLE
+        console.error('Location position unavailable')
+        break
+      case 3: // TIMEOUT
+        console.error('Location request timeout')
+        break
+      default:
+        console.error('Unknown location error:', error)
+    }
+  }
+  
+  // Add geofence
+  addGeofence(geofence) {
+    const id = geofence.id || `geofence_${Date.now()}`
+    
+    const geofenceData = {
+      ...geofence,
+      id,
+      isInside: false,
+      entryTime: null,
+      exitTime: null
+    }
+    
+    this.geofences.set(id, geofenceData)
+    console.log(`Geofence added: ${id}`)
+    
+    return id
+  }
+  
+  // Remove geofence
+  removeGeofence(geofenceId) {
+    const removed = this.geofences.delete(geofenceId)
+    if (removed) {
+      console.log(`Geofence removed: ${geofenceId}`)
+    }
+    return removed
+  }
+  
+  // Check geofences
+  checkGeofences(location) {
+    this.geofences.forEach((geofence, id) => {
+      const distance = this.calculateDistance(
+        location.latitude,
+        location.longitude,
+        geofence.latitude,
+        geofence.longitude
+      )
+      
+      const isInside = distance <= geofence.radius
+      const wasInside = geofence.isInside
+      
+      if (isInside && !wasInside) {
+        // Entered geofence
+        geofence.isInside = true
+        geofence.entryTime = Date.now()
+        
+        console.log(`Entered geofence: ${id}`)
+        
+        if (geofence.onEnter) {
+          geofence.onEnter(geofence, location)
+        }
+        
+        // Trigger notification if configured
+        if (geofence.notification?.onEnter) {
+          this.triggerNotification(geofence.notification.onEnter)
+        }
+        
+      } else if (!isInside && wasInside) {
+        // Exited geofence
+        geofence.isInside = false
+        geofence.exitTime = Date.now()
+        
+        console.log(`Exited geofence: ${id}`)
+        
+        if (geofence.onExit) {
+          geofence.onExit(geofence, location)
+        }
+        
+        // Trigger notification if configured
+        if (geofence.notification?.onExit) {
+          this.triggerNotification(geofence.notification.onExit)
+        }
+      }
+    })
+  }
+  
+  // Calculate distance between two points (Haversine formula)
+  calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3 // Earth's radius in meters
+    const φ1 = lat1 * Math.PI / 180
+    const φ2 = lat2 * Math.PI / 180
+    const Δφ = (lat2 - lat1) * Math.PI / 180
+    const Δλ = (lon2 - lon1) * Math.PI / 180
+    
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    
+    return R * c
+  }
+  
+  // Calculate bearing between two points
+  calculateBearing(lat1, lon1, lat2, lon2) {
+    const φ1 = lat1 * Math.PI / 180
+    const φ2 = lat2 * Math.PI / 180
+    const Δλ = (lon2 - lon1) * Math.PI / 180
+    
+    const y = Math.sin(Δλ) * Math.cos(φ2)
+    const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ)
+    
+    const θ = Math.atan2(y, x)
+    
+    return (θ * 180 / Math.PI + 360) % 360 // Convert to degrees
+  }
+  
+  // Get location history
+  getLocationHistory(limit = null) {
+    if (limit) {
+      return this.locationHistory.slice(-limit)
+    }
+    return [...this.locationHistory]
+  }
+  
+  // Clear location history
+  clearLocationHistory() {
+    this.locationHistory = []
+    console.log('Location history cleared')
+  }
+  
+  // Get geofences
+  getGeofences() {
+    return Array.from(this.geofences.values())
+  }
+  
+  // Trigger notification
+  triggerNotification(notification) {
+    // This would integrate with a notification service
+    console.log('Triggering notification:', notification)
+  }
+  
+  // Get tracking status
+  getTrackingStatus() {
+    return {
+      isTracking: this.isTracking,
+      watchId: this.watchId,
+      historyCount: this.locationHistory.length,
+      geofenceCount: this.geofences.size,
+      subscriberCount: this.subscribers.size
+    }
+  }
+}
+
+// Global location services manager
+const locationServicesManager = new LocationServicesManager()
+```
+
+**3. Route Planning and Navigation:**
+
+```javascript
+// Route Planning Manager
+class RoutePlanningManager {
+  constructor(apiKey) {
+    this.apiKey = apiKey
+    this.routeCache = new Map()
+  }
+  
+  // Get route between two points
+  async getRoute(origin, destination, options = {}) {
+    try {
+      const cacheKey = this.generateCacheKey(origin, destination, options)
+      
+      // Check cache first
+      if (this.routeCache.has(cacheKey)) {
+        console.log('Returning cached route')
+        return this.routeCache.get(cacheKey)
+      }
+      
+      const defaultOptions = {
+        mode: 'driving', // driving, walking, bicycling, transit
+        avoidTolls: false,
+        avoidHighways: false,
+        avoidFerries: false,
+        optimize: false,
+        alternatives: false
+      }
+      
+      const routeOptions = { ...defaultOptions, ...options }
+      
+      // Build Google Directions API URL
+      const params = new URLSearchParams({
+        origin: `${origin.latitude},${origin.longitude}`,
+        destination: `${destination.latitude},${destination.longitude}`,
+        mode: routeOptions.mode,
+        avoid: this.buildAvoidParams(routeOptions),
+        alternatives: routeOptions.alternatives,
+        key: this.apiKey
+      })
+      
+      const url = `https://maps.googleapis.com/maps/api/directions/json?${params}`
+      
+      const response = await fetch(url)
+      const data = await response.json()
+      
+      if (data.status !== 'OK') {
+        throw new Error(`Route planning failed: ${data.status}`)
+      }
+      
+      const processedRoute = this.processRouteData(data)
+      
+      // Cache the result
+      this.routeCache.set(cacheKey, processedRoute)
+      
+      return processedRoute
+      
+    } catch (error) {
+      console.error('Route planning error:', error)
+      throw error
+    }
+  }
+  
+  // Get multiple routes with waypoints
+  async getRouteWithWaypoints(origin, destination, waypoints = [], options = {}) {
+    try {
+      const waypointString = waypoints
+        .map(wp => `${wp.latitude},${wp.longitude}`)
+        .join('|')
+      
+      const params = new URLSearchParams({
+        origin: `${origin.latitude},${origin.longitude}`,
+        destination: `${destination.latitude},${destination.longitude}`,
+        waypoints: waypointString,
+        mode: options.mode || 'driving',
+        optimize: options.optimize || false,
+        key: this.apiKey
+      })
+      
+      const url = `https://maps.googleapis.com/maps/api/directions/json?${params}`
+      
+      const response = await fetch(url)
+      const data = await response.json()
+      
+      if (data.status !== 'OK') {
+        throw new Error(`Route planning failed: ${data.status}`)
+      }
+      
+      return this.processRouteData(data)
+      
+    } catch (error) {
+      console.error('Waypoint route planning error:', error)
+      throw error
+    }
+  }
+  
+  // Process route data from API
+  processRouteData(data) {
+    const route = data.routes[0]
+    const leg = route.legs[0]
+    
+    // Decode polyline
+    const coordinates = this.decodePolyline(route.overview_polyline.points)
+    
+    return {
+      coordinates,
+      distance: leg.distance,
+      duration: leg.duration,
+      steps: leg.steps.map(step => ({
+        instruction: step.html_instructions.replace(/<[^>]*>/g, ''), // Remove HTML tags
+        distance: step.distance,
+        duration: step.duration,
+        startLocation: step.start_location,
+        endLocation: step.end_location,
+        maneuver: step.maneuver
+      })),
+      bounds: route.bounds,
+      copyrights: route.copyrights,
+      warnings: route.warnings
+    }
+  }
+  
+  // Decode Google polyline
+  decodePolyline(encoded) {
+    const coordinates = []
+    let index = 0
+    let lat = 0
+    let lng = 0
+    
+    while (index < encoded.length) {
+      let b, shift = 0, result = 0
+      
+      do {
+        b = encoded.charCodeAt(index++) - 63
+        result |= (b & 0x1f) << shift
+        shift += 5
+      } while (b >= 0x20)
+      
+      const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1))
+      lat += dlat
+      
+      shift = 0
+      result = 0
+      
+      do {
+        b = encoded.charCodeAt(index++) - 63
+        result |= (b & 0x1f) << shift
+        shift += 5
+      } while (b >= 0x20)
+      
+      const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1))
+      lng += dlng
+      
+      coordinates.push({
+        latitude: lat / 1e5,
+        longitude: lng / 1e5
+      })
+    }
+    
+    return coordinates
+  }
+  
+  // Build avoid parameters
+  buildAvoidParams(options) {
+    const avoid = []
+    if (options.avoidTolls) avoid.push('tolls')
+    if (options.avoidHighways) avoid.push('highways')
+    if (options.avoidFerries) avoid.push('ferries')
+    return avoid.join('|')
+  }
+  
+  // Generate cache key
+  generateCacheKey(origin, destination, options) {
+    return `${origin.latitude},${origin.longitude}_${destination.latitude},${destination.longitude}_${JSON.stringify(options)}`
+  }
+  
+  // Clear route cache
+  clearCache() {
+    this.routeCache.clear()
+    console.log('Route cache cleared')
+  }
+  
+  // Get estimated travel time
+  async getTravelTime(origin, destination, mode = 'driving') {
+    try {
+      const route = await this.getRoute(origin, destination, { mode })
+      return route.duration
+    } catch (error) {
+      console.error('Travel time estimation error:', error)
+      throw error
+    }
+  }
+  
+  // Get distance matrix
+  async getDistanceMatrix(origins, destinations, options = {}) {
+    try {
+      const originsString = origins
+        .map(o => `${o.latitude},${o.longitude}`)
+        .join('|')
+      
+      const destinationsString = destinations
+        .map(d => `${d.latitude},${d.longitude}`)
+        .join('|')
+      
+      const params = new URLSearchParams({
+        origins: originsString,
+        destinations: destinationsString,
+        mode: options.mode || 'driving',
+        units: options.units || 'metric',
+        key: this.apiKey
+      })
+      
+      const url = `https://maps.googleapis.com/maps/api/distancematrix/json?${params}`
+      
+      const response = await fetch(url)
+      const data = await response.json()
+      
+      if (data.status !== 'OK') {
+        throw new Error(`Distance matrix failed: ${data.status}`)
+      }
+      
+      return data
+      
+    } catch (error) {
+      console.error('Distance matrix error:', error)
+      throw error
+    }
+  }
+}
+```
+
+**4. Location and Map Hooks:**
+
+```javascript
+// Custom hooks for location and maps
+const useLocation = (options = {}) => {
+  const [location, setLocation] = useState(null)
+  const [error, setError] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [permission, setPermission] = useState(null)
+  
+  useEffect(() => {
+    checkPermission()
+  }, [])
+  
+  const checkPermission = async () => {
+    try {
+      let result
+      
+      if (Platform.OS === 'ios') {
+        result = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE)
+      } else {
+        result = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION)
+      }
+      
+      setPermission(result)
+      
+      if (result === RESULTS.GRANTED && options.autoStart) {
+        getCurrentLocation()
+      }
+    } catch (err) {
+      setError(err)
+    }
+  }
+  
+  const getCurrentLocation = useCallback(async () => {
+    if (permission !== RESULTS.GRANTED) {
+      setError(new Error('Location permission not granted'))
+      return
+    }
+    
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      const position = await locationServicesManager.getCurrentLocation(options)
+      setLocation(position)
+    } catch (err) {
+      setError(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [permission, options])
+  
+  const startTracking = useCallback(() => {
+    if (permission !== RESULTS.GRANTED) {
+      setError(new Error('Location permission not granted'))
+      return
+    }
+    
+    const unsubscribe = locationServicesManager.subscribe(setLocation)
+    locationServicesManager.startTracking(options)
+    
+    return () => {
+      unsubscribe()
+      locationServicesManager.stopTracking()
+    }
+  }, [permission, options])
+  
+  return {
+    location,
+    error,
+    isLoading,
+    permission,
+    getCurrentLocation,
+    startTracking,
+    checkPermission
+  }
+}
+
+// Geofencing hook
+const useGeofencing = () => {
+  const [geofences, setGeofences] = useState([])
+  const [events, setEvents] = useState([])
+  
+  const addGeofence = useCallback((geofence) => {
+    const id = locationServicesManager.addGeofence({
+      ...geofence,
+      onEnter: (gf, location) => {
+        setEvents(prev => [...prev, {
+          type: 'enter',
+          geofence: gf,
+          location,
+          timestamp: Date.now()
+        }])
+        geofence.onEnter?.(gf, location)
+      },
+      onExit: (gf, location) => {
+        setEvents(prev => [...prev, {
+          type: 'exit',
+          geofence: gf,
+          location,
+          timestamp: Date.now()
+        }])
+        geofence.onExit?.(gf, location)
+      }
+    })
+    
+    setGeofences(prev => [...prev, { ...geofence, id }])
+    return id
+  }, [])
+  
+  const removeGeofence = useCallback((geofenceId) => {
+    locationServicesManager.removeGeofence(geofenceId)
+    setGeofences(prev => prev.filter(gf => gf.id !== geofenceId))
+  }, [])
+  
+  const clearEvents = useCallback(() => {
+    setEvents([])
+  }, [])
+  
+  return {
+    geofences,
+    events,
+    addGeofence,
+    removeGeofence,
+    clearEvents
+  }
+}
+
+// Route planning hook
+const useRoutePlanning = (apiKey) => {
+  const [routePlanner] = useState(() => new RoutePlanningManager(apiKey))
+  const [route, setRoute] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
+  
+  const planRoute = useCallback(async (origin, destination, options) => {
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      const routeData = await routePlanner.getRoute(origin, destination, options)
+      setRoute(routeData)
+      return routeData
+    } catch (err) {
+      setError(err)
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
+  }, [routePlanner])
+  
+  const clearRoute = useCallback(() => {
+    setRoute(null)
+    setError(null)
+  }, [])
+  
+  return {
+    route,
+    isLoading,
+    error,
+    planRoute,
+    clearRoute,
+    routePlanner
+  }
+}
+
+export {
+  AdvancedMap,
+  LocationServicesManager,
+  RoutePlanningManager,
+  locationServicesManager,
+  useLocation,
+  useGeofencing,
+  useRoutePlanning
+}
+```
+
+This comprehensive guide covers advanced map implementation, location services management, route planning, geofencing, and custom hooks for implementing robust maps and location services in React Native applications.
 
 ---
