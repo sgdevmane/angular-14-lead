@@ -14,6 +14,7 @@
   --surface-elevated: #ffffff;
   --text-primary: #1a202c;
   --text-secondary: #4a5568;
+  --text-ternary: #4a5568;
   --text-muted: #718096;
   --border-color: #e2e8f0;
   --border-light: #f1f5f9;
@@ -40,6 +41,7 @@ body.dark-theme {
   --surface-elevated: #334155;
   --text-primary: #f1f5f9;
   --text-secondary: #cbd5e1;
+  --text-ternary: #4a5568;
   --text-muted: #94a3b8;
   --border-color: #334155;
   --border-light: #475569;
@@ -619,7 +621,7 @@ body {
 }
 
 .content-header p {
-  color: var(--text-secondary);
+  color: var(--text-ternary);
   font-size: 1.1rem;
 }
 
@@ -780,6 +782,10 @@ body {
 .markdown-content li {
   margin-bottom: 8px;
   line-height: 1.6;
+}
+
+.dark-theme .markdown-content li a {
+  color: #c3c3c3 !important;
 }
 
 .markdown-content blockquote {
@@ -1067,8 +1073,20 @@ pre[class*="language-"] code[class*="language-"] {
     var(--primary-light) 0%,
     var(--primary-color) 100%
   ); */
-  transform: scale(1.1) rotate(90deg);
+  transform: scale(1.05);
   box-shadow: var(--shadow-xl), 0 0 20px rgba(229, 57, 53, 0.4);
+}
+
+.mobile-menu-btn.active {
+  transform: scale(1.05);
+}
+
+.mobile-menu-btn.active svg {
+  transform: rotate(180deg);
+}
+
+.mobile-menu-btn svg {
+  transition: transform 0.3s ease;
 }
 
 .mobile-menu-btn:hover::before {
@@ -1236,7 +1254,11 @@ pre[class*="language-"] code[class*="language-"] {
 
 /* Enhanced Table of Contents Styles */
 .toc {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 20px;
@@ -1290,7 +1312,11 @@ pre[class*="language-"] code[class*="language-"] {
 
 .markdown-content h3:first-child + ul,
 .markdown-content h3:first-child + ol {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 20px;

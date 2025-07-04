@@ -38,9 +38,11 @@ class InterviewGuideApp {
         if (window.innerWidth <= 1024) {
           const sidebar = document.querySelector(".sidebar");
           const overlay = document.getElementById("sidebarOverlay");
+          const mobileMenuBtn = document.getElementById("mobileMenuBtn");
 
           sidebar.classList.remove("active");
           overlay.classList.remove("active");
+          mobileMenuBtn.classList.remove("active");
         }
       });
     });
@@ -78,24 +80,23 @@ class InterviewGuideApp {
     document.getElementById("mobileMenuBtn").addEventListener("click", (e) => {
       const sidebar = document.querySelector(".sidebar");
       const overlay = document.getElementById("sidebarOverlay");
+      const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+      
       console.log("mobileMenuBtn clicked");
       sidebar.classList.add("active");
       overlay.classList.add("active");
-      // document
-      //   .getElementById("mobileMenuBtn")
-      //   .classList.add("hide-zindex");
+      mobileMenuBtn.classList.add("active");
     });
 
     // Sidebar overlay click to close
     document.getElementById("sidebarOverlay").addEventListener("click", (e) => {
       const sidebar = document.querySelector(".sidebar");
       const overlay = document.getElementById("sidebarOverlay");
+      const mobileMenuBtn = document.getElementById("mobileMenuBtn");
 
       sidebar.classList.remove("active");
       overlay.classList.remove("active");
-      // document
-      //   .getElementById("mobileMenuBtn")
-      //   .classList.remove("hide-zindex");
+      mobileMenuBtn.classList.remove("active");
     });
 
     // Close sidebar on escape key
@@ -103,11 +104,12 @@ class InterviewGuideApp {
       if (e.key === "Escape") {
         const sidebar = document.querySelector(".sidebar");
         const overlay = document.getElementById("sidebarOverlay");
+        const mobileMenuBtn = document.getElementById("mobileMenuBtn");
 
         if (sidebar.classList.contains("active")) {
           sidebar.classList.remove("active");
           overlay.classList.remove("active");
-          e.target.classList.remove("hide");
+          mobileMenuBtn.classList.remove("active");
         }
       }
     });

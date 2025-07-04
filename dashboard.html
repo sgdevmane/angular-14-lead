@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A comprehensive guide for technical interview preparation"
+    />
+    <meta name="theme-color" content="#e53935" />
+    <title>Tech Interview Guide</title>
+
+    <!-- PWA Support -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.svg" />
+
+    <!-- Prism.js for syntax highlighting -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-coy.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/toolbar/prism-toolbar.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Marked.js for markdown parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+
+    <!-- PDF Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="assets/css/inline-styles.css" />
+  </head>
+  <body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+      <div class="loading-container">
+        <div class="loading-logo">
+          <svg
+            width="80"
+            height="80"
+            viewBox="0 0 100 100"
+            class="loading-icon"
+          >
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              stroke="currentColor"
+              stroke-width="8"
+              fill="none"
+              stroke-linecap="round"
+              stroke-dasharray="283"
+              stroke-dashoffset="283"
+            >
+              <animate
+                attributeName="stroke-dashoffset"
+                dur="2s"
+                values="283;0;283"
+                repeatCount="indefinite"
+              />
+            </circle>
+            <circle cx="50" cy="50" r="25" fill="currentColor" opacity="0.3">
+              <animate
+                attributeName="opacity"
+                dur="1.5s"
+                values="0.3;1;0.3"
+                repeatCount="indefinite"
+              />
+            </circle>
+          </svg>
+        </div>
+        <h2 class="loading-title">Tech Interview Guide</h2>
+        <p class="loading-subtitle">Loading resources...</p>
+        <div class="loading-progress">
+          <div class="loading-bar">
+            <div class="loading-fill"></div>
+          </div>
+        </div>
+        <div class="loading-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+    <!-- Mobile menu button -->
+    <!-- <button
+      class="mobile-menu-btn"
+      id="mobileMenuBtn"
+      title="Toggle mobile menu"
+    >
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+      </svg>
+    </button> -->
+
+    <article id="mobile-sidebar"></article>
+    <!-- Sidebar overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <section class="container">
+      <!-- Sidebar Navigation -->
+      <article id="desktop-sidebar">
+        <nav class="sidebar" id="sidebar">
+          <h1>📚 Interview Guide</h1>
+
+          <!-- 
+                <!-- Font Size Controls 
+        <div class="font-controls">
+          <button
+            class="toolbar-btn"
+            id="decreaseFontBtn"
+            title="Decrease Font Size"
+          >
+            <span style="font-weight: bold; font-size: 16px">A-</span>
+          </button>
+          <button
+            class="toolbar-btn"
+            id="increaseFontBtn"
+            title="Increase Font Size"
+          >
+            <span style="font-weight: bold; font-size: 18px">A+</span>
+          </button>
+        </div>
+        <div class="toolbar-wrapper">
+          <button
+            class="toolbar-btn"
+            id="printBtn"
+            title="Print Current Content"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path
+                d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"
+              ></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            Print
+          </button>
+          <button class="toolbar-btn" id="pdfBtn" title="Export as PDF">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              ></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            PDF
+          </button>
+          <button
+            class="toolbar-btn"
+            id="themeBtn"
+            title="Toggle Dark/Light Theme"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            Theme
+          </button>
+          <button class="toolbar-btn" id="colorBtn" title="Change Color Theme">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <circle cx="12" cy="12" r="4"></circle>
+            </svg>
+            Colors
+          </button>
+
+         -->
+
+          <!-- Control Center Accordion -->
+          <div class="control-center" id="controlCenter">
+            <button class="control-center-toggle" id="controlCenterToggle">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="3"></circle>
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.79a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+                ></path>
+              </svg>
+              <span>Controls Center</span>
+              <svg
+                class="chevron"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            <div class="control-center-content" id="controlCenterContent">
+              <!-- Font Size Controls -->
+              <div class="control-section">
+                <h4>Font Size</h4>
+                <div class="font-controls">
+                  <button
+                    class="control-btn"
+                    id="decreaseFontBtn"
+                    title="Decrease Font Size"
+                  >
+                    <span style="font-weight: bold; font-size: 14px">A-</span>
+                  </button>
+                  <button
+                    class="control-btn"
+                    id="increaseFontBtn"
+                    title="Increase Font Size"
+                  >
+                    <span style="font-weight: bold; font-size: 16px">A+</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Toolbar Controls -->
+              <div class="control-section">
+                <h4>Tools</h4>
+                <div class="toolbar-wrapper">
+                  <button
+                    class="control-btn"
+                    id="printBtn"
+                    title="Print Current Content"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                      <path
+                        d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"
+                      ></path>
+                      <rect x="6" y="14" width="12" height="8"></rect>
+                    </svg>
+                    <span>Print</span>
+                  </button>
+                  <button class="control-btn" id="pdfBtn" title="Export as PDF">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                      ></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                      <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    <span>PDF</span>
+                  </button>
+                  <button
+                    class="control-btn"
+                    id="themeBtn"
+                    title="Toggle Dark/Light Theme"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                      ></path>
+                    </svg>
+                    <span>Theme</span>
+                  </button>
+                  <button
+                    class="control-btn"
+                    id="colorBtn"
+                    title="Change Color Theme"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <circle cx="12" cy="12" r="4"></circle>
+                    </svg>
+                    <span>Colors</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="search-container">
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search topics..."
+              id="searchInput"
+            />
+            <span class="search-icon">🔍</span>
+            <button class="search-clear" id="searchClear" title="Clear search">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <div class="nav-section">
+            <h3>Frontend Technologies</h3>
+            <button
+              class="nav-item"
+              data-file="markdowns/angular/angular-questions.md"
+            >
+              Angular 14 <span class="badge">100+</span>
+            </button>
+            <button
+              class="nav-item"
+              data-file="markdowns/javascript/javascript-questions.md"
+            >
+              JavaScript <span class="badge">80+</span>
+            </button>
+            <button
+              class="nav-item"
+              data-file="markdowns/typescript/typescript-questions.md"
+            >
+              TypeScript <span class="badge">70+</span>
+            </button>
+            <button
+              class="nav-item"
+              data-file="markdowns/html/html-questions.md"
+            >
+              HTML5 <span class="badge">50+</span>
+            </button>
+            <button class="nav-item" data-file="markdowns/css/css-questions.md">
+              CSS3 <span class="badge">60+</span>
+            </button>
+            <button
+              class="nav-item"
+              data-file="markdowns/tailwind-bootstrap/tailwind-bootstrap-questions.md"
+            >
+              Tailwind & Bootstrap <span class="badge">25+</span>
+            </button>
+            <button
+              class="nav-item"
+              data-file="markdowns/react/react-questions.md"
+            >
+              React.js <span class="badge">45+</span>
+            </button>
+            <button class="nav-item" data-file="markdowns/vue/vue-questions.md">
+              Vue.js <span class="badge">50+</span>
+            </button>
+          </div>
+
+          <div class="nav-section">
+            <h3>State Management</h3>
+            <button
+              class="nav-item"
+              data-file="markdowns/ngrx/ngrx-questions.md"
+            >
+              NgRx <span class="badge">40+</span>
+            </button>
+            <button
+              class="nav-item"
+              data-file="markdowns/redux+zustand/redux-zustand-questions.md"
+            >
+              Redux & Zustand <span class="badge">30+</span>
+            </button>
+          </div>
+
+          <div class="nav-section">
+            <h3>Backend Technologies</h3>
+            <button
+              class="nav-item"
+              data-file="markdowns/nodejs/nodejs-questions.md"
+            >
+              Node.js <span class="badge">60+</span>
+            </button>
+            <button
+              class="nav-item"
+              data-file="markdowns/python/python-questions.md"
+            >
+              Python & Django <span class="badge">55+</span>
+            </button>
+            <button
+              class="nav-item"
+              data-file="markdowns/docker/docker-questions.md"
+            >
+              Docker & DevOps <span class="badge">45+</span>
+            </button>
+            <button
+              class="nav-item"
+              data-file="markdowns/kubernetes/kubernetes-questions.md"
+            >
+              Kubernetes <span class="badge">40+</span>
+            </button>
+            <button class="nav-item" data-file="markdowns/aws/aws-questions.md">
+              AWS Cloud <span class="badge">50+</span>
+            </button>
+            <button
+              class="nav-item"
+              data-file="markdowns/database/database-questions.md"
+            >
+              Database & SQL <span class="badge">65+</span>
+            </button>
+          </div>
+
+          <div class="nav-section">
+            <h3>Integration & Advanced</h3>
+            <button
+              class="nav-item"
+              data-file="markdowns/integration/angular14-integration-questions.md"
+            >
+              Angular 14 Integration <span class="badge">25+</span>
+            </button>
+          </div>
+
+          <div class="nav-section">
+            <h3>Mobile Development</h3>
+            <button
+              class="nav-item"
+              data-file="markdowns/swift-swiftui/swift-swiftui-questions.md"
+            >
+              Swift/SwiftUI <span class="badge">20+</span>
+            </button>
+            <button
+              class="nav-item"
+              data-file="markdowns/kotlin/kotlin-questions.md"
+            >
+              Kotlin <span class="badge">20+</span>
+            </button>
+          </div>
+
+          <div class="nav-section">
+            <h3>Backend Development</h3>
+            <button
+              class="nav-item"
+              data-file="markdowns/dotnet/dotnet-questions.md"
+            >
+              .NET <span class="badge">20+</span>
+            </button>
+            <button
+              class="nav-item"
+              data-file="markdowns/java/java-questions.md"
+            >
+              Java <span class="badge">20+</span>
+            </button>
+            <button class="nav-item" data-file="markdowns/cpp/cpp-questions.md">
+              C++ <span class="badge">20+</span>
+            </button>
+          </div>
+        </nav>
+      </article>
+
+      <!-- Main Content Area -->
+      <main class="main-content">
+        <div class="content-header">
+          <h1>Technical Interview Guide</h1>
+          <p>
+            Comprehensive collection of interview questions covering React.js,
+            Angular 14, JavaScript, TypeScript, HTML5, CSS3, NgRx, Backend-
+            related technologies, Performance, Security, and Integration
+            patterns.
+          </p>
+        </div>
+
+        <div id="contentArea">
+          <div class="welcome-content">
+            <h2>Welcome to the Interview Guide</h2>
+            <p>
+              Select a topic from the sidebar to begin exploring interview
+              questions and answers.
+            </p>
+
+            <div class="toc">
+              <h3>📋 Available Topics</h3>
+              <ul>
+                <li>
+                  <strong>Angular 14:</strong> Components, Services, Routing,
+                  Forms, and new features
+                </li>
+                <li>
+                  <strong>JavaScript:</strong> ES6+, Async/Await, Closures,
+                  Prototypes, and modern patterns
+                </li>
+                <li>
+                  <strong>TypeScript:</strong> Type system, Generics,
+                  Decorators, and advanced patterns
+                </li>
+                <li>
+                  <strong>HTML5:</strong> Semantic elements, APIs, Forms, and
+                  accessibility
+                </li>
+                <li>
+                  <strong>CSS3:</strong> Flexbox, Grid, Animations, and
+                  responsive design
+                </li>
+                <li>
+                  <strong>NgRx:</strong> State management, Actions, Reducers,
+                  Effects, and Selectors
+                </li>
+                <li>
+                  <strong>Performance:</strong> Optimization techniques, Core
+                  Web Vitals, and best practices
+                </li>
+                <li>
+                  <strong>Security:</strong> OWASP Top 10, Authentication,
+                  Authorization, and secure coding
+                </li>
+                <li>
+                  <strong>Integration:</strong> Angular 14 features, Standalone
+                  components, and advanced patterns
+                </li>
+              </ul>
+            </div>
+
+            <h3>🚀 Features</h3>
+            <ul>
+              <li>
+                ✅ <strong>Syntax Highlighting:</strong> Code examples with
+                proper highlighting
+              </li>
+              <li>
+                ✅ <strong>Responsive Design:</strong> Works on desktop, tablet,
+                and mobile
+              </li>
+              <li>
+                ✅ <strong>Search Functionality:</strong> Find topics quickly
+              </li>
+              <li>✅ <strong>Print Support:</strong> Print-friendly layouts</li>
+              <li>
+                ✅ <strong>Modular Structure:</strong> Easy to add new topics
+              </li>
+              <li>
+                ✅ <strong>Progressive Loading:</strong> Fast initial load,
+                content loaded on demand
+              </li>
+            </ul>
+
+            <h3>💡 How to Use</h3>
+            <ol>
+              <li>Click on any topic in the sidebar to load questions</li>
+              <li>Use the search box to find specific topics</li>
+              <li>Print individual sections using the print button</li>
+              <li>Toggle between light and dark themes</li>
+              <li>Export content to PDF for offline reading</li>
+            </ol>
+          </div>
+        </div>
+      </main>
+    </section>
+    <!-- FAB Button -->
+    <button class="fab-button" id="fabButton" title="Scroll to Top">↑</button>
+
+    <!-- Sticky Question Header -->
+    <div class="sticky-question">
+      <button
+        class="mobile-menu-btn"
+        id="mobileMenuBtn"
+        title="Toggle mobile menu"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+        </svg>
+      </button>
+      <section id="stickyQuestion"></section>
+    </div>
+
+    <!-- Mobile Menu Button -->
+    <!-- Color Theme Modal -->
+    <div class="modal" id="colorModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Choose Theme Color</h3>
+          <button class="modal-close" id="closeColorModal">&times;</button>
+        </div>
+        <p>Select a primary color for the application theme:</p>
+        <div class="color-options">
+          <div
+            class="color-option"
+            style="background-color: #e53935"
+            data-color="#e53935"
+            title="Red"
+          ></div>
+          <div
+            class="color-option"
+            style="background-color: #1976d2"
+            data-color="#1976d2"
+            title="Blue"
+          ></div>
+          <div
+            class="color-option"
+            style="background-color: #43a047"
+            data-color="#43a047"
+            title="Green"
+          ></div>
+          <div
+            class="color-option"
+            style="background-color: #7b1fa2"
+            data-color="#7b1fa2"
+            title="Purple"
+          ></div>
+          <div
+            class="color-option"
+            style="background-color: #ff9800"
+            data-color="#ff9800"
+            title="Orange"
+          ></div>
+          <div
+            class="color-option"
+            style="background-color: #00acc1"
+            data-color="#00acc1"
+            title="Cyan"
+          ></div>
+          <div
+            class="color-option"
+            style="background-color: #5d4037"
+            data-color="#5d4037"
+            title="Brown"
+          ></div>
+          <div
+            class="color-option"
+            style="background-color: #546e7a"
+            data-color="#546e7a"
+            title="Blue Grey"
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prism.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/toolbar/prism-toolbar.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script>
+
+    <!-- Main Application Script -->
+    <script src="assets/js/app-main.js"></script>
+  </body>
+</html>
