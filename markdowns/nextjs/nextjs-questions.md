@@ -5895,6 +5895,84 @@ export function ProtectedRoute({ children, requiredRole }) {
 
   return children
 }
+
+// pages/login.js - Login page
+export default function Login() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const { login } = useAuth()
+  const router = useRouter()
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    
+    const result = await login(email, password)
+    if (!result.success) {
+      setError(result.error)
+    }
+  }
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-lg">
+        <h1 className="text-2xl font-bold mb-6 text-center">Sign In</h1>
+        
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              required
+            />
+          </div>
+          
+          <div className="mb-6">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              required
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <button
+              type="submit"
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            >
+              Sign In
+            </button>
+            <a
+              href="/forgot-password"
+              className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+            >
+              Forgot Password?
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
 ```
 
 // SSG with Dynamic Routes - getStaticPaths
@@ -6054,52 +6132,6 @@ export async function getServerSideProps(context) {
         permanent: false,
       },
     }
-  }
-}
-
-// ISR with On-Demand Revalidation
-// pages/api/revalidate.js
-export default async function handler(req, res) {
-  // Check for secret to confirm this is a valid request
-  if (req.query.secret !== process.env.REVALIDATION_SECRET) {
-    return res.status(401).json({ message: 'Invalid token' })
-  }
-
-  try {
-    const { path } = req.body
-    
-    // Revalidate specific path
-    await res.revalidate(path)
-    
-    return res.json({ revalidated: true, path })
-  } catch (err) {
-    return res.status(500).send('Error revalidating')
-  }
-}
-
-// Webhook to trigger revalidation
-// pages/api/webhook/content-update.js
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' })
-  }
-
-  const { type, slug } = req.body
-  
-  try {
-    if (type === 'post') {
-      // Revalidate blog post and blog index
-      await res.revalidate(`/blog/${slug}`)
-      await res.revalidate('/blog')
-    } else if (type === 'product') {
-      // Revalidate product page and category
-      await res.revalidate(`/products/${slug}`)
-      await res.revalidate('/products')
-    }
-    
-    res.status(200).json({ message: 'Revalidation triggered' })
-  } catch (error) {
-    res.status(500).json({ message: 'Error triggering revalidation' })
   }
 }
 ```
